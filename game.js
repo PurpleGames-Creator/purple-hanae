@@ -425,6 +425,7 @@ function showEvent(eventData, scene, onChoice) {
 }
 
 function renderChoices(eventData, scene, choicesEl, onChoice) {
+  choicesEl.innerHTML = "";
   choicesEl.style.display = "flex";
 
   // 本文を早送りしたタップがそのまま選択肢に流れ込まないよう、描画直後は受け付けない
@@ -441,6 +442,13 @@ function renderChoices(eventData, scene, choicesEl, onChoice) {
     btn.style.animationDelay = (i * CHOICE_STAGGER_MS) / 1000 + "s";
     btn.onclick = () => {
       if (choicesEl.classList.contains("is-locked")) return;
+      // 「選び直す」で戻せるよう、加算前の値を控えておく
+      const before = {
+        score: state.score,
+        rival: state.rival,
+        pushyCount: state.pushyCount,
+        passiveCount: state.passiveCount,
+      };
       choicesEl.style.display = "none";
       const points = choice.points || 0;
       state.score += points;
@@ -458,12 +466,31 @@ function renderChoices(eventData, scene, choicesEl, onChoice) {
       const body = document.createElement("div");
       reactionEl.appendChild(body);
       typeText(body, choice.reaction || "", () => {
+        const row = document.createElement("div");
+        row.className = "reaction-actions";
+
         const nextBtn = document.createElement("button");
         nextBtn.className = "next-btn";
         nextBtn.textContent = "つづける";
         nextBtn.onclick = () => { onChoice(choice); };
-        reactionEl.appendChild(document.createElement("br"));
-        reactionEl.appendChild(nextBtn);
+        row.appendChild(nextBtn);
+
+        // 誤タップ救済。まだ確定していないので、この場でだけ選び直せる
+        const undoBtn = document.createElement("button");
+        undoBtn.className = "link-btn";
+        undoBtn.type = "button";
+        undoBtn.textContent = "選び直す";
+        undoBtn.onclick = () => {
+          Object.assign(state, before);
+          saveGame();
+          reactionEl.style.display = "none";
+          reactionEl.innerHTML = "";
+          if (scene && scene.sprite) setSprite(scene.sprite, null);
+          renderChoices(eventData, scene, choicesEl, onChoice);
+        };
+        row.appendChild(undoBtn);
+
+        reactionEl.appendChild(row);
       });
     };
     choicesEl.appendChild(btn);
