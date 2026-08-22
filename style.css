@@ -32,18 +32,18 @@ body { background: transparent; }
 
 /* ---------------- 背景レイヤー ---------------- */
 
-#bg-layer {
+/* 背景は2枚を重ねてクロスフェードさせる。1枚で opacity 0 から出すと
+   切り替わるたびに下地のグラデーションが見えて画面が瞬く */
+.bg-layer {
   position: fixed;
   inset: 0;
   background-size: cover;
   background-position: center;
   z-index: -2;
+  opacity: 0;
+  transition: opacity 0.55s ease-out;
 }
-#bg-layer.bg-fade { animation: bgIn 0.6s ease-out; }
-@keyframes bgIn {
-  from { opacity: 0; transform: scale(1.04); }
-  to   { opacity: 1; transform: scale(1); }
-}
+.bg-layer.bg-show { opacity: 1; }
 
 /* 背景の上に敷く暗幕。本文の可読性は各パネルの背景で確保しているので、
    ここは背景写真が見える程度に留める(濃くしすぎると背景を入れた意味が消える) */
@@ -57,51 +57,38 @@ body { background: transparent; }
 
 /* ---------------- 立ち絵 ---------------- */
 
+/* 透過PNG由来の全身立ち絵。額装せず、画面下端に立たせる */
 #sprite {
   position: fixed;
   display: none;
+  bottom: 0;
   z-index: 1;
   pointer-events: none;
-  object-fit: cover;
-  object-position: 50% 12%;
-  background: #fff;
+  width: auto;
+  /* 背景となじませる影。box-shadow だと矩形に影が出るので filter を使う */
+  filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.55));
 }
 #sprite.sprite-in { animation: spriteIn 0.5s ease-out; }
 @keyframes spriteIn {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* 狭い画面: 顔まわりを丸く切り出したリアクション用アイコン */
+/* 狭い画面: 本文の後ろに小さめに立たせる(本文パネルが上に重なる) */
 @media (max-width: 1059px) {
   #sprite {
-    top: 12px;
-    right: 12px;
-    width: 84px;
-    height: 84px;
-    border-radius: 50%;
-    border: 2px solid rgba(255, 143, 177, 0.8);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+    right: -6%;
+    height: min(52vh, 420px);
+    opacity: 0.92;
   }
 }
 
-/* 広い画面: バストアップを右側に額装して置く */
+/* 広い画面: 本文は左カラム、立ち絵は右に等身大で */
 @media (min-width: 1060px) {
   #sprite {
-    top: 50%;
-    right: max(24px, calc(50vw - 640px));
-    width: 300px;
-    height: 380px;
-    transform: translateY(-50%);
-    border-radius: 18px;
-    border: 1px solid rgba(255, 143, 177, 0.45);
-    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.55);
+    right: max(16px, calc(50vw - 680px));
+    height: min(94vh, 960px);
   }
-  #sprite.sprite-in { animation: spriteInWide 0.5s ease-out; }
-}
-@keyframes spriteInWide {
-  from { opacity: 0; transform: translateY(calc(-50% + 10px)); }
-  to   { opacity: 1; transform: translateY(-50%); }
 }
 
 /* ---------------- レイアウト ---------------- */
@@ -117,13 +104,14 @@ body { background: transparent; }
   z-index: 2;
 }
 
-/* 立ち絵と本文が重ならないよう配置を切り替える。
+/* 広い画面では本文を左カラムに寄せて、右側を立ち絵に明け渡す。
    同じ詳細度の #app 指定より後に置くこと(先に書くとカスケードで負ける) */
-@media (max-width: 1059px) {
-  #app { padding-top: 108px; }
-}
 @media (min-width: 1060px) {
-  #app { margin-left: max(24px, calc(50vw - 640px)); margin-right: 0; }
+  #app { margin-left: max(24px, calc(50vw - 660px)); margin-right: 0; }
+}
+/* 立ち絵が下端に立つので、最後の要素が隠れないよう余白を足す */
+@media (max-width: 1059px) {
+  #app { padding-bottom: 96px; }
 }
 
 .screen { display: none; flex: 1; flex-direction: column; }
@@ -369,12 +357,13 @@ body { background: transparent; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  #bg-layer.bg-fade, #sprite.sprite-in { animation: none; }
+  .bg-layer { transition: none; }
+  #sprite.sprite-in { animation: none; }
   .heart { display: none; }
 }
 
 @media (max-width: 420px) {
   .game-title { font-size: 1.7rem; }
-  #app { padding: 104px 14px 40px; }
+  #app { padding: 24px 14px 96px; }
   .event-text { padding: 16px; }
 }

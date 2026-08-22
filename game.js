@@ -77,24 +77,30 @@ function showScreen(id) {
 
 let currentBg = null;
 let currentOutfit = null;
+let bgFront = "bg-a"; // いま表示している側のレイヤー
 
 function setBackground(bgName) {
-  const layer = el("bg-layer");
+  if (bgName === currentBg) return;
+  const front = el(bgFront);
+  const back = el(bgFront === "bg-a" ? "bg-b" : "bg-a");
   if (!bgName) {
-    layer.style.backgroundImage = "none";
+    front.classList.remove("bg-show");
+    back.classList.remove("bg-show");
     currentBg = null;
     return;
   }
-  if (bgName === currentBg) return;
+  // 裏のレイヤーに新しい背景を載せてからフェードイン、表側を落とす
+  back.style.backgroundImage = `url("${ASSET_DIR}${bgName}.webp")`;
+  void back.offsetWidth;
+  back.classList.add("bg-show");
+  front.classList.remove("bg-show");
+  bgFront = back.id;
   currentBg = bgName;
-  layer.style.backgroundImage = `url("${ASSET_DIR}${bgName}.webp")`;
-  layer.classList.remove("bg-fade");
-  void layer.offsetWidth; // アニメーションを再生し直す
-  layer.classList.add("bg-fade");
 }
 
 // 表情差分ファイルがあれば使い、無ければ基本立ち絵にフォールバックする。
-// 追加する場合のファイル名: assets/hanae_summer_<expr>.webp (expr = joy/smile/normal/trouble/sad)
+// 追加する場合のファイル名: assets/hanae_summer_<expr>.webp
+// expr = joy / smile / normal / trouble / sad / angry
 function setSprite(outfit, expr) {
   const img = el("sprite");
   if (!outfit) {
@@ -174,6 +180,13 @@ function heartTier(points) {
   return { count: 1, cls: "heart-shrink", expr: "trouble" };
 }
 
+// 同じ減点でも、無神経な言動(pushy)は怒り、それ以外は落胆として出し分ける
+function exprFor(points, tag) {
+  const base = heartTier(points).expr;
+  if (points < 0 && tag === "pushy") return "angry";
+  return base;
+}
+
 function playHeartEffect(points) {
   const layer = el("heart-layer");
   layer.innerHTML = "";
@@ -226,7 +239,7 @@ function showEvent(eventData, scene, onChoice) {
       // 選択を確定した時点で保存する(リアクション表示中に閉じても巻き戻らない)
       saveGame();
       playHeartEffect(points);
-      if (scene && scene.sprite) setSprite(scene.sprite, heartTier(points).expr);
+      if (scene && scene.sprite) setSprite(scene.sprite, exprFor(points, choice.tag));
       el("event-reaction").style.display = "block";
       el("event-reaction").innerHTML = choice.reaction ? choice.reaction.replace(/\n/g, "<br>") : "";
       const nextBtn = document.createElement("button");

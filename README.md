@@ -37,7 +37,8 @@
 
 ## 立ち絵の表情差分を追加する
 
-現在は笑顔1種のみ。以下のファイル名で `assets/` に置くと、エンジンが自動で使い分ける
+立ち絵は**背景透過の全身像**で、画面下端に立たせている。現在は笑顔1種のみ。
+以下のファイル名で `assets/` に置くと、エンジンが自動で使い分ける
 (ファイルが無ければ `hanae_summer.webp` にフォールバックするので、1枚ずつ足してよい)。
 
 | ファイル名 | 使われる場面 |
@@ -46,9 +47,12 @@
 | `hanae_summer_smile.webp` | +1〜+3 |
 | `hanae_summer_normal.webp` | ±0 |
 | `hanae_summer_trouble.webp` | -1〜-2 |
-| `hanae_summer_sad.webp` | -3 以下(💔) |
+| `hanae_summer_sad.webp` | 減点、かつ無神経ではない選択(落胆) |
+| `hanae_summer_angry.webp` | 減点、かつ `tag:"pushy"` の選択(怒り) |
 
-`winter` 版も同じ規則(`hanae_winter_joy.webp` など)。
+**冬服の差分は不要**(パーフェクトエピローグの1シーンにしか出ないため)。
+
+元画像は `_source/` に置く。透過とwebp変換の手順は `_source/README.md` を参照。
 
 ## 登場人物
 
