@@ -20,6 +20,7 @@ function freshState() {
     freePicksLeft: 3,
     act3DriftApplied: false,
     rivalInsertShown: false,
+    foreshadowShown: false,
     senshu: false,
     finished: false,
   };
@@ -207,7 +208,10 @@ function playHeartEffect(points) {
 
 function renderEventText(rawText) {
   let text = rawText;
-  if (state.rival >= GAME_DATA.foreshadowThreshold) {
+  // 伏線は一度だけ差し込む。毎回付けると同じ一文が終盤まで延々繰り返され、
+  // 伏線ではなく表示バグに見える
+  if (!state.foreshadowShown && state.rival >= GAME_DATA.foreshadowThreshold) {
+    state.foreshadowShown = true;
     text += GAME_DATA.foreshadowLine;
   }
   return text.replace(/\n/g, "<br>");
