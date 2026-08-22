@@ -359,7 +359,15 @@ body { background: transparent; }
 @media (prefers-reduced-motion: reduce) {
   .bg-layer { transition: none; }
   #sprite.sprite-in { animation: none; }
-  .heart { display: none; }
+  .choice-btn { animation: none; }
+  /* 本作は好感度を非公開にしており、ハートが唯一のフィードバック。
+     消すと選択の良し悪しを知る手段が無くなるので、動きだけ止めて静止表示する */
+  .heart {
+    animation: none;
+    opacity: 1;
+    top: 42%;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.7));
+  }
 }
 
 @media (max-width: 420px) {
