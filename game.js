@@ -291,15 +291,28 @@ function playHeartEffect(points) {
   layer.innerHTML = "";
   const tier = heartTier(points);
   if (tier.count === 0) return;
+
+  // 立ち絵が出ている時は顔のあたりに出す。画面中央だと「画面の装飾」に見えて、
+  // ハナエの反応として読み取れない
+  const sprite = el("sprite");
+  const rect = sprite.style.display === "none" ? null : sprite.getBoundingClientRect();
+  const anchored = rect && rect.width > 0;
+
   for (let i = 0; i < tier.count; i++) {
     const h = document.createElement("div");
     h.className = "heart " + tier.cls;
-    h.style.left = 40 + Math.random() * 20 + i * 8 + "%";
+    if (anchored) {
+      h.style.left = rect.left + rect.width * (0.34 + Math.random() * 0.28) + i * 16 + "px";
+      h.style.top = rect.top + rect.height * (0.12 + Math.random() * 0.08) + "px";
+    } else {
+      h.style.left = 40 + Math.random() * 20 + i * 8 + "%";
+    }
     h.style.animationDelay = (i * 0.12) + "s";
     h.textContent = tier.cls === "heart-break" ? "💔" : "💗";
     layer.appendChild(h);
   }
-  setTimeout(() => { layer.innerHTML = ""; }, 1400);
+  clearTimeout(playHeartEffect._clearTimer);
+  playHeartEffect._clearTimer = setTimeout(() => { layer.innerHTML = ""; }, 1400);
 }
 
 /* ---------------- 本文の逐次表示 ---------------- */
