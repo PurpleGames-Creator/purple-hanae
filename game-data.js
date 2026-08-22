@@ -34,7 +34,7 @@ const GAME_DATA = {
       choices: [
         { id:"A", label:"「わかった」とすぐ手伝う", points:2, rival:0, reaction:"ハナエは軽く微笑んだ。「おおきに、助かるわ」" },
         { id:"B", label:"周りの様子を見てから動く", points:0, rival:0, reaction:"特に反応はない。作業は淡々と進んでいく。" },
-        { id:"C", label:"「自分でやったら?」と軽口を叩く", points:-2, rival:0, reaction:"ハナエは一瞬こちらを見て、何も言わずに机を運び続けた。" },
+        { id:"C", label:"「自分でやったら?」と返す", points:-2, rival:0, reaction:"ハナエは一瞬こちらを見て、何も言わずに机を運び続けた。" },
       ],
     },
 
@@ -44,7 +44,7 @@ const GAME_DATA = {
       choices: [
         { id:"A", label:"「了解」とすぐ列に加わり、指示通りに動く", points:1, rival:0, reaction:"「素直でよろしい」と軽く言われる。" },
         { id:"B", label:"周りの様子を見てから動く", points:-1, rival:0, reaction:"「あんた、覇気ないなあ」と苦笑いされる。" },
-        { id:"C", label:"「班長でもないのに仕切るんやな」と皮肉る", points:-2, rival:0, tag:"pushy", reaction:"ハナエの表情が一瞬固くなる。「文句あるなら手ぇ動かしてくれる?」" },
+        { id:"C", label:"「班長でもないのに仕切るんやな」と言う", points:-2, rival:0, tag:"pushy", reaction:"ハナエの表情が一瞬固くなる。「文句あるなら手ぇ動かしてくれる?」" },
         { id:"D", label:"指示を待たず、まだ運ばれていない段ボールを先に運び始める", points:2, rival:0, reaction:"「言われる前に動くとか、ええ子やん」と驚いた笑顔を見せる。" },
       ],
     },
@@ -56,7 +56,7 @@ const GAME_DATA = {
         { id:"A", label:"「大丈夫? 無理しすぎじゃ」と気遣う", points:1, rival:0, reaction:"「そんな心配せんでもええのに」と少し照れくさそうに、でもどこか物足りなさそうに返す。" },
         { id:"B", label:"「へえ、大変だね」と軽く相槌を打つ", points:-1, rival:0, reaction:"「そっけないなあ」と苦笑い。" },
         { id:"C", label:"「じゃあその分、今日の作業は俺が多めにやっとくよ」と行動で示す", points:2, rival:0, reaction:"一瞬驚いた顔をして、「……そういうとこ、ずるいわ」と珍しく照れる。" },
-        { id:"D", label:"「両方はキツくない?」と呆れ気味に言う", points:-2, rival:0, tag:"pushy", reaction:"「キツいに決まってるやん」とムッとされる。" },
+        { id:"D", label:"「そこまでして両方やる意味ある?」と聞く", points:-2, rival:0, tag:"pushy", reaction:"「キツいに決まってるやん」とムッとされる。" },
       ],
     },
 
@@ -66,7 +66,7 @@ const GAME_DATA = {
       choices: [
         { id:"A", label:"「ハナエの言う通りだと思う」とすぐ同調する", points:1, rival:0, reaction:"「せやろ」と軽く返される。反応は薄め。" },
         { id:"B", label:"「どっちの意見も一理あるような……」と中立を保つ", points:-1, rival:0, tag:"passive", reaction:"特に何も言われず、話は先に進む。" },
-        { id:"C", label:"「そこまで言わなくても」とたしなめる", points:-2, rival:0, tag:"pushy", reaction:"ハナエが一瞬睨むように見る。「思うたことハッキリ言うて何が悪いん」" },
+        { id:"C", label:"「そこまで言わんでも」と間に入る", points:-2, rival:0, tag:"pushy", reaction:"ハナエが一瞬睨むように見る。「思うたことハッキリ言うて何が悪いん」" },
         { id:"D", label:"「シンプルな方がいいと思う。去年の案内板、見づらかったし」と理由を添えて賛成する", points:2, rival:0, reaction:"目を輝かせる。「そうそう、それやねん!」" },
       ],
     },
@@ -76,7 +76,7 @@ const GAME_DATA = {
       text: `作業を終えた帰り道、「甘いもんで一服してこ」とハナエに誘われる。念願の喫茶店デビューである。注文を終えたところで、ハナエが伝票に手を伸ばした。\n\n「ここは奢ったるわ」`,
       choices: [
         { id:"A", label:"「いいよ、奢ってもらうよ」と甘える", points:0, rival:0, reaction:"「そう?まあええけど」と少し物足りなさそう。" },
-        { id:"B", label:"「いや、俺が払うよ」と強引に払おうとする", points:-2, rival:0, tag:"pushy", reaction:"「そんなんええって、意地張らんでも」と面倒くさがられる。" },
+        { id:"B", label:"「いや、ここは俺が払うよ」と伝票を取る", points:-2, rival:0, tag:"pushy", reaction:"「そんなんええって、意地張らんでも」と面倒くさがられる。" },
         { id:"C", label:"「じゃあ半分ずつで」と提案する", points:3, rival:0, reaction:"「そういう対等な感じ、嫌いちゃうで」と笑う。" },
         { id:"D", label:"気づかず別の話を始める", points:-1, rival:0, tag:"passive", reaction:"「そこは反応せなあかんとこやろ」と半ば呆れられる。" },
       ],
@@ -88,7 +88,7 @@ const GAME_DATA = {
       choices: [
         { id:"A", label:"「大会に集中してもらって、こっちで進めよう」と作業を巻き取る", points:3, rival:0, reaction:"翌日「うちのぶんまでやってくれたん……ありがとう、ほんまに」と驚く。" },
         { id:"B", label:"ハナエに連絡して「進捗どうする?」と指示を仰ぐ", points:-1, rival:0, tag:"pushy", reaction:"「今それどころちゃうねんけど」と若干迷惑そうな返信。" },
-        { id:"C", label:"何もせず、戻ってから一緒にやろうと放置する", points:-2, rival:0, tag:"passive", reaction:"翌日「なんで進めといてくれへんかったん」と困惑される。" },
+        { id:"C", label:"戻ってから一緒にやろうと、手をつけずに待つ", points:-2, rival:0, tag:"passive", reaction:"翌日「なんで進めといてくれへんかったん」と困惑される。" },
         { id:"D", label:"応援のメッセージだけ送る", points:1, rival:0, reaction:"「ありがとな」とだけ短い返事。悪くはないが、それだけ。" },
       ],
     },
@@ -100,7 +100,7 @@ const GAME_DATA = {
         { id:"A", label:"「へえ、そうなんですね」と自然に会話に混ざる", points:2, rival:0, reaction:"「まあ、そうやねん。昔からのお守りみたいなもんや」と話してくれる。" },
         { id:"B", label:"深く踏み込まずニコニコ見守る", points:1, rival:0, tag:"passive", reaction:"悪くはないが、会話の輪には入らなかった。" },
         { id:"C", label:"「兄弟仲いいんですね」とストレートに言う", points:3, rival:0, reaction:"「まあ、喧嘩もようしたけどな。今はこんな感じや」と嬉しそうに話す。" },
-        { id:"D", label:"気まずくなり、目を逸らして作業に戻る", points:-2, rival:0, tag:"passive", reaction:"ハナエは少し寂しそうな顔をするが、何も言わない。" },
+        { id:"D", label:"目を逸らして作業に戻る", points:-2, rival:0, tag:"passive", reaction:"ハナエは少し寂しそうな顔をするが、何も言わない。" },
       ],
     },
 
@@ -141,7 +141,7 @@ const GAME_DATA = {
       title: "三人での作業",
       text: `体育館で装飾を吊るしていると、西野が「手伝うわ」と加わってきた。段取りが良く、話も面白い。ハナエが声を上げて笑っている。\n\n「西野くん、それ上手いなあ」\n「せやろ、こう見えて器用やねん」\n\n三人での作業は、確かに早い。早いのだが。`,
       choices: [
-        { id:"A", label:"西野より面白い話をしようと張り合う", points:-2, rival:1, tag:"pushy", reaction:"空回りして、変な間ができる。「……どしたん、今日テンションおかしない?」" },
+        { id:"A", label:"自分も会話に入って、場を盛り上げようとする", points:-2, rival:1, tag:"pushy", reaction:"空回りして、変な間ができる。「……どしたん、今日テンションおかしない?」" },
         { id:"B", label:"西野に高い場所を任せ、自分はハナエの手元を支えに回る", points:3, rival:-2, reaction:"脚立の上のハナエが下を見る。「……あんた、ずっとそこおったん?」と、少しだけ声が柔らかくなった。" },
         { id:"C", label:"黙って一人で別の作業を始める", points:-1, rival:3, tag:"passive", reaction:"戻ってきた時には、二人の会話は次の話題に移っていた。" },
         { id:"D", label:"「三人でやったら早いな」と普通に混ざる", points:1, rival:0, reaction:"作業は順調に終わる。特別なことは何も起こらない。" },
@@ -152,7 +152,7 @@ const GAME_DATA = {
       title: "喫茶店で、ハナエが黙り込む",
       text: `買い出しの帰り、また例の喫茶店に寄った。注文を終えたあたりで、ハナエのスマホが短く鳴る。画面を見た瞬間、表情が抜け落ちた。\n\n部活の連絡らしい。しばらく黙って画面を見つめた後、スマホを伏せた。\n\n「……ごめん、なんでもない」\n\nどう見ても、なんでもなくはない。`,
       choices: [
-        { id:"A", label:"「何かあった?」と踏み込んで聞き出す", points:-2, rival:0, tag:"pushy", reaction:"「なんでもないって言うてるやん」と、初めて少しきつい声が返ってくる。" },
+        { id:"A", label:"「何かあった?」と聞く", points:-2, rival:0, tag:"pushy", reaction:"「なんでもないって言うてるやん」と、初めて少しきつい声が返ってくる。" },
         { id:"B", label:"何も聞かず、運ばれてきたパフェを「溶けるで」と押しやる", points:3, rival:0, reaction:"数秒黙った後、ふっと肩の力が抜けた。「……あんた、ほんま聞かへんな」スプーンを取る手が、少し軽くなった。" },
         { id:"C", label:"「話したくなったら聞くわ」とだけ言う", points:2, rival:0, reaction:"「うん」と短く頷く。その日はそれ以上、何も言わなかった。" },
         { id:"D", label:"気づかないふりで別の話を始める", points:-1, rival:0, tag:"passive", reaction:"会話は続くが、ハナエの相槌はどこか上の空だった。" },
@@ -164,7 +164,7 @@ const GAME_DATA = {
       text: `作業を終えて外に出ると、いつの間にか雨が降り出していた。傘はない。渡り廊下の軒下で雨宿りすることになり、二人きりの静かな時間が流れる。\n\n「こういう時間、嫌いちゃうな」とハナエがぽつりと呟いた。`,
       choices: [
         { id:"A", label:"「俺も」と静かに同意する", points:3, rival:0, reaction:"隣を見て小さく笑う。" },
-        { id:"B", label:"気まずさに耐えられず、無理に話題を探して喋り続ける", points:-1, rival:0, tag:"pushy", reaction:"「そんな無理に喋らんでもええのに」と苦笑い。" },
+        { id:"B", label:"沈黙が持たなくて、次々に話題を振る", points:-1, rival:0, tag:"pushy", reaction:"「そんな無理に喋らんでもええのに」と苦笑い。" },
         { id:"C", label:"「早く止まないかな」と本音を漏らす", points:-2, rival:0, tag:"passive", reaction:"少し寂しそうな顔をされる。" },
         { id:"D", label:"何も言わず、ただ隣に並んで雨を眺める", points:4, rival:0, reaction:"しばらくの沈黙の後、「……こういうの、悪ないな」と柔らかい声で呟く。" },
       ],
@@ -175,7 +175,7 @@ const GAME_DATA = {
       text: `休憩中、ハナエがぼんやりとスマホを眺めていた。「兄ちゃん、正式に決まったんやって。向こうの大学、寮に入るらしいわ」明るいトーンだが、どこか上の空だ。\n\n「ええことやのに、なんでやろな……ちょっと、寂しいわ」`,
       choices: [
         { id:"A", label:"「寂しいの、当然だと思うよ」と肯定する", points:2, rival:0, reaction:"「うん……ありがと」と小さく頷く。" },
-        { id:"B", label:"「委員会あるし、寂しがってる暇ないよ」と茶化す", points:-2, rival:0, tag:"passive", reaction:"「せやな」と笑うが、どこか寂しげ。" },
+        { id:"B", label:"「委員会あるし、寂しがってる暇ないよ」と言う", points:-2, rival:0, tag:"passive", reaction:"「せやな」と笑うが、どこか寂しげ。" },
         { id:"C", label:"何も言わず「うん」と相槌を打ち、続きを待つ", points:4, rival:0, reaction:"「うちな、兄ちゃんおらんくなったら、一人になる気がして怖いねん。……子供の頃からずっと、誰かがおらんとあかん性格でな」と本音がこぼれる。" },
         { id:"D", label:"「一人でも案外平気だよ」と軽く励ます", points:-3, rival:0, tag:"pushy", reaction:"「そんな簡単に言わんといて」と少し傷ついた顔をされる。" },
       ],
@@ -210,7 +210,7 @@ const GAME_DATA = {
         { id:"A", label:"気にせず自分の作業を続ける", points:0, rival:2, tag:"passive", reaction:"特に何も起きない。" },
         { id:"B", label:"「西野と仲良いんだ」とさりげなく聞く", points:1, rival:0, reaction:"「クラス違うけど、まあ普通に喋る仲やな」と特に意識していない反応。" },
         { id:"C", label:"「俺たちも今度、打ち上げしようよ」と対抗するように誘う", points:3, rival:-3, reaction:"「ええな、行こ行こ」と乗ってくれる。" },
-        { id:"D", label:"露骨に不機嫌になる", points:-2, rival:4, tag:"pushy", reaction:"「なんか機嫌悪い?」と困惑される。" },
+        { id:"D", label:"「へえ、行くんや」と短く返す", points:-2, rival:4, tag:"pushy", reaction:"「なんか機嫌悪い?」と困惑される。" },
       ],
     },
 
@@ -221,7 +221,7 @@ const GAME_DATA = {
         { id:"A", label:"「手分けしてやろう、指示出して」と冷静に提案する", points:3, rival:0, reaction:"「せやな、頼むわ」とすぐに立て直す。" },
         { id:"B", label:"「大丈夫、なんとかなるよ」と根拠のない励ましをする", points:-2, rival:0, tag:"pushy", reaction:"「そんな軽く言わんといて、マジでヤバいねん」" },
         { id:"C", label:"黙って自分の判断で作業を始める", points:1, rival:0, tag:"passive", reaction:"少し戸惑うが、悪くはない反応。" },
-        { id:"D", label:"パニックになり右往左往する", points:-3, rival:0, tag:"pushy", reaction:"「あんたが慌ててどうすんの」と呆れられる。" },
+        { id:"D", label:"「どうしよう、間に合わへんて」と焦る", points:-3, rival:0, tag:"pushy", reaction:"「あんたが慌ててどうすんの」と呆れられる。" },
       ],
     },
 
@@ -256,7 +256,7 @@ const GAME_DATA = {
         { id:"A", label:"「ハナエが全部引き受けなくてもいいんじゃない?」と指摘する", points:3, rival:0, reaction:"一瞬驚いた顔をして「……そうなんかな」と考え込む。" },
         { id:"B", label:"「さすがハナエ、頼りになるね」と素直に褒める", points:0, rival:0, reaction:"「これくらい普通やろ」と軽く流される。" },
         { id:"C", label:"何も言わず、増えた分の作業を黙って一緒にこなす", points:2, rival:0, reaction:"言葉はないが、行動で示す優しさとして伝わる。" },
-        { id:"D", label:"我関せずで自分の担当作業だけ進める", points:-2, rival:0, tag:"passive", reaction:"何も気づかれないが、少し寂しげな視線。" },
+        { id:"D", label:"自分の担当分を先に終わらせる", points:-2, rival:0, tag:"passive", reaction:"何も気づかれないが、少し寂しげな視線。" },
       ],
     },
     F3_kaidashi: {
@@ -266,7 +266,7 @@ const GAME_DATA = {
         { id:"A", label:"「大丈夫、俺が持つよ」と全部引き受ける", points:0, rival:0, tag:"pushy", reaction:"「ちょっと悔しいな」と微妙な反応。" },
         { id:"B", label:"素直に半分渡す", points:3, rival:0, reaction:"「持ちつ持たれつ、これでええねん」と満足そう。" },
         { id:"C", label:"「じゃあ一番重いのお願い」と冗談っぽく甘える", points:2, rival:0, reaction:"「調子ええな」と言いつつまんざらでもなさそう。" },
-        { id:"D", label:"「女の子に持たせるわけには」と固辞し続ける", points:-2, rival:0, tag:"pushy", reaction:"「そういう変な気遣い、いらんのやけどな」" },
+        { id:"D", label:"「女の子に持たせるわけにはいかんやろ」と断る", points:-2, rival:0, tag:"pushy", reaction:"「そういう変な気遣い、いらんのやけどな」" },
       ],
     },
     F4_baiten: {
@@ -274,7 +274,7 @@ const GAME_DATA = {
       text: `昼休み、購買前の行列。隣にハナエが並んでいた。カウンターのサンドイッチを覗き込み、ふと顔をしかめる。「うわ、これ生姜焼きサンドやん……無理やわ、生姜」`,
       choices: [
         { id:"A", label:"「え、生姜嫌いなの?意外」と軽く驚く", points:1, rival:0, reaction:"「あとらっきょうとセロリも無理」と教えてくれる。" },
-        { id:"B", label:"「好き嫌いって子供っぽくない?」と茶化す", points:-3, rival:0, tag:"pushy", reaction:"「別にええやろ、好みなんやから」とムッとされる。" },
+        { id:"B", label:"「好き嫌いって子供っぽくない?」と言う", points:-3, rival:0, tag:"pushy", reaction:"「別にええやろ、好みなんやから」とムッとされる。" },
         { id:"C", label:"「じゃあこっちのツナサンドにしたら?」とさりげなく代案を出す", points:3, rival:0, reaction:"「気ぃ利くやん、ありがとう」" },
         { id:"D", label:"特に反応せず自分の分だけ選ぶ", points:-1, rival:0, tag:"passive", reaction:"「そこ拾ってや」と半ば呆れられる。" },
       ],
