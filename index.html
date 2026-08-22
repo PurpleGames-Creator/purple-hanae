@@ -15,7 +15,7 @@
 <meta property="og:image" content="https://purplegames-creator.github.io/purple-hanae/assets/ogp.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💗</text></svg>">
-<link rel="stylesheet" href="style.css?v=4">
+<link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
 
@@ -26,6 +26,14 @@
 <div id="heart-layer"></div>
 
 <main id="app">
+
+  <div id="hud" class="hud">
+    <div class="hud-row">
+      <span id="hud-progress" class="hud-progress"></span>
+      <button id="btn-title" class="link-btn" type="button">タイトルへ</button>
+    </div>
+    <div class="hud-bar"><span id="hud-bar-fill"></span></div>
+  </div>
 
   <section id="screen-title" class="screen active">
     <h1 class="game-title">センチメンタル・ハナエ</h1>
@@ -71,7 +79,7 @@
 
 </main>
 
-<script src="game-data.js?v=4"></script>
-<script src="game.js?v=4"></script>
+<script src="game-data.js?v=5"></script>
+<script src="game.js?v=5"></script>
 </body>
 </html>

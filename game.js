@@ -135,6 +135,39 @@ function renderEndingGallery() {
 function showScreen(id) {
   document.querySelectorAll(".screen").forEach((s) => s.classList.remove("active"));
   el(id).classList.add("active");
+  renderHud(id);
+}
+
+/* ---------------- 進行度の表示(HUD) ---------------- */
+
+// 残りイベント数。1イベント = 準備期間の1日として数える
+function stepsLeft() {
+  let left = 0;
+  for (let i = state.queueIndex; i < QUEUE.length; i++) {
+    left += QUEUE[i] === "FREE" ? state.freePicksLeft : 1;
+  }
+  return left;
+}
+
+function totalSteps() {
+  return QUEUE.length - 1 + 3; // FREE を3回分として数える
+}
+
+function renderHud(screenId) {
+  const hud = el("hud");
+  const playing = screenId === "screen-event" || screenId === "screen-free" || screenId === "screen-confession";
+  hud.style.display = playing ? "block" : "none";
+  if (!playing) return;
+
+  const left = stepsLeft();
+  let label;
+  if (screenId === "screen-confession") label = "文化祭 最終日 ―― 後夜祭のあと";
+  else if (left <= 1) label = "文化祭 前日";
+  else label = `文化祭まで あと${left}日`;
+  el("hud-progress").textContent = label;
+
+  const done = Math.max(0, totalSteps() - left);
+  el("hud-bar-fill").style.width = Math.min(100, (done / totalSteps()) * 100) + "%";
 }
 
 /* ---------------- 背景・立ち絵 ---------------- */
@@ -485,5 +518,10 @@ function resolveEnding() {
 
 document.addEventListener("DOMContentLoaded", () => {
   preloadAssets();
+  // 進行はセーブ済みなので、タイトルに戻っても「つづきから」で復帰できる
+  el("btn-title").onclick = () => {
+    saveGame();
+    initTitleScreen();
+  };
   initTitleScreen();
 });

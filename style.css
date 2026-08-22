@@ -79,6 +79,7 @@ body { background: transparent; }
   #sprite {
     right: -6%;
     height: min(52vh, 420px);
+    height: min(52dvh, 420px);
     opacity: 0.92;
   }
 }
@@ -88,6 +89,7 @@ body { background: transparent; }
   #sprite {
     right: max(16px, calc(50vw - 680px));
     height: min(94vh, 960px);
+    height: min(94dvh, 960px);
   }
 }
 
@@ -98,6 +100,7 @@ body { background: transparent; }
   margin: 0 auto;
   padding: 24px 20px 48px;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -116,6 +119,52 @@ body { background: transparent; }
 
 .screen { display: none; flex: 1; flex-direction: column; }
 .screen.active { display: flex; }
+
+/* ---------------- 進行度バー(プレイ中のみ) ---------------- */
+
+.hud {
+  display: none;
+  margin-bottom: 4px;
+}
+.hud-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+.hud-progress {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+}
+.link-btn {
+  border: none;
+  background: none;
+  color: var(--text-dim);
+  font-size: 0.78rem;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 8px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.link-btn:hover { color: var(--accent); }
+.hud-bar {
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  overflow: hidden;
+}
+.hud-bar > span {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent), var(--purple));
+  transition: width 0.45s ease-out;
+}
 
 /* ---------------- タイトル ---------------- */
 
@@ -379,6 +428,17 @@ body { background: transparent; }
   margin-top: 18px;
 }
 .ending-back a { color: var(--accent); }
+
+/* キーボード操作時のフォーカス表示。マウス操作では出さない */
+.choice-btn:focus-visible,
+.free-card:focus-visible,
+.main-btn:focus-visible,
+.next-btn:focus-visible,
+.link-btn:focus-visible,
+#player-name-input:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
 
 /* ---------------- ハート演出 ---------------- */
 
