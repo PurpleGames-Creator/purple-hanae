@@ -355,6 +355,17 @@ const GAME_DATA = {
     nishino:        { bg: "bg_ground_night", sprite: null     },
   },
 
+  // タイトル画面のエンディング図鑑に出す順番と短い表示名
+  endingOrder: ["success", "successPerfect", "friend", "soretigai", "awkward", "nishino"],
+  endingLabels: {
+    success: "好き合ってた、あの頃",
+    successPerfect: "その先の、冬",
+    friend: "友達エンド",
+    soretigai: "すれ違いエンド",
+    awkward: "気まずいエンド",
+    nishino: "西野エンド",
+  },
+
   endings: {
     successPerfect: {
       title: "センチメンタル・ハナエ ―― その先の、冬",

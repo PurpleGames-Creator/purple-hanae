@@ -71,6 +71,65 @@ function loadGame() {
   return Object.assign(freshState(), saved);
 }
 
+/* ---------------- エンディング図鑑 ---------------- */
+
+// セーブとは別に保存する。「もう一度プレイする」で消えてはいけない
+const ENDINGS_KEY = "sentimentalHanaeEndings";
+
+function loadSeenEndings() {
+  try {
+    const arr = JSON.parse(localStorage.getItem(ENDINGS_KEY) || "[]");
+    return Array.isArray(arr) ? arr.filter((k) => GAME_DATA.endingLabels[k]) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+// 初めて到達したエンディングなら true を返す
+function recordEnding(key) {
+  const seen = loadSeenEndings();
+  if (seen.includes(key)) return false;
+  seen.push(key);
+  try {
+    localStorage.setItem(ENDINGS_KEY, JSON.stringify(seen));
+  } catch (e) {
+    /* 保存できなくても進行に影響させない */
+  }
+  return true;
+}
+
+function renderEndingGallery() {
+  const box = el("ending-gallery");
+  const seen = loadSeenEndings();
+  const order = GAME_DATA.endingOrder;
+  box.innerHTML = "";
+
+  const head = document.createElement("p");
+  head.className = "gallery-head";
+  head.textContent = `エンディング ${seen.length} / ${order.length}`;
+  box.appendChild(head);
+
+  const grid = document.createElement("div");
+  grid.className = "gallery-grid";
+  order.forEach((k) => {
+    const cell = document.createElement("span");
+    const got = seen.includes(k);
+    cell.className = "gallery-cell";
+    if (got) cell.classList.add("is-got");
+    if (k === "successPerfect") cell.classList.add("is-special");
+    cell.textContent = got ? GAME_DATA.endingLabels[k] : "???";
+    grid.appendChild(cell);
+  });
+  box.appendChild(grid);
+
+  if (seen.length >= order.length) {
+    const done = document.createElement("p");
+    done.className = "gallery-done";
+    done.textContent = "全エンディング到達。おつかれさまでした。";
+    box.appendChild(done);
+  }
+}
+
 /* ---------------- 画面制御 ---------------- */
 
 function showScreen(id) {
@@ -153,6 +212,8 @@ function preloadAssets() {
 function initTitleScreen() {
   showScreen("screen-title");
   applyScene(sceneFor("TITLE"));
+  renderEndingGallery();
+  window.scrollTo(0, 0);
   const saved = loadGame();
   const continueBtn = el("btn-continue");
   if (saved && !saved.finished) {
@@ -398,12 +459,21 @@ function resolveEnding() {
 
   state.finished = true;
   saveGame();
+  const isNew = recordEnding(endingKey);
 
   const ending = GAME_DATA.endings[endingKey];
   showScreen("screen-ending");
   applyScene(GAME_DATA.endingScenes[endingKey]);
+  const badge = el("ending-new");
+  badge.style.display = isNew ? "block" : "none";
+  badge.textContent = endingKey === "successPerfect"
+    ? "NEW — 最も到達が難しいエンディングです"
+    : "NEW — 初めて見るエンディングです";
   el("ending-title").textContent = ending.title;
   el("ending-text").innerHTML = ending.text.replace(/\n/g, "<br>");
+  const seen = loadSeenEndings();
+  el("ending-note").textContent =
+    `エンディングは全${GAME_DATA.endingOrder.length}種類(到達済み ${seen.length})。選択を変えると結末が変わります。`;
   window.scrollTo(0, 0);
   el("btn-restart").onclick = () => {
     state = freshState();

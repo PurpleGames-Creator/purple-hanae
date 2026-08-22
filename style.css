@@ -314,6 +314,65 @@ body { background: transparent; }
   font-size: 0.82rem;
   margin-top: 4px;
 }
+.ending-new {
+  display: none;
+  align-self: center;
+  margin: 24px 0 0;
+  padding: 6px 16px;
+  border-radius: 999px;
+  background: rgba(255, 92, 138, 0.9);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: bold;
+  letter-spacing: 0.03em;
+}
+
+/* ---------------- エンディング図鑑(タイトル画面) ---------------- */
+
+.ending-gallery {
+  margin: 28px auto 0;
+  width: 100%;
+  max-width: 420px;
+}
+.gallery-head {
+  text-align: center;
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: bold;
+  margin: 0 0 10px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+}
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.gallery-cell {
+  padding: 9px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(18, 12, 26, 0.6);
+  color: var(--text-dim);
+  font-size: 0.78rem;
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+.gallery-cell.is-got {
+  color: var(--text);
+  border-color: rgba(255, 143, 177, 0.55);
+  background: rgba(255, 143, 177, 0.14);
+}
+.gallery-cell.is-special.is-got {
+  border-color: rgba(255, 209, 102, 0.75);
+  background: rgba(255, 209, 102, 0.16);
+  color: #ffe6a8;
+}
+.gallery-done {
+  text-align: center;
+  color: #ffe6a8;
+  font-size: 0.8rem;
+  margin: 12px 0 0;
+}
 .ending-back {
   text-align: center;
   font-size: 0.85rem;
