@@ -5,6 +5,10 @@
 const SAVE_KEY = "sentimentalHanaeSave";
 const ASSET_DIR = "assets/";
 
+// 選択肢を描画してから受け付けるまでの猶予(誤タップ防止)と、1つずつ現れる間隔
+const CHOICE_LOCK_MS = 320;
+const CHOICE_STAGGER_MS = 55;
+
 function freshState() {
   return {
     v: GAME_DATA.SAVE_VERSION,
@@ -229,11 +233,21 @@ function showEvent(eventData, scene, onChoice) {
   choicesEl.style.display = "flex";
   window.scrollTo(0, 0);
 
-  eventData.choices.forEach((choice) => {
+  // 直前の「つづける」を連打していると、同じ座標に現れた次の選択肢を
+  // そのまま確定してしまう。選択は取り消せないので、描画直後は受け付けない
+  choicesEl.classList.add("is-locked");
+  clearTimeout(showEvent._unlockTimer);
+  showEvent._unlockTimer = setTimeout(() => {
+    choicesEl.classList.remove("is-locked");
+  }, CHOICE_LOCK_MS + eventData.choices.length * CHOICE_STAGGER_MS);
+
+  eventData.choices.forEach((choice, i) => {
     const btn = document.createElement("button");
     btn.className = "choice-btn";
     btn.textContent = choice.label;
+    btn.style.animationDelay = (i * CHOICE_STAGGER_MS) / 1000 + "s";
     btn.onclick = () => {
+      if (choicesEl.classList.contains("is-locked")) return;
       choicesEl.style.display = "none";
       const points = choice.points || 0;
       state.score += points;
@@ -265,12 +279,21 @@ function showFreeSelect() {
   el("free-remaining").textContent = `あと${state.freePicksLeft}つ選べます`;
   const list = el("free-list");
   list.innerHTML = "";
-  state.freeRemaining.forEach((key) => {
+  // 選択肢と同じ理由で、描画直後は受け付けない
+  list.classList.add("is-locked");
+  clearTimeout(showFreeSelect._unlockTimer);
+  showFreeSelect._unlockTimer = setTimeout(() => {
+    list.classList.remove("is-locked");
+  }, CHOICE_LOCK_MS + state.freeRemaining.length * CHOICE_STAGGER_MS);
+
+  state.freeRemaining.forEach((key, i) => {
     const data = GAME_DATA.freePool[key];
     const card = document.createElement("button");
     card.className = "free-card";
     card.textContent = data.title;
+    card.style.animationDelay = (i * CHOICE_STAGGER_MS) / 1000 + "s";
     card.onclick = () => {
+      if (list.classList.contains("is-locked")) return;
       state.freeChosen.push(key);
       state.freeRemaining = state.freeRemaining.filter((k) => k !== key);
       state.freePicksLeft--;

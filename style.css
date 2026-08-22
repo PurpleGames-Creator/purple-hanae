@@ -211,7 +211,14 @@ body { background: transparent; }
   flex-direction: column;
   gap: 10px;
 }
+/* 描画直後の誤タップ防止。1つずつ現れる間はクリックを受け付けない */
+.event-choices.is-locked { pointer-events: none; }
+@keyframes choiceIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 .choice-btn {
+  animation: choiceIn 0.32s ease-out both;
   text-align: left;
   padding: 14px 16px;
   border-radius: 12px;
@@ -274,7 +281,9 @@ body { background: transparent; }
   flex-direction: column;
   gap: 12px;
 }
+.free-list.is-locked { pointer-events: none; }
 .free-card {
+  animation: choiceIn 0.32s ease-out both;
   padding: 18px;
   border-radius: 14px;
   border: 1px solid rgba(255,255,255,0.2);
