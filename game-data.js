@@ -6,19 +6,26 @@
 
 const GAME_DATA = {
 
+  // セーブ互換バージョン。イベント追加・点数調整をしたら必ず上げる(古いセーブは破棄される)
+  SAVE_VERSION: 2,
+
   // 開始値
   START_SCORE: 50,
   START_RIVAL: 0,
-  SUCCESS_THRESHOLD: 65,
+  // モンテカルロで元プロトタイプと同難易度になるよう調整した値
+  // (ランダムプレイ時 success 約16% / bad 約2%。イベントを増減したら再計測すること)
+  SUCCESS_THRESHOLD: 67,
+  FRIEND_THRESHOLD: 39,
   RIVAL_FAIL_THRESHOLD: 8,
   SKIP_F5_RIVAL_PENALTY: 3,
   ACT3_RIVAL_DRIFT: 1,
 
   // Act構成(自由行動プールは別途 freePool から3つ選ぶ)
-  order: ["E1","E2","E3","E4","E5","E6","E7","E8","FREE","E13","E14","E15","E16","E17","E18","E19"],
+  order: ["E1","E2","E3","E4","E5","E6","E7","E8","FREE","E9","E10","E11","E12","E13","E14","E15","E16","E17","E18","E19"],
 
-  // パーフェクトルート判定(この4イベントすべてで最高評価の選択肢を選んだ場合)
-  perfectRoute: { E8: "D", E13: "D", E14: "C", E19: "A" },
+  // パーフェクトルート判定(この5イベントすべてで最高評価の選択肢を選んだ場合)
+  // 共通するのは「踏み込まず、黙って待つ」。ハナエの核にあたる部分。
+  perfectRoute: { E8: "D", E12: "B", E13: "D", E14: "C", E19: "A" },
 
   events: {
     E1: {
@@ -105,6 +112,50 @@ const GAME_DATA = {
         { id:"B", label:"「そっか」とだけ返し、それ以上何も聞かない", points:2, rival:0, reaction:"ほっとしたように「うん……ありがと」と小さく笑う。" },
         { id:"C", label:"「怪我のことは仕方ないよ、誰のせいでもない」とすぐフォローする", points:0, rival:0, reaction:"「そんなんわかってるって……」と、慰められることに居心地悪さを見せる。" },
         { id:"D", label:"何も言わず、隣に座ってただ話を聞く姿勢を見せる", points:3, rival:0, reaction:"しばらく黙った後「……なんか、こうやって黙って聞いてくれる人、久しぶりやわ」としみじみ呟く。" },
+      ],
+    },
+
+    E9: {
+      title: "朝練を覗きに行く",
+      text: `早朝のテニスコート。フェンス越しに覗くと、ハナエが誰よりも大きな声を出していた。\n\n「そこ、もう一本!足止まってんで!」\n\n委員会で見せる仕切りとは、まただいぶ違う。キャプテンの顔だ。汗だくで、髪も乱れていて、こちらにはまるで気づいていない。`,
+      choices: [
+        { id:"A", label:"練習が終わるまで待って、声をかける", points:2, rival:0, reaction:"「え、いつからおったん?……見んといてや、こんなグチャグチャの時に」と慌てて髪を直す。" },
+        { id:"B", label:"邪魔しないよう、黙って引き返す", points:0, rival:0, tag:"passive", reaction:"誰にも気づかれないまま、朝の校舎に戻る。" },
+        { id:"C", label:"フェンス越しに名前を呼んで手を振る", points:-3, rival:0, tag:"pushy", reaction:"部員全員がこちらを向く。ハナエは真っ赤な顔で「あんた、後で覚えとけよ」と口の形だけで伝えてきた。" },
+        { id:"D", label:"買っておいたスポーツドリンクをベンチに置いて、何も言わず委員会へ向かう", points:3, rival:0, reaction:"その日の昼、ハナエがぼそりと。「……あれ、あんたやろ。名前も書かんと置いてくとか、ようやるわ」" },
+      ],
+    },
+
+    E10: {
+      title: "誰もいない教室で、集計が残る",
+      text: `委員会が解散した後の教室。ハナエが一人、名簿と電卓を前に唸っている。当日の配置表がまだ終わっていないらしい。\n\n「あー、もう。……なんでうちだけ残っとるんやろな」\n\n独り言のつもりだったのか、こちらに気づいて「あ、悪い。なんでもない」と取り繕った。`,
+      choices: [
+        { id:"A", label:"何も聞かず、隣の席に座って名簿を半分引き取る", points:3, rival:0, reaction:"一瞬こちらを見て、それから小さく息を吐いた。「……ほんま、こういうとこやねんな、あんた」" },
+        { id:"B", label:"「終わるまで待ってるよ」と後ろの席で待つ", points:0, rival:0, tag:"passive", reaction:"「別にええのに」と言いつつ、少しだけ手が速くなった気がした。" },
+        { id:"C", label:"「そんなん明日でええやん」と切り上げさせる", points:-1, rival:0, reaction:"「明日やったら間に合わへんのよ」と苦笑いされる。" },
+        { id:"D", label:"「お疲れ、先帰るわ」と声をかけて帰る", points:-2, rival:0, tag:"passive", reaction:"「うん、おつかれ」と笑顔で返されるが、教室の電気は遅くまで点いていた。" },
+      ],
+    },
+
+    E11: {
+      title: "三人での作業",
+      text: `体育館で装飾を吊るしていると、西野が「手伝うわ」と加わってきた。段取りが良く、話も面白い。ハナエが声を上げて笑っている。\n\n「西野くん、それ上手いなあ」\n「せやろ、こう見えて器用やねん」\n\n三人での作業は、確かに早い。早いのだが。`,
+      choices: [
+        { id:"A", label:"西野より面白い話をしようと張り合う", points:-2, rival:1, tag:"pushy", reaction:"空回りして、変な間ができる。「……どしたん、今日テンションおかしない?」" },
+        { id:"B", label:"西野に高い場所を任せ、自分はハナエの手元を支えに回る", points:3, rival:-2, reaction:"脚立の上のハナエが下を見る。「……あんた、ずっとそこおったん?」と、少しだけ声が柔らかくなった。" },
+        { id:"C", label:"黙って一人で別の作業を始める", points:-1, rival:3, tag:"passive", reaction:"戻ってきた時には、二人の会話は次の話題に移っていた。" },
+        { id:"D", label:"「三人でやったら早いな」と普通に混ざる", points:1, rival:0, reaction:"作業は順調に終わる。特別なことは何も起こらない。" },
+      ],
+    },
+
+    E12: {
+      title: "喫茶店で、ハナエが黙り込む",
+      text: `買い出しの帰り、また例の喫茶店に寄った。注文を終えたあたりで、ハナエのスマホが短く鳴る。画面を見た瞬間、表情が抜け落ちた。\n\n部活の連絡らしい。しばらく黙って画面を見つめた後、スマホを伏せた。\n\n「……ごめん、なんでもない」\n\nどう見ても、なんでもなくはない。`,
+      choices: [
+        { id:"A", label:"「何かあった?」と踏み込んで聞き出す", points:-2, rival:0, tag:"pushy", reaction:"「なんでもないって言うてるやん」と、初めて少しきつい声が返ってくる。" },
+        { id:"B", label:"何も聞かず、運ばれてきたパフェを「溶けるで」と押しやる", points:3, rival:0, reaction:"数秒黙った後、ふっと肩の力が抜けた。「……あんた、ほんま聞かへんな」スプーンを取る手が、少し軽くなった。" },
+        { id:"C", label:"「話したくなったら聞くわ」とだけ言う", points:2, rival:0, reaction:"「うん」と短く頷く。その日はそれ以上、何も言わなかった。" },
+        { id:"D", label:"気づかないふりで別の話を始める", points:-1, rival:0, tag:"passive", reaction:"会話は続くが、ハナエの相槌はどこか上の空だった。" },
       ],
     },
 
@@ -256,10 +307,58 @@ const GAME_DATA = {
 
   confessionIntro: `文化祭最終日、後夜祭の片付けが終わった後。校庭の隅、誰もいない場所で、ハナエと二人きりになる。\n\n「なあ、話って何?」\n\nここまでの日々が、一気に頭を巡る。今しかない。\n\n{name}は、まっすぐにハナエを見て言った。\n\n「好きです。付き合ってください」`,
 
+  // 「先手を打つ」を選んだ場合の告白(前日の夜。E19を経ずに告白へ飛ぶ)
+  confessionIntroSenshu: `その夜。まだ校庭の照明が半分だけ点いている時間に、ハナエを呼び出した。\n\n「なんなん、こんな時間に。明日本番やで」\n\n明日を待っていたら、たぶん間に合わない。理屈ではなく、そう思った。\n\n{name}は、息を整えてからハナエを見た。\n\n「好きです。付き合ってください」`,
+
+  // 各シーンの背景と立ち絵(演出データ。テキスト側とは分離して管理する)
+  // sprite: "summer" | "winter" | null(ハナエが画面にいない場面)
+  scenes: {
+    E1:  { bg: "bg_classroom",    sprite: "summer" },
+    E2:  { bg: "bg_gym",          sprite: "summer" },
+    E3:  { bg: "bg_gym",          sprite: "summer" },
+    E4:  { bg: "bg_classroom",    sprite: "summer" },
+    E5:  { bg: "bg_cafe",         sprite: "summer" },
+    E6:  { bg: "bg_classroom",    sprite: null    },
+    E7:  { bg: "bg_gym",          sprite: "summer" },
+    E8:  { bg: "bg_gym",          sprite: "summer" },
+    E9:  { bg: "bg_tennis",       sprite: "summer" },
+    E10: { bg: "bg_classroom",    sprite: "summer" },
+    E11: { bg: "bg_gym",          sprite: "summer" },
+    E12: { bg: "bg_cafe",         sprite: "summer" },
+    E13: { bg: "bg_rain",         sprite: "summer" },
+    E14: { bg: "bg_gym",          sprite: "summer" },
+    E15: { bg: "bg_classroom",    sprite: "summer" },
+    E16: { bg: "bg_gym",          sprite: "summer" },
+    E17: { bg: "bg_classroom",    sprite: "summer" },
+    E18: { bg: "bg_ground_night", sprite: "summer" },
+    E19: { bg: "bg_gym_night",    sprite: "summer" },
+
+    F1_neji:     { bg: "bg_gym",       sprite: "summer" },
+    F2_chusai:   { bg: "bg_classroom", sprite: "summer" },
+    F3_kaidashi: { bg: "bg_gym",       sprite: "summer" },
+    F4_baiten:   { bg: "bg_classroom", sprite: "summer" },
+    F5_nishino:  { bg: "bg_gym",       sprite: "summer" },
+
+    TITLE:       { bg: "bg_gym_night",    sprite: null },
+    FREE:        { bg: "bg_classroom",    sprite: null },
+    RIVAL:       { bg: "bg_gym_night",    sprite: null },
+    CONFESSION:  { bg: "bg_ground_night", sprite: "summer" },
+  },
+
+  // エンディングごとの演出。パーフェクトのみ冬服(季節がひとつ進んだことを示す)
+  endingScenes: {
+    successPerfect: { bg: "bg_cafe",         sprite: "winter" },
+    success:        { bg: "bg_ground_night", sprite: "summer" },
+    friend:         { bg: "bg_ground_night", sprite: "summer" },
+    awkward:        { bg: "bg_ground_night", sprite: null     },
+    soretigai:      { bg: "bg_ground_night", sprite: null     },
+    nishino:        { bg: "bg_ground_night", sprite: null     },
+  },
+
   endings: {
     successPerfect: {
-      title: "センチメンタル・ハナエ ―― 好き合ってた、あの頃",
-      text: `ハナエは一瞬目を丸くし、いつもの勝気な顔とは違う、はにかんだ表情で――\n\n「……うち、テニス部のキャプテンで、たぶんめんどくさい性格やで。それでもええんやったら」\n\n「よろしく」\n\n「なあ、うちが黙り込んでも、いっつもちゃんと待っててくれたやろ。……そういうとこ、一番好きやったんかもな」\n\n――この夏の日々が、ずっと続くと思っていた。まだ何も知らない、あの頃の自分たちは。`,
+      title: "センチメンタル・ハナエ ―― その先の、冬",
+      text: `ハナエは一瞬目を丸くし、いつもの勝気な顔とは違う、はにかんだ表情で――\n\n「……うち、テニス部のキャプテンで、たぶんめんどくさい性格やで。それでもええんやったら」\n\n「よろしく」\n\n「なあ、うちが黙り込んでも、いっつもちゃんと待っててくれたやろ。……そういうとこ、一番好きやったんかもな」\n\n\n＿＿＿＿＿＿＿＿＿＿\n\n\n――冬。\n\nあの喫茶店の窓際。ブレザーの襟にマフラーを押し込んだハナエが、湯気の立つカップを両手で包んでいる。\n\n「なあ。夏に、ここでうちが黙り込んだ日あったやろ」\n\nパフェが溶けるで、とだけ言って、それ以上は何も聞かなかった日のことだ。\n\n「あんとき来た連絡な。後輩が怪我したっていう知らせやってん」\n\nカップに口をつけて、少し間を置く。\n\n「同じとこ。中学のうちと、まったく同じとこ」\n\n窓の外を、部活帰りの一年生が走っていく。\n\n「キャプテンやのに、また止められへんかったんか、って。あの時それしか頭になくてな」\n\n「あそこで『大丈夫やって』とか言われてたら、うちたぶん、あの店で泣いてたわ」\n\nカップを置いて、まっすぐこちらを見る。\n\n「うち、しんどい時ほど黙るクセあんねん。ほんで黙ったら、大体みんな困った顔して離れてくねん」\n\n「あんただけやったで。黙ったまま、隣におってくれたん」\n\n\n――センチメンタル、というらしい。\n\nあの夏を思い出すたびに少しだけ胸が痛むのは、たぶん、もう二度と戻れないからだ。\n\nけれど、目の前でマフラーを巻き直している彼女は、まだ何ひとつ終わっていない顔をしている。`,
     },
     success: {
       title: "センチメンタル・ハナエ ―― 好き合ってた、あの頃",

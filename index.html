@@ -2,12 +2,26 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>センチメンタル・ハナエ</title>
-<link rel="stylesheet" href="style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>センチメンタル・ハナエ | Purple Games</title>
+<meta name="description" content="文化祭実行委員として出会った味村ハナエへの、ひと夏の恋愛アドベンチャー。好感度は表示されません。彼女の反応だけを頼りに、選択肢を選んでください。ブラウザで無料で遊べます。">
+<!-- 制作中のため検索避け。完成して Purple Games HP に掲載する時に、この1行を必ず消すこと -->
+<meta name="robots" content="noindex, nofollow">
+<link rel="canonical" href="https://purplegames-creator.github.io/purple-hanae/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="センチメンタル・ハナエ">
+<meta property="og:description" content="文化祭実行委員として出会った味村ハナエへの、ひと夏の恋愛アドベンチャー。好感度は表示されない。">
+<meta property="og:url" content="https://purplegames-creator.github.io/purple-hanae/">
+<meta property="og:image" content="https://purplegames-creator.github.io/purple-hanae/assets/ogp.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💗</text></svg>">
+<link rel="stylesheet" href="style.css?v=2">
 </head>
 <body>
 
+<div id="bg-layer"></div>
+<div id="bg-scrim"></div>
+<img id="sprite" alt="">
 <div id="heart-layer"></div>
 
 <main id="app">
@@ -21,6 +35,7 @@
     </div>
     <button id="btn-start" class="main-btn">はじめる</button>
     <button id="btn-continue" class="main-btn secondary">つづきから</button>
+    <p class="title-note">好感度は表示されません。ハナエの反応だけが手がかりです。</p>
   </section>
 
   <section id="screen-event" class="screen">
@@ -47,11 +62,13 @@
     <h2 id="ending-title" class="ending-title"></h2>
     <div id="ending-text" class="event-text"></div>
     <button id="btn-restart" class="main-btn">もう一度プレイする</button>
+    <p class="ending-note">エンディングは全6種類。選択を変えると結末が変わります。</p>
+    <p class="ending-back"><a href="https://purple-games.vercel.app/">Purple Games の他のゲームを見る</a></p>
   </section>
 
 </main>
 
-<script src="game-data.js"></script>
-<script src="game.js"></script>
+<script src="game-data.js?v=2"></script>
+<script src="game.js?v=2"></script>
 </body>
 </html>

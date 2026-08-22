@@ -1,7 +1,8 @@
 :root {
   --bg-top: #2b1f3d;
   --bg-bottom: #4a2a45;
-  --panel: rgba(255, 255, 255, 0.06);
+  --panel: rgba(18, 12, 26, 0.72);
+  --panel-soft: rgba(255, 255, 255, 0.08);
   --accent: #ff8fb1;
   --accent-strong: #ff5c8a;
   --text: #f5eef2;
@@ -11,15 +12,99 @@
 
 * { box-sizing: border-box; }
 
+/* 背景グラデーションは html にだけ置く。body に置くと、body の背景が
+   #bg-layer(z-index:-2)より後に描画されて背景画像を覆い隠してしまう */
+html {
+  background: linear-gradient(160deg, var(--bg-top), var(--bg-bottom));
+  background-attachment: fixed;
+}
+
 html, body {
   margin: 0;
   padding: 0;
   min-height: 100%;
-  background: linear-gradient(160deg, var(--bg-top), var(--bg-bottom));
   color: var(--text);
   font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
   overflow-x: hidden;
 }
+
+body { background: transparent; }
+
+/* ---------------- 背景レイヤー ---------------- */
+
+#bg-layer {
+  position: fixed;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  z-index: -2;
+}
+#bg-layer.bg-fade { animation: bgIn 0.6s ease-out; }
+@keyframes bgIn {
+  from { opacity: 0; transform: scale(1.04); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* 背景の上に敷く暗幕。本文の可読性は各パネルの背景で確保しているので、
+   ここは背景写真が見える程度に留める(濃くしすぎると背景を入れた意味が消える) */
+#bg-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(180deg, rgba(20, 12, 30, 0.28) 0%, rgba(20, 12, 30, 0.46) 55%, rgba(20, 12, 30, 0.62) 100%);
+}
+
+/* ---------------- 立ち絵 ---------------- */
+
+#sprite {
+  position: fixed;
+  display: none;
+  z-index: 1;
+  pointer-events: none;
+  object-fit: cover;
+  object-position: 50% 12%;
+  background: #fff;
+}
+#sprite.sprite-in { animation: spriteIn 0.5s ease-out; }
+@keyframes spriteIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* 狭い画面: 顔まわりを丸く切り出したリアクション用アイコン */
+@media (max-width: 1059px) {
+  #sprite {
+    top: 12px;
+    right: 12px;
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 143, 177, 0.8);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+  }
+}
+
+/* 広い画面: バストアップを右側に額装して置く */
+@media (min-width: 1060px) {
+  #sprite {
+    top: 50%;
+    right: max(24px, calc(50vw - 640px));
+    width: 300px;
+    height: 380px;
+    transform: translateY(-50%);
+    border-radius: 18px;
+    border: 1px solid rgba(255, 143, 177, 0.45);
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.55);
+  }
+  #sprite.sprite-in { animation: spriteInWide 0.5s ease-out; }
+}
+@keyframes spriteInWide {
+  from { opacity: 0; transform: translateY(calc(-50% + 10px)); }
+  to   { opacity: 1; transform: translateY(-50%); }
+}
+
+/* ---------------- レイアウト ---------------- */
 
 #app {
   max-width: 640px;
@@ -28,6 +113,17 @@ html, body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  position: relative;
+  z-index: 2;
+}
+
+/* 立ち絵と本文が重ならないよう配置を切り替える。
+   同じ詳細度の #app 指定より後に置くこと(先に書くとカスケードで負ける) */
+@media (max-width: 1059px) {
+  #app { padding-top: 108px; }
+}
+@media (min-width: 1060px) {
+  #app { margin-left: max(24px, calc(50vw - 640px)); margin-right: 0; }
 }
 
 .screen { display: none; flex: 1; flex-direction: column; }
@@ -41,13 +137,21 @@ html, body {
   margin: 40px 0 6px;
   letter-spacing: 0.05em;
   color: var(--accent);
-  text-shadow: 0 0 18px rgba(255, 92, 138, 0.5);
+  text-shadow: 0 0 18px rgba(255, 92, 138, 0.5), 0 2px 12px rgba(0, 0, 0, 0.8);
 }
 .subtitle {
   text-align: center;
   color: var(--text-dim);
   margin-bottom: 36px;
   font-size: 0.9rem;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+.title-note {
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  margin-top: 24px;
+  line-height: 1.7;
 }
 .name-form {
   display: flex;
@@ -62,7 +166,7 @@ html, body {
   padding: 12px 14px;
   border-radius: 10px;
   border: 1px solid rgba(255,255,255,0.25);
-  background: rgba(255,255,255,0.08);
+  background: rgba(10, 6, 16, 0.6);
   color: var(--text);
   font-size: 1rem;
 }
@@ -85,7 +189,7 @@ html, body {
 .main-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(255, 92, 138, 0.45); }
 .main-btn:active { transform: translateY(0); }
 .main-btn.secondary {
-  background: transparent;
+  background: rgba(10, 6, 16, 0.55);
   border: 1px solid rgba(255,255,255,0.35);
   box-shadow: none;
 }
@@ -98,15 +202,21 @@ html, body {
   border-left: 4px solid var(--accent-strong);
   padding-left: 10px;
   margin: 20px 0 16px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
 }
 .event-text {
   background: var(--panel);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 14px;
   padding: 20px;
-  line-height: 1.9;
+  line-height: 1.95;
   font-size: 0.98rem;
   margin-bottom: 20px;
   white-space: normal;
+  word-break: auto-phrase;
+  line-break: strict;
 }
 .event-choices {
   display: flex;
@@ -118,14 +228,16 @@ html, body {
   padding: 14px 16px;
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,0.18);
-  background: rgba(255,255,255,0.05);
+  background: rgba(18, 12, 26, 0.7);
   color: var(--text);
   font-size: 0.95rem;
+  line-height: 1.6;
   cursor: pointer;
+  word-break: auto-phrase;
   transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
 }
 .choice-btn:hover {
-  background: rgba(255, 143, 177, 0.15);
+  background: rgba(255, 143, 177, 0.22);
   border-color: var(--accent);
   transform: translateX(2px);
 }
@@ -134,10 +246,13 @@ html, body {
   margin-top: 20px;
   padding: 18px;
   border-radius: 14px;
-  background: rgba(138, 92, 246, 0.15);
-  border: 1px solid rgba(138, 92, 246, 0.35);
-  line-height: 1.8;
+  background: rgba(138, 92, 246, 0.28);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(138, 92, 246, 0.5);
+  line-height: 1.85;
   font-size: 0.95rem;
+  word-break: auto-phrase;
 }
 .next-btn {
   margin-top: 14px;
@@ -157,12 +272,14 @@ html, body {
   color: var(--accent);
   font-weight: bold;
   margin-bottom: 4px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
 }
 .free-hint {
   text-align: center;
   color: var(--text-dim);
   font-size: 0.85rem;
   margin-bottom: 20px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
 }
 .free-list {
   display: flex;
@@ -173,7 +290,7 @@ html, body {
   padding: 18px;
   border-radius: 14px;
   border: 1px solid rgba(255,255,255,0.2);
-  background: rgba(255,255,255,0.05);
+  background: rgba(18, 12, 26, 0.7);
   color: var(--text);
   font-size: 1rem;
   cursor: pointer;
@@ -181,7 +298,7 @@ html, body {
 }
 .free-card:hover {
   border-color: var(--accent);
-  background: rgba(255, 143, 177, 0.12);
+  background: rgba(255, 143, 177, 0.2);
 }
 
 /* ---------------- エンディング ---------------- */
@@ -191,7 +308,21 @@ html, body {
   font-size: 1.4rem;
   color: var(--accent);
   margin: 40px 0 20px;
+  line-height: 1.6;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
 }
+.ending-note {
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.82rem;
+  margin-top: 4px;
+}
+.ending-back {
+  text-align: center;
+  font-size: 0.85rem;
+  margin-top: 18px;
+}
+.ending-back a { color: var(--accent); }
 
 /* ---------------- ハート演出 ---------------- */
 
@@ -237,7 +368,13 @@ html, body {
   100% { opacity: 0; transform: translateY(40px) rotate(25deg); }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  #bg-layer.bg-fade, #sprite.sprite-in { animation: none; }
+  .heart { display: none; }
+}
+
 @media (max-width: 420px) {
-  .game-title { font-size: 1.8rem; }
-  #app { padding: 16px 14px 40px; }
+  .game-title { font-size: 1.7rem; }
+  #app { padding: 104px 14px 40px; }
+  .event-text { padding: 16px; }
 }

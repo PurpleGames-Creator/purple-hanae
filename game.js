@@ -3,9 +3,11 @@
    ========================================================================== */
 
 const SAVE_KEY = "sentimentalHanaeSave";
+const ASSET_DIR = "assets/";
 
 function freshState() {
   return {
+    v: GAME_DATA.SAVE_VERSION,
     name: "",
     score: GAME_DATA.START_SCORE,
     rival: GAME_DATA.START_RIVAL,
@@ -17,6 +19,8 @@ function freshState() {
     queueIndex: 0,
     freePicksLeft: 3,
     act3DriftApplied: false,
+    rivalInsertShown: false,
+    senshu: false,
     finished: false,
   };
 }
@@ -33,17 +37,33 @@ function saveGame() {
     localStorage.removeItem(SAVE_KEY);
     return;
   }
-  localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+  } catch (e) {
+    /* プライベートブラウジング等で保存できなくてもゲームは続行する */
+  }
 }
 
 function loadGame() {
-  const raw = localStorage.getItem(SAVE_KEY);
-  if (!raw) return null;
+  let raw = null;
   try {
-    return JSON.parse(raw);
+    raw = localStorage.getItem(SAVE_KEY);
   } catch (e) {
     return null;
   }
+  if (!raw) return null;
+  let saved;
+  try {
+    saved = JSON.parse(raw);
+  } catch (e) {
+    return null;
+  }
+  // シナリオを更新した後の古いセーブは進行が噛み合わないので破棄する
+  if (!saved || saved.v !== GAME_DATA.SAVE_VERSION) {
+    try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
+    return null;
+  }
+  return Object.assign(freshState(), saved);
 }
 
 /* ---------------- 画面制御 ---------------- */
@@ -53,8 +73,75 @@ function showScreen(id) {
   el(id).classList.add("active");
 }
 
+/* ---------------- 背景・立ち絵 ---------------- */
+
+let currentBg = null;
+let currentOutfit = null;
+
+function setBackground(bgName) {
+  const layer = el("bg-layer");
+  if (!bgName) {
+    layer.style.backgroundImage = "none";
+    currentBg = null;
+    return;
+  }
+  if (bgName === currentBg) return;
+  currentBg = bgName;
+  layer.style.backgroundImage = `url("${ASSET_DIR}${bgName}.webp")`;
+  layer.classList.remove("bg-fade");
+  void layer.offsetWidth; // アニメーションを再生し直す
+  layer.classList.add("bg-fade");
+}
+
+// 表情差分ファイルがあれば使い、無ければ基本立ち絵にフォールバックする。
+// 追加する場合のファイル名: assets/hanae_summer_<expr>.webp (expr = joy/smile/normal/trouble/sad)
+function setSprite(outfit, expr) {
+  const img = el("sprite");
+  if (!outfit) {
+    img.style.display = "none";
+    img.removeAttribute("src");
+    currentOutfit = null;
+    return;
+  }
+  const base = `${ASSET_DIR}hanae_${outfit}.webp`;
+  const wanted = expr ? `${ASSET_DIR}hanae_${outfit}_${expr}.webp` : base;
+  img.onerror = () => {
+    img.onerror = null;
+    if (img.getAttribute("src") !== base) img.src = base;
+  };
+  img.style.display = "block";
+  if (img.getAttribute("src") !== wanted) img.src = wanted;
+  if (outfit !== currentOutfit) {
+    currentOutfit = outfit;
+    img.classList.remove("sprite-in");
+    void img.offsetWidth;
+    img.classList.add("sprite-in");
+  }
+}
+
+function applyScene(scene) {
+  if (!scene) return;
+  setBackground(scene.bg);
+  setSprite(scene.sprite, null);
+}
+
+function sceneFor(key) {
+  return GAME_DATA.scenes[key] || null;
+}
+
+function preloadAssets() {
+  const names = new Set();
+  Object.values(GAME_DATA.scenes).forEach((s) => { if (s.bg) names.add(s.bg); });
+  Object.values(GAME_DATA.endingScenes).forEach((s) => { if (s.bg) names.add(s.bg); });
+  names.forEach((n) => { new Image().src = `${ASSET_DIR}${n}.webp`; });
+  ["summer", "winter"].forEach((o) => { new Image().src = `${ASSET_DIR}hanae_${o}.webp`; });
+}
+
+/* ---------------- タイトル ---------------- */
+
 function initTitleScreen() {
   showScreen("screen-title");
+  applyScene(sceneFor("TITLE"));
   const saved = loadGame();
   const continueBtn = el("btn-continue");
   if (saved && !saved.finished) {
@@ -62,7 +149,7 @@ function initTitleScreen() {
     continueBtn.onclick = () => {
       state = saved;
       el("player-name-input").value = state.name;
-      advanceQueue(true);
+      advanceQueue();
     };
   } else {
     continueBtn.style.display = "none";
@@ -79,12 +166,12 @@ function initTitleScreen() {
 /* ---------------- ハート演出 ---------------- */
 
 function heartTier(points) {
-  if (points >= 4) return { count: 3, cls: "heart-huge" };
-  if (points >= 2) return { count: 2, cls: "heart-big" };
-  if (points >= 1) return { count: 1, cls: "heart-small" };
-  if (points === 0) return { count: 0, cls: "" };
-  if (points <= -3) return { count: 1, cls: "heart-break" };
-  return { count: 1, cls: "heart-shrink" };
+  if (points >= 4) return { count: 3, cls: "heart-huge", expr: "joy" };
+  if (points >= 2) return { count: 2, cls: "heart-big", expr: "smile" };
+  if (points >= 1) return { count: 1, cls: "heart-small", expr: "smile" };
+  if (points === 0) return { count: 0, cls: "", expr: "normal" };
+  if (points <= -3) return { count: 1, cls: "heart-break", expr: "sad" };
+  return { count: 1, cls: "heart-shrink", expr: "trouble" };
 }
 
 function playHeartEffect(points) {
@@ -113,8 +200,9 @@ function renderEventText(rawText) {
   return text.replace(/\n/g, "<br>");
 }
 
-function showEvent(eventData, onChoice) {
+function showEvent(eventData, scene, onChoice) {
   showScreen("screen-event");
+  applyScene(scene);
   el("event-title").textContent = eventData.title || "";
   el("event-text").innerHTML = renderEventText(eventData.text);
   el("event-reaction").innerHTML = "";
@@ -122,6 +210,7 @@ function showEvent(eventData, onChoice) {
   const choicesEl = el("event-choices");
   choicesEl.innerHTML = "";
   choicesEl.style.display = "flex";
+  window.scrollTo(0, 0);
 
   eventData.choices.forEach((choice) => {
     const btn = document.createElement("button");
@@ -129,19 +218,21 @@ function showEvent(eventData, onChoice) {
     btn.textContent = choice.label;
     btn.onclick = () => {
       choicesEl.style.display = "none";
-      state.score += choice.points || 0;
+      const points = choice.points || 0;
+      state.score += points;
       state.rival = Math.max(0, state.rival + (choice.rival || 0));
       if (choice.tag === "pushy") state.pushyCount++;
       if (choice.tag === "passive") state.passiveCount++;
-      playHeartEffect(choice.points || 0);
+      // 選択を確定した時点で保存する(リアクション表示中に閉じても巻き戻らない)
+      saveGame();
+      playHeartEffect(points);
+      if (scene && scene.sprite) setSprite(scene.sprite, heartTier(points).expr);
       el("event-reaction").style.display = "block";
       el("event-reaction").innerHTML = choice.reaction ? choice.reaction.replace(/\n/g, "<br>") : "";
       const nextBtn = document.createElement("button");
       nextBtn.className = "next-btn";
       nextBtn.textContent = "つづける";
-      nextBtn.onclick = () => {
-        onChoice(choice);
-      };
+      nextBtn.onclick = () => { onChoice(choice); };
       el("event-reaction").appendChild(document.createElement("br"));
       el("event-reaction").appendChild(nextBtn);
     };
@@ -153,6 +244,7 @@ function showEvent(eventData, onChoice) {
 
 function showFreeSelect() {
   showScreen("screen-free");
+  applyScene(sceneFor("FREE"));
   el("free-remaining").textContent = `あと${state.freePicksLeft}つ選べます`;
   const list = el("free-list");
   list.innerHTML = "";
@@ -165,8 +257,9 @@ function showFreeSelect() {
       state.freeChosen.push(key);
       state.freeRemaining = state.freeRemaining.filter((k) => k !== key);
       state.freePicksLeft--;
-      showEvent(data, () => {
+      showEvent(data, sceneFor(key), () => {
         if (state.freePicksLeft > 0) {
+          saveGame();
           showFreeSelect();
         } else {
           if (!state.freeChosen.includes("F5_nishino")) {
@@ -184,7 +277,7 @@ function showFreeSelect() {
 
 /* ---------------- 進行 ---------------- */
 
-function advanceQueue(isResume) {
+function advanceQueue() {
   saveGame();
   if (state.queueIndex >= QUEUE.length) {
     startConfession();
@@ -211,7 +304,16 @@ function advanceQueue(isResume) {
   // E19直前、ライバル度が閾値以上なら割り込みイベント
   if (key === "E19" && state.rival >= GAME_DATA.RIVAL_FAIL_THRESHOLD && !state.rivalInsertShown) {
     state.rivalInsertShown = true;
-    showEvent(GAME_DATA.rivalInsert, () => {
+    saveGame();
+    showEvent(GAME_DATA.rivalInsert, sceneFor("RIVAL"), (choice) => {
+      if (choice.flag === "senshu") {
+        // 先手を打つ: 西野エンドは回避できるが、最後の一日(E19)を捨てることになる
+        state.senshu = true;
+        state.queueIndex = QUEUE.length;
+        saveGame();
+        advanceQueue();
+        return;
+      }
       advanceEventThenNext(key);
     });
     return;
@@ -222,11 +324,9 @@ function advanceQueue(isResume) {
 
 function advanceEventThenNext(key) {
   const eventData = GAME_DATA.events[key];
-  showEvent(eventData, (choice) => {
-    if (GAME_DATA.perfectRoute[key] && choice.id === GAME_DATA.perfectRoute[key]) {
-      state.perfect[key] = true;
-    } else if (GAME_DATA.perfectRoute[key]) {
-      state.perfect[key] = false;
+  showEvent(eventData, sceneFor(key), (choice) => {
+    if (GAME_DATA.perfectRoute[key]) {
+      state.perfect[key] = choice.id === GAME_DATA.perfectRoute[key];
     }
     state.queueIndex++;
     advanceQueue();
@@ -237,21 +337,20 @@ function advanceEventThenNext(key) {
 
 function startConfession() {
   showScreen("screen-confession");
-  const text = GAME_DATA.confessionIntro.replace("{name}", state.name);
-  el("confession-text").innerHTML = text.replace(/\n/g, "<br>");
-  el("btn-confess").onclick = () => {
-    resolveEnding();
-  };
+  applyScene(sceneFor("CONFESSION"));
+  const intro = state.senshu ? GAME_DATA.confessionIntroSenshu : GAME_DATA.confessionIntro;
+  el("confession-text").innerHTML = intro.replace("{name}", state.name).replace(/\n/g, "<br>");
+  el("btn-confess").onclick = () => { resolveEnding(); };
 }
 
 function resolveEnding() {
   let endingKey;
-  if (state.rival >= GAME_DATA.RIVAL_FAIL_THRESHOLD) {
+  if (!state.senshu && state.rival >= GAME_DATA.RIVAL_FAIL_THRESHOLD) {
     endingKey = "nishino";
   } else if (state.score >= GAME_DATA.SUCCESS_THRESHOLD) {
     const allPerfect = Object.keys(GAME_DATA.perfectRoute).every((k) => state.perfect[k]);
     endingKey = allPerfect ? "successPerfect" : "success";
-  } else if (state.score >= 40) {
+  } else if (state.score >= GAME_DATA.FRIEND_THRESHOLD) {
     endingKey = "friend";
   } else {
     endingKey = state.pushyCount > state.passiveCount ? "awkward" : "soretigai";
@@ -262,8 +361,10 @@ function resolveEnding() {
 
   const ending = GAME_DATA.endings[endingKey];
   showScreen("screen-ending");
+  applyScene(GAME_DATA.endingScenes[endingKey]);
   el("ending-title").textContent = ending.title;
   el("ending-text").innerHTML = ending.text.replace(/\n/g, "<br>");
+  window.scrollTo(0, 0);
   el("btn-restart").onclick = () => {
     state = freshState();
     initTitleScreen();
@@ -273,5 +374,6 @@ function resolveEnding() {
 /* ---------------- 起動 ---------------- */
 
 document.addEventListener("DOMContentLoaded", () => {
+  preloadAssets();
   initTitleScreen();
 });
