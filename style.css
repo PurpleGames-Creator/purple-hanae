@@ -74,14 +74,25 @@ body { background: transparent; }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* 狭い画面: 本文の後ろに小さめに立たせる(本文パネルが上に重なる) */
+/* 狭い画面: 全身で立たせると、本文パネルの高さの都合で顔が必ず隠れる。
+   表情差分が唯一のフィードバックなので、顔を切り出した円形にして常に見せる */
 @media (max-width: 1059px) {
   #sprite {
-    right: -6%;
-    height: min(52vh, 420px);
-    height: min(52dvh, 420px);
-    opacity: 0.92;
+    top: 12px;
+    bottom: auto;
+    right: 12px;
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: 50% 6%;
+    background: rgba(24, 16, 34, 0.88);
+    border: 2px solid rgba(255, 143, 177, 0.75);
+    filter: none;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
   }
+  /* 円形アイコンと本文がぶつからないよう頭を空ける */
+  #app { padding-top: 100px; }
 }
 
 /* 広い画面: 本文は左カラム、立ち絵は右に等身大で */
@@ -255,6 +266,15 @@ body { background: transparent; }
   word-break: auto-phrase;
   line-break: strict;
 }
+/* プロローグは本編より少し大きく、行間を広く取って回想の距離感を出す */
+.prologue-text {
+  margin: auto auto 28px;
+  max-width: 560px;
+  font-size: 1.02rem;
+  line-height: 2.15;
+  letter-spacing: 0.02em;
+}
+
 .event-choices {
   display: flex;
   flex-direction: column;

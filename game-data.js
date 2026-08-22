@@ -342,6 +342,7 @@ const GAME_DATA = {
     F5_nishino:  { bg: "bg_gym",       sprite: "summer" },
 
     TITLE:       { bg: "bg_gym_night",    sprite: null },
+    PROLOGUE:    { bg: "bg_ground_night", sprite: null },
     FREE:        { bg: "bg_classroom",    sprite: null },
     RIVAL:       { bg: "bg_gym_night",    sprite: null },
     CONFESSION:  { bg: "bg_ground_night", sprite: "summer" },
@@ -356,6 +357,10 @@ const GAME_DATA = {
     soretigai:      { bg: "bg_ground_night", sprite: null     },
     nishino:        { bg: "bg_ground_night", sprite: null     },
   },
+
+  // 名前入力のあと、E1 の前に一度だけ出す回想フレーム。
+  // 「好感度が見えない」という仕様を、物語の側から説明する役割も持たせている
+  prologue: `これは、俺がまだ何も分かってへんかった頃の話や。\n\n味村ハナエ。\n硬式テニス部の主将で、物言いに容赦がなくて、\nそれでいて、やたらとよう笑うやつやった。\n\n十七歳の夏。\n高校生活、最後の文化祭。\n俺はその実行委員で、たまたま彼女と同じ班になった。\n\n――あの頃、彼女が何を考えてたんか、俺には見えへんかった。\n返ってくる言葉と、その顔だけが、手がかりやった。`,
 
   // タイトル画面のエンディング図鑑に出す順番と短い表示名
   endingOrder: ["success", "successPerfect", "friend", "soretigai", "awkward", "nishino"],

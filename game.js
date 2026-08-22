@@ -277,8 +277,23 @@ function initTitleScreen() {
     state = freshState();
     state.name = nameInput || "あなた";
     saveGame();
-    advanceQueue();
+    showPrologue();
   };
+}
+
+/* ---------------- プロローグ ---------------- */
+
+// 新規プレイの時だけ出す回想フレーム。「つづきから」では出さない
+function showPrologue() {
+  showScreen("screen-prologue");
+  applyScene(sceneFor("PROLOGUE"));
+  const btn = el("btn-prologue-next");
+  btn.style.display = "none";
+  btn.onclick = () => { advanceQueue(); };
+  window.scrollTo(0, 0);
+  typeText(el("prologue-text"), GAME_DATA.prologue, () => {
+    btn.style.display = "block";
+  });
 }
 
 /* ---------------- ハート演出 ---------------- */
@@ -621,7 +636,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initTitleScreen();
   };
   // 本文の表示中はどこをタップしても早送りできる(周回プレイヤーを待たせない)
-  ["screen-event", "screen-confession"].forEach((id) => {
+  ["screen-event", "screen-confession", "screen-prologue"].forEach((id) => {
     el(id).addEventListener("click", (ev) => {
       if (!finishTyping) return;
       if (ev.target.closest("button")) return;
