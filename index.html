@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>センチメンタル・ハナエ</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="heart-layer"></div>
+
+<main id="app">
+
+  <section id="screen-title" class="screen active">
+    <h1 class="game-title">センチメンタル・ハナエ</h1>
+    <p class="subtitle">文化祭実行委員として出会った、味村ハナエへの物語</p>
+    <div class="name-form">
+      <label for="player-name-input">あなたの名前</label>
+      <input type="text" id="player-name-input" maxlength="12" placeholder="名前を入力">
+    </div>
+    <button id="btn-start" class="main-btn">はじめる</button>
+    <button id="btn-continue" class="main-btn secondary">つづきから</button>
+  </section>
+
+  <section id="screen-event" class="screen">
+    <h2 id="event-title" class="event-title"></h2>
+    <div id="event-text" class="event-text"></div>
+    <div id="event-choices" class="event-choices"></div>
+    <div id="event-reaction" class="event-reaction"></div>
+  </section>
+
+  <section id="screen-free" class="screen">
+    <h2 class="event-title">準備期間中、まとまった時間が取れる日</h2>
+    <p id="free-remaining" class="free-remaining"></p>
+    <p class="free-hint">どれか一つを選んでください。選ばなかった行動は、今回は起こりません。</p>
+    <div id="free-list" class="free-list"></div>
+  </section>
+
+  <section id="screen-confession" class="screen">
+    <h2 class="event-title">告白</h2>
+    <div id="confession-text" class="event-text"></div>
+    <button id="btn-confess" class="main-btn">気持ちを伝える</button>
+  </section>
+
+  <section id="screen-ending" class="screen">
+    <h2 id="ending-title" class="ending-title"></h2>
+    <div id="ending-text" class="event-text"></div>
+    <button id="btn-restart" class="main-btn">もう一度プレイする</button>
+  </section>
+
+</main>
+
+<script src="game-data.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
