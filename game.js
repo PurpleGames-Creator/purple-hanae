@@ -136,6 +136,7 @@ function showScreen(id) {
   document.querySelectorAll(".screen").forEach((s) => s.classList.remove("active"));
   el(id).classList.add("active");
   renderHud(id);
+  updateLayout();
 }
 
 /* ---------------- 進行度の表示(HUD) ---------------- */
@@ -226,6 +227,18 @@ function applyScene(scene) {
   if (!scene) return;
   setBackground(scene.bg);
   setSprite(scene.sprite, null);
+  updateLayout();
+}
+
+// 広い画面では、立ち絵が出ている間だけ本文を左カラムに寄せる。
+// 常に寄せるとタイトル画面まで左に偏り、立ち絵の有無で切り替えるだけだと
+// プレイ中に本文の位置が飛ぶので、「プレイ中」も条件に含める
+function updateLayout() {
+  const active = document.querySelector(".screen.active");
+  const id = active ? active.id : "";
+  const playing = id === "screen-event" || id === "screen-free" || id === "screen-confession";
+  const spriteVisible = el("sprite").style.display !== "none";
+  el("app").classList.toggle("col-left", playing || spriteVisible);
 }
 
 function sceneFor(key) {

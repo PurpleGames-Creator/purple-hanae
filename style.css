@@ -110,7 +110,7 @@ body { background: transparent; }
 /* 広い画面では本文を左カラムに寄せて、右側を立ち絵に明け渡す。
    同じ詳細度の #app 指定より後に置くこと(先に書くとカスケードで負ける) */
 @media (min-width: 1060px) {
-  #app { margin-left: max(24px, calc(50vw - 660px)); margin-right: 0; }
+  #app.col-left { margin-left: max(24px, calc(50vw - 660px)); margin-right: 0; }
 }
 /* 立ち絵が下端に立つので、最後の要素が隠れないよう余白を足す */
 @media (max-width: 1059px) {
