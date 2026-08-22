@@ -302,9 +302,60 @@ function playHeartEffect(points) {
   setTimeout(() => { layer.innerHTML = ""; }, 1400);
 }
 
+/* ---------------- 本文の逐次表示 ---------------- */
+
+const TYPE_SPEED_MS = 16;
+
+let typeTimer = null;
+let finishTyping = null; // 表示中に呼ぶと即座に全文表示する
+
+function reduceMotion() {
+  return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+// raw は改行を \n で含む素のテキスト。1文字ずつ出し、タップで即全表示できる
+function typeText(elm, raw, onDone) {
+  clearInterval(typeTimer);
+  const html = raw.replace(/\n/g, "<br>");
+  const done = () => {
+    clearInterval(typeTimer);
+    typeTimer = null;
+    finishTyping = null;
+    elm.innerHTML = html;
+    elm.classList.remove("is-typing");
+    if (onDone) onDone();
+  };
+  if (reduceMotion() || raw.length === 0) {
+    done();
+    return;
+  }
+  // 先に完成形の高さを測って確保しておく。でないと文字が増えるたびに
+  // パネルが伸びて、下にあるものが動き続ける
+  elm.style.minHeight = "";
+  elm.innerHTML = html;
+  elm.style.minHeight = elm.offsetHeight + "px";
+
+  let i = 0;
+  elm.innerHTML = "";
+  elm.classList.add("is-typing");
+  finishTyping = done;
+  typeTimer = setInterval(() => {
+    i += 1;
+    if (i >= raw.length) {
+      done();
+      return;
+    }
+    elm.innerHTML = raw.slice(0, i).replace(/\n/g, "<br>");
+  }, TYPE_SPEED_MS);
+}
+
+function skipTyping() {
+  if (finishTyping) finishTyping();
+}
+
 /* ---------------- イベント表示 ---------------- */
 
-function renderEventText(rawText) {
+function buildEventText(rawText) {
   let text = rawText;
   // 伏線は一度だけ差し込む。毎回付けると同じ一文が終盤まで延々繰り返され、
   // 伏線ではなく表示バグに見える
@@ -312,23 +363,30 @@ function renderEventText(rawText) {
     state.foreshadowShown = true;
     text += GAME_DATA.foreshadowLine;
   }
-  return text.replace(/\n/g, "<br>");
+  return text;
 }
 
 function showEvent(eventData, scene, onChoice) {
   showScreen("screen-event");
   applyScene(scene);
   el("event-title").textContent = eventData.title || "";
-  el("event-text").innerHTML = renderEventText(eventData.text);
   el("event-reaction").innerHTML = "";
   el("event-reaction").style.display = "none";
   const choicesEl = el("event-choices");
   choicesEl.innerHTML = "";
-  choicesEl.style.display = "flex";
+  // 本文を読み終わるまで選択肢は出さない。連打で読み飛ばして誤爆するのを防ぐ
+  choicesEl.style.display = "none";
   window.scrollTo(0, 0);
 
-  // 直前の「つづける」を連打していると、同じ座標に現れた次の選択肢を
-  // そのまま確定してしまう。選択は取り消せないので、描画直後は受け付けない
+  typeText(el("event-text"), buildEventText(eventData.text), () => {
+    renderChoices(eventData, scene, choicesEl, onChoice);
+  });
+}
+
+function renderChoices(eventData, scene, choicesEl, onChoice) {
+  choicesEl.style.display = "flex";
+
+  // 本文を早送りしたタップがそのまま選択肢に流れ込まないよう、描画直後は受け付けない
   choicesEl.classList.add("is-locked");
   clearTimeout(showEvent._unlockTimer);
   showEvent._unlockTimer = setTimeout(() => {
@@ -352,14 +410,20 @@ function showEvent(eventData, scene, onChoice) {
       saveGame();
       playHeartEffect(points);
       if (scene && scene.sprite) setSprite(scene.sprite, exprFor(points, choice.tag));
-      el("event-reaction").style.display = "block";
-      el("event-reaction").innerHTML = choice.reaction ? choice.reaction.replace(/\n/g, "<br>") : "";
-      const nextBtn = document.createElement("button");
-      nextBtn.className = "next-btn";
-      nextBtn.textContent = "つづける";
-      nextBtn.onclick = () => { onChoice(choice); };
-      el("event-reaction").appendChild(document.createElement("br"));
-      el("event-reaction").appendChild(nextBtn);
+
+      const reactionEl = el("event-reaction");
+      reactionEl.style.display = "block";
+      reactionEl.innerHTML = "";
+      const body = document.createElement("div");
+      reactionEl.appendChild(body);
+      typeText(body, choice.reaction || "", () => {
+        const nextBtn = document.createElement("button");
+        nextBtn.className = "next-btn";
+        nextBtn.textContent = "つづける";
+        nextBtn.onclick = () => { onChoice(choice); };
+        reactionEl.appendChild(document.createElement("br"));
+        reactionEl.appendChild(nextBtn);
+      });
     };
     choicesEl.appendChild(btn);
   });
@@ -473,8 +537,13 @@ function startConfession() {
   showScreen("screen-confession");
   applyScene(sceneFor("CONFESSION"));
   const intro = state.senshu ? GAME_DATA.confessionIntroSenshu : GAME_DATA.confessionIntro;
-  el("confession-text").innerHTML = intro.replace("{name}", state.name).replace(/\n/g, "<br>");
-  el("btn-confess").onclick = () => { resolveEnding(); };
+  const btn = el("btn-confess");
+  btn.style.display = "none";
+  btn.onclick = () => { resolveEnding(); };
+  window.scrollTo(0, 0);
+  typeText(el("confession-text"), intro.replace("{name}", state.name), () => {
+    btn.style.display = "block";
+  });
 }
 
 function resolveEnding() {
@@ -520,8 +589,18 @@ document.addEventListener("DOMContentLoaded", () => {
   preloadAssets();
   // 進行はセーブ済みなので、タイトルに戻っても「つづきから」で復帰できる
   el("btn-title").onclick = () => {
+    clearInterval(typeTimer);
+    finishTyping = null;
     saveGame();
     initTitleScreen();
   };
+  // 本文の表示中はどこをタップしても早送りできる(周回プレイヤーを待たせない)
+  ["screen-event", "screen-confession"].forEach((id) => {
+    el(id).addEventListener("click", (ev) => {
+      if (!finishTyping) return;
+      if (ev.target.closest("button")) return;
+      skipTyping();
+    });
+  });
   initTitleScreen();
 });
