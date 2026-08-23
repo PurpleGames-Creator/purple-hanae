@@ -199,6 +199,10 @@ function setBackground(bgName) {
 // 表情差分ファイルがあれば使い、無ければ基本立ち絵にフォールバックする。
 // 追加する場合のファイル名: assets/hanae_summer_<expr>.webp
 // expr = joy / smile / normal / trouble / sad / angry
+// 未作成の表情ファイルを覚えておく。覚えないと、表情が変わるたびに
+// 同じファイルへ404リクエストが飛び続ける
+const missingSprites = new Set();
+
 function setSprite(outfit, expr) {
   const img = el("sprite");
   if (!outfit) {
@@ -208,9 +212,11 @@ function setSprite(outfit, expr) {
     return;
   }
   const base = `${ASSET_DIR}hanae_${outfit}.webp`;
-  const wanted = expr ? `${ASSET_DIR}hanae_${outfit}_${expr}.webp` : base;
+  const variant = expr ? `${ASSET_DIR}hanae_${outfit}_${expr}.webp` : base;
+  const wanted = missingSprites.has(variant) ? base : variant;
   img.onerror = () => {
     img.onerror = null;
+    missingSprites.add(img.getAttribute("src"));
     if (img.getAttribute("src") !== base) img.src = base;
   };
   img.style.display = "block";
@@ -226,7 +232,8 @@ function setSprite(outfit, expr) {
 function applyScene(scene) {
   if (!scene) return;
   setBackground(scene.bg);
-  setSprite(scene.sprite, null);
+  // 場面の入りの表情。重い場面で満面の笑みのまま始まらないようにする
+  setSprite(scene.sprite, scene.expr || null);
   updateLayout();
 }
 
@@ -307,7 +314,8 @@ function heartTier(points) {
   return { count: 1, cls: "heart-shrink", expr: "trouble" };
 }
 
-// 同じ減点でも、無神経な言動(pushy)は怒り、それ以外は落胆として出し分ける
+// 選択肢に expr の指定が無い場合の保険。点数と感情は一致しないので、
+// 本来は game-data.js 側で1件ずつ指定する(現在は全103件に指定済み)
 function exprFor(points, tag) {
   const base = heartTier(points).expr;
   if (points < 0 && tag === "pushy") return "angry";
@@ -458,7 +466,8 @@ function renderChoices(eventData, scene, choicesEl, onChoice) {
       // 選択を確定した時点で保存する(リアクション表示中に閉じても巻き戻らない)
       saveGame();
       playHeartEffect(points);
-      if (scene && scene.sprite) setSprite(scene.sprite, exprFor(points, choice.tag));
+      // 表情は選択肢ごとの指定を最優先する。点数からの自動判定は指定漏れの保険
+      if (scene && scene.sprite) setSprite(scene.sprite, choice.expr || exprFor(points, choice.tag));
 
       const reactionEl = el("event-reaction");
       reactionEl.style.display = "block";

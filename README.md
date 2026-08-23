@@ -37,22 +37,31 @@
 
 ## 立ち絵の表情差分を追加する
 
-立ち絵は**背景透過の全身像**で、画面下端に立たせている。現在は笑顔1種のみ。
-以下のファイル名で `assets/` に置くと、エンジンが自動で使い分ける
-(ファイルが無ければ `hanae_summer.webp` にフォールバックするので、1枚ずつ足してよい)。
+立ち絵は**背景透過の全身像**。広い画面(1060px以上)は画面下端に全身で立たせ、
+狭い画面は顔を切り出した円形アイコンにする。
 
-| ファイル名 | 使われる場面 |
-|---|---|
-| `hanae_summer_joy.webp` | 好感度 +4 以上(ハート3つ) |
-| `hanae_summer_smile.webp` | +1〜+3 |
-| `hanae_summer_normal.webp` | ±0 |
-| `hanae_summer_trouble.webp` | -1〜-2 |
-| `hanae_summer_sad.webp` | 減点、かつ無神経ではない選択(落胆) |
-| `hanae_summer_angry.webp` | 減点、かつ `tag:"pushy"` の選択(怒り) |
+**表情は選択肢ごとに `game-data.js` の `expr` で指定済み**(全103選択肢)。
+点数から自動で決めると本文と2割ずれるため、リアクション本文を読んで1件ずつ割り当ててある。
 
-**冬服の差分は不要**(パーフェクトエピローグの1シーンにしか出ないため)。
+以下のファイル名で `assets/` に置くと自動で使われる。無ければ `hanae_summer.webp`
+にフォールバックするので、**1枚ずつ足していける**(未作成のファイルは一度だけ問い合わせて記憶する)。
 
-元画像は `_source/` に置く。透過とwebp変換の手順は `_source/README.md` を参照。
+| ファイル名 | 表情 | 出番 |
+|---|---|---|
+| `hanae_summer.webp` | 普通の笑顔(提供済み・ベース) | 11回 |
+| `hanae_summer_normal.webp` | 真顔〜わずかな微笑み | 21回 |
+| `hanae_summer_soft.webp` | 静かに心を許した顔。笑っていないが柔らかい | 17回 |
+| `hanae_summer_trouble.webp` | 困り顔・苦笑い | 16回 |
+| `hanae_summer_lonely.webp` | 寂しげ。笑っていない、視線が落ちる | 12回 |
+| `hanae_summer_angry.webp` | ムッとした顔。怒鳴ってはいない | 10回 |
+| `hanae_summer_surprise.webp` | 目を見開いた驚き | 6回 |
+| `hanae_summer_shy.webp` | 照れ。頬に赤み、目を逸らす | 6回 |
+| `hanae_summer_joy.webp` | 満面の笑み | 3回 |
+| `hanae_summer_cry.webp` | 泣きそう。目が潤む | 1回 |
+
+冬服は `hanae_winter_soft.webp` の1枚だけあればよい(パーフェクトエピローグ専用)。
+
+場面の入りの表情は `game-data.js` の `scenes` / `endingScenes` の `expr` で指定する。
 
 ## 登場人物
 
