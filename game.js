@@ -4,6 +4,10 @@
 
 const SAVE_KEY = "sentimentalHanaeSave";
 const ASSET_DIR = "assets/";
+// 画像にもキャッシュバスターを付ける。付けないと、後から表情を差し替えたり
+// 追加したりした時に、古い画像や過去の404がブラウザに残り続ける。
+// index.html の ?v= と同じ数字に揃えること
+const ASSET_V = "?v=16";
 
 // 選択肢を描画してから受け付けるまでの猶予(誤タップ防止)と、1つずつ現れる間隔
 const CHOICE_LOCK_MS = 320;
@@ -188,7 +192,7 @@ function setBackground(bgName) {
     return;
   }
   // 裏のレイヤーに新しい背景を載せてからフェードイン、表側を落とす
-  back.style.backgroundImage = `url("${ASSET_DIR}${bgName}.webp")`;
+  back.style.backgroundImage = `url("${ASSET_DIR}${bgName}.webp${ASSET_V}")`;
   void back.offsetWidth;
   back.classList.add("bg-show");
   front.classList.remove("bg-show");
@@ -202,6 +206,9 @@ function setBackground(bgName) {
 // 未作成の表情ファイルを覚えておく。覚えないと、表情が変わるたびに
 // 同じファイルへ404リクエストが飛び続ける
 const missingSprites = new Set();
+
+// ベース立ち絵が担っている表情。専用ファイルを持たず hanae_<outfit>.webp を使う
+const BASE_EXPR = "smile";
 
 const SPRITE_FADE_MS = 180;
 let spriteFadeToken = 0;
@@ -219,8 +226,10 @@ function setSprite(outfit, expr) {
     currentOutfit = null;
     return;
   }
-  const base = `${ASSET_DIR}hanae_${outfit}.webp`;
-  const variant = expr ? `${ASSET_DIR}hanae_${outfit}_${expr}.webp` : base;
+  const base = `${ASSET_DIR}hanae_${outfit}.webp${ASSET_V}`;
+  // ベース画像そのものが smile なので、専用ファイルは持たない
+  const variant =
+    expr && expr !== BASE_EXPR ? `${ASSET_DIR}hanae_${outfit}_${expr}.webp${ASSET_V}` : base;
   const wanted = missingSprites.has(variant) ? base : variant;
   const current = img.getAttribute("src");
   img.style.display = "block";
@@ -262,9 +271,10 @@ async function crossfadeSprite(wanted, base) {
   try {
     await alt.decode();
   } catch (e) {
-    // 差分ファイルが無かった。以後この表情は問い合わせない
-    missingSprites.add(wanted);
+    // decode() は「読み込み失敗」でも「差し替えが重なって打ち切られた」でも失敗する。
+    // 後者をファイル無しと誤判定すると、以降その表情が二度と使われなくなる
     if (token !== spriteFadeToken) return;
+    if (alt.naturalWidth === 0) missingSprites.add(wanted);
     if (wanted !== base && img.getAttribute("src") !== base) {
       crossfadeSprite(base, base);
     } else {
@@ -317,8 +327,8 @@ function preloadAssets() {
   const names = new Set();
   Object.values(GAME_DATA.scenes).forEach((s) => { if (s.bg) names.add(s.bg); });
   Object.values(GAME_DATA.endingScenes).forEach((s) => { if (s.bg) names.add(s.bg); });
-  names.forEach((n) => { new Image().src = `${ASSET_DIR}${n}.webp`; });
-  ["summer", "winter"].forEach((o) => { new Image().src = `${ASSET_DIR}hanae_${o}.webp`; });
+  names.forEach((n) => { new Image().src = `${ASSET_DIR}${n}.webp${ASSET_V}`; });
+  ["summer", "winter"].forEach((o) => { new Image().src = `${ASSET_DIR}hanae_${o}.webp${ASSET_V}`; });
 }
 
 // 表情差分は枚数が多く、まとめて起動時に読むとタイトルの表示が遅れる。
@@ -339,7 +349,7 @@ function preloadExpressions() {
   };
   const next = () => {
     if (i >= PRELOAD_EXPRESSIONS.length) return;
-    const url = `${ASSET_DIR}${PRELOAD_EXPRESSIONS[i++]}.webp`;
+    const url = `${ASSET_DIR}${PRELOAD_EXPRESSIONS[i++]}.webp${ASSET_V}`;
     const img = new Image();
     img.onload = () => idle(next);
     img.onerror = () => {

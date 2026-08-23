@@ -72,6 +72,11 @@ ffmpeg -y -i aligned.png -c:v libwebp -pix_fmt yuva420p -quality 88 assets/hanae
 | joy | 0.9103 | 0.628 | +1 | 0.5px |
 
 夏服10種の一覧は `_source/expression_sheet.png`。
+プロンプト集と手順は `_source/expression_prompts.md`(ストーリー追加時はこれを見る)。
+
+> [!important] 画像を差し替えたら `game.js` の `ASSET_V` を上げる
+> 画像URLにキャッシュバスターを付けている。上げ忘れると、差し替えても
+> ユーザーのブラウザには古い画像が出続ける。`index.html` の `?v=` と同じ数字に揃える。
 
 位置合わせの精度は、全表情の「目の高さ」を測ると 171.3〜172.4px に収まっている(ズレ1px以内)。
 
