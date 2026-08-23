@@ -312,12 +312,43 @@ function sceneFor(key) {
   return GAME_DATA.scenes[key] || null;
 }
 
+// 起動時に読むのは、すぐ必要になる背景とベース立ち絵だけ
 function preloadAssets() {
   const names = new Set();
   Object.values(GAME_DATA.scenes).forEach((s) => { if (s.bg) names.add(s.bg); });
   Object.values(GAME_DATA.endingScenes).forEach((s) => { if (s.bg) names.add(s.bg); });
   names.forEach((n) => { new Image().src = `${ASSET_DIR}${n}.webp`; });
   ["summer", "winter"].forEach((o) => { new Image().src = `${ASSET_DIR}hanae_${o}.webp`; });
+}
+
+// 表情差分は枚数が多く、まとめて起動時に読むとタイトルの表示が遅れる。
+// タイトルを出した後、暇な時に1枚ずつ読む。プレイ開始までには揃う。
+// 併せて、存在しない表情をここで記憶しておくので、本編中に404が飛ばなくなる
+const PRELOAD_EXPRESSIONS = [
+  "hanae_summer_normal", "hanae_summer_soft", "hanae_summer_trouble",
+  "hanae_summer_lonely", "hanae_summer_angry", "hanae_summer_surprise",
+  "hanae_summer_shy", "hanae_summer_joy", "hanae_summer_cry",
+  "hanae_winter_soft",
+];
+
+function preloadExpressions() {
+  let i = 0;
+  const idle = (fn) => {
+    if (window.requestIdleCallback) window.requestIdleCallback(fn, { timeout: 2000 });
+    else setTimeout(fn, 120);
+  };
+  const next = () => {
+    if (i >= PRELOAD_EXPRESSIONS.length) return;
+    const url = `${ASSET_DIR}${PRELOAD_EXPRESSIONS[i++]}.webp`;
+    const img = new Image();
+    img.onload = () => idle(next);
+    img.onerror = () => {
+      missingSprites.add(url);
+      idle(next);
+    };
+    img.src = url;
+  };
+  idle(next);
 }
 
 /* ---------------- タイトル ---------------- */
@@ -360,7 +391,7 @@ function showPrologue() {
   window.scrollTo(0, 0);
   typeText(el("prologue-text"), GAME_DATA.prologue, () => {
     btn.style.display = "block";
-  });
+  }, "prologue");
 }
 
 /* ---------------- ハート演出 ---------------- */
@@ -415,6 +446,52 @@ function playHeartEffect(points) {
 
 const TYPE_SPEED_MS = 16;
 
+// 既読テキストは逐次表示しない。1周で約100タップ・本文6000字あり、
+// 図鑑を埋めるには何周も必要なので、2周目以降の待ち時間が体験を殺す
+const READ_KEY = "sentimentalHanaeRead";
+const SPEED_KEY = "sentimentalHanaeSpeed";
+
+let readSet = (() => {
+  try {
+    const a = JSON.parse(localStorage.getItem(READ_KEY) || "[]");
+    return new Set(Array.isArray(a) ? a : []);
+  } catch (e) {
+    return new Set();
+  }
+})();
+
+// "type" = 逐次表示(既定) / "instant" = 常に即時表示
+let textSpeed = (() => {
+  try {
+    return localStorage.getItem(SPEED_KEY) === "instant" ? "instant" : "type";
+  } catch (e) {
+    return "type";
+  }
+})();
+
+function markRead(key) {
+  if (!key || readSet.has(key)) return;
+  readSet.add(key);
+  try {
+    localStorage.setItem(READ_KEY, JSON.stringify([...readSet]));
+  } catch (e) {
+    /* 保存できなくても進行に影響させない */
+  }
+}
+
+function toggleTextSpeed() {
+  textSpeed = textSpeed === "instant" ? "type" : "instant";
+  try { localStorage.setItem(SPEED_KEY, textSpeed); } catch (e) {}
+  renderSpeedLabel();
+}
+
+function renderSpeedLabel() {
+  const btn = el("btn-speed");
+  if (!btn) return;
+  btn.textContent = textSpeed === "instant" ? "文字送り: 即時" : "文字送り: 逐次";
+  btn.setAttribute("aria-pressed", textSpeed === "instant" ? "true" : "false");
+}
+
 let typeTimer = null;
 let finishTyping = null; // 表示中に呼ぶと即座に全文表示する
 
@@ -423,7 +500,7 @@ function reduceMotion() {
 }
 
 // raw は改行を \n で含む素のテキスト。1文字ずつ出し、タップで即全表示できる
-function typeText(elm, raw, onDone) {
+function typeText(elm, raw, onDone, readKey) {
   clearInterval(typeTimer);
   const html = raw.replace(/\n/g, "<br>");
   const done = () => {
@@ -432,9 +509,13 @@ function typeText(elm, raw, onDone) {
     finishTyping = null;
     elm.innerHTML = html;
     elm.classList.remove("is-typing");
+    markRead(readKey);
     if (onDone) onDone();
   };
-  if (reduceMotion() || raw.length === 0) {
+  // 既読・即時設定・アニメーション低減のいずれかなら、待たせずに全文を出す
+  const instant =
+    reduceMotion() || textSpeed === "instant" || (readKey && readSet.has(readKey));
+  if (instant || raw.length === 0) {
     done();
     return;
   }
@@ -475,7 +556,7 @@ function buildEventText(rawText) {
   return text;
 }
 
-function showEvent(eventData, scene, onChoice) {
+function showEvent(key, eventData, scene, onChoice) {
   showScreen("screen-event");
   applyScene(scene);
   el("event-title").textContent = eventData.title || "";
@@ -488,11 +569,11 @@ function showEvent(eventData, scene, onChoice) {
   window.scrollTo(0, 0);
 
   typeText(el("event-text"), buildEventText(eventData.text), () => {
-    renderChoices(eventData, scene, choicesEl, onChoice);
-  });
+    renderChoices(key, eventData, scene, choicesEl, onChoice);
+  }, "t:" + key);
 }
 
-function renderChoices(eventData, scene, choicesEl, onChoice) {
+function renderChoices(key, eventData, scene, choicesEl, onChoice) {
   choicesEl.innerHTML = "";
   choicesEl.style.display = "flex";
 
@@ -555,12 +636,12 @@ function renderChoices(eventData, scene, choicesEl, onChoice) {
           reactionEl.style.display = "none";
           reactionEl.innerHTML = "";
           if (scene && scene.sprite) setSprite(scene.sprite, null);
-          renderChoices(eventData, scene, choicesEl, onChoice);
+          renderChoices(key, eventData, scene, choicesEl, onChoice);
         };
         row.appendChild(undoBtn);
 
         reactionEl.appendChild(row);
-      });
+      }, "r:" + key + ":" + choice.id);
     };
     choicesEl.appendChild(btn);
   });
@@ -592,7 +673,7 @@ function showFreeSelect() {
       state.freeChosen.push(key);
       state.freeRemaining = state.freeRemaining.filter((k) => k !== key);
       state.freePicksLeft--;
-      showEvent(data, sceneFor(key), () => {
+      showEvent(key, data, sceneFor(key), () => {
         if (state.freePicksLeft > 0) {
           saveGame();
           showFreeSelect();
@@ -640,7 +721,7 @@ function advanceQueue() {
   if (key === "E19" && state.rival >= GAME_DATA.RIVAL_FAIL_THRESHOLD && !state.rivalInsertShown) {
     state.rivalInsertShown = true;
     saveGame();
-    showEvent(GAME_DATA.rivalInsert, sceneFor("RIVAL"), (choice) => {
+    showEvent("RIVAL", GAME_DATA.rivalInsert, sceneFor("RIVAL"), (choice) => {
       if (choice.flag === "senshu") {
         // 先手を打つ: 西野エンドは回避できるが、最後の一日(E19)を捨てることになる
         state.senshu = true;
@@ -659,7 +740,7 @@ function advanceQueue() {
 
 function advanceEventThenNext(key) {
   const eventData = GAME_DATA.events[key];
-  showEvent(eventData, sceneFor(key), (choice) => {
+  showEvent(key, eventData, sceneFor(key), (choice) => {
     if (GAME_DATA.perfectRoute[key]) {
       state.perfect[key] = choice.id === GAME_DATA.perfectRoute[key];
     }
@@ -680,7 +761,7 @@ function startConfession() {
   window.scrollTo(0, 0);
   typeText(el("confession-text"), intro.replace("{name}", state.name), () => {
     btn.style.display = "block";
-  });
+  }, state.senshu ? "confession:senshu" : "confession");
 }
 
 function resolveEnding() {
@@ -724,7 +805,10 @@ function resolveEnding() {
 
 document.addEventListener("DOMContentLoaded", () => {
   preloadAssets();
+  preloadExpressions();
   // 進行はセーブ済みなので、タイトルに戻っても「つづきから」で復帰できる
+  el("btn-speed").onclick = toggleTextSpeed;
+  renderSpeedLabel();
   el("btn-title").onclick = () => {
     clearInterval(typeTimer);
     finishTyping = null;

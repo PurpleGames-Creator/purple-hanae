@@ -15,7 +15,7 @@
 <meta property="og:image" content="https://purplegames-creator.github.io/purple-hanae/assets/ogp.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💗</text></svg>">
-<link rel="stylesheet" href="style.css?v=14">
+<link rel="stylesheet" href="style.css?v=15">
 </head>
 <body>
 
@@ -31,7 +31,10 @@
   <div id="hud" class="hud">
     <div class="hud-row">
       <span id="hud-progress" class="hud-progress"></span>
-      <button id="btn-title" class="link-btn" type="button">タイトルへ</button>
+      <span class="hud-actions">
+        <button id="btn-speed" class="link-btn" type="button" aria-pressed="false">文字送り: 逐次</button>
+        <button id="btn-title" class="link-btn" type="button">タイトルへ</button>
+      </span>
     </div>
     <div class="hud-bar"><span id="hud-bar-fill"></span></div>
   </div>
@@ -85,7 +88,7 @@
 
 </main>
 
-<script src="game-data.js?v=14"></script>
-<script src="game.js?v=14"></script>
+<script src="game-data.js?v=15"></script>
+<script src="game.js?v=15"></script>
 </body>
 </html>
