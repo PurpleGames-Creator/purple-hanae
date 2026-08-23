@@ -65,6 +65,7 @@ ffmpeg -y -i aligned.png -c:v libwebp -pix_fmt yuva420p -quality 88 assets/hanae
 | lonely | 0.9211 | 0.632 | +1 | 0.0px |
 | angry | 0.9174 | 0.630 | +1 | 0.5px |
 | shy | 0.9067 | 0.648 | +0 | 1.0px |
+| soft | 0.9126 | 0.628 | +0 | 0.0px |
 
 倍率が毎回大きく違う(0.69 / 0.63)ことから分かるとおり、ChatGPT は指示しても
 構図を揃えてくれない。位置合わせは必須。
