@@ -203,30 +203,90 @@ function setBackground(bgName) {
 // 同じファイルへ404リクエストが飛び続ける
 const missingSprites = new Set();
 
+const SPRITE_FADE_MS = 180;
+let spriteFadeToken = 0;
+
 function setSprite(outfit, expr) {
   const img = el("sprite");
+  const alt = el("sprite-b");
   if (!outfit) {
+    spriteFadeToken++;
     img.style.display = "none";
+    alt.style.display = "none";
+    alt.classList.remove("is-shown");
     img.removeAttribute("src");
+    alt.removeAttribute("src");
     currentOutfit = null;
     return;
   }
   const base = `${ASSET_DIR}hanae_${outfit}.webp`;
   const variant = expr ? `${ASSET_DIR}hanae_${outfit}_${expr}.webp` : base;
   const wanted = missingSprites.has(variant) ? base : variant;
-  img.onerror = () => {
-    img.onerror = null;
-    missingSprites.add(img.getAttribute("src"));
-    if (img.getAttribute("src") !== base) img.src = base;
-  };
+  const current = img.getAttribute("src");
   img.style.display = "block";
-  if (img.getAttribute("src") !== wanted) img.src = wanted;
-  if (outfit !== currentOutfit) {
+
+  // 初回、または服が変わる時はクロスフェードしない。
+  // 夏服と冬服はシルエットが違うので、溶かすと二重写しに見える
+  if (!current || outfit !== currentOutfit) {
+    spriteFadeToken++;
+    alt.style.display = "none";
+    alt.classList.remove("is-shown");
+    img.onerror = () => {
+      img.onerror = null;
+      missingSprites.add(img.getAttribute("src"));
+      if (img.getAttribute("src") !== base) img.src = base;
+    };
+    img.src = wanted;
     currentOutfit = outfit;
     img.classList.remove("sprite-in");
     void img.offsetWidth;
     img.classList.add("sprite-in");
+    return;
   }
+
+  if (current === wanted) return;
+  crossfadeSprite(wanted, base);
+}
+
+// 表情の切り替え。裏のレイヤーに次の表情を読み込んでから重ねて溶かす。
+// 表情差分はすべて同じポーズ・同じシルエットなので、顔だけが変化して見える
+async function crossfadeSprite(wanted, base) {
+  const img = el("sprite");
+  const alt = el("sprite-b");
+  const token = ++spriteFadeToken;
+
+  alt.style.display = "block";
+  alt.classList.remove("is-shown");
+  alt.src = wanted;
+
+  try {
+    await alt.decode();
+  } catch (e) {
+    // 差分ファイルが無かった。以後この表情は問い合わせない
+    missingSprites.add(wanted);
+    if (token !== spriteFadeToken) return;
+    if (wanted !== base && img.getAttribute("src") !== base) {
+      crossfadeSprite(base, base);
+    } else {
+      alt.classList.remove("is-shown");
+      alt.style.display = "none";
+    }
+    return;
+  }
+  if (token !== spriteFadeToken) return;
+
+  void alt.offsetWidth;
+  alt.classList.add("is-shown");
+
+  setTimeout(() => {
+    if (token !== spriteFadeToken) return;
+    // 表側を新しい表情に差し替えてから裏を落とす(復号済みなので瞬時)
+    img.src = alt.getAttribute("src");
+    alt.classList.remove("is-shown");
+    setTimeout(() => {
+      if (token === spriteFadeToken) alt.style.display = "none";
+    }, SPRITE_FADE_MS + 40);
+  }, SPRITE_FADE_MS + 10);
 }
 
 function applyScene(scene) {

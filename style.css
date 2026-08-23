@@ -61,7 +61,7 @@ body { background: transparent; }
 /* ---------------- 立ち絵 ---------------- */
 
 /* 透過PNG由来の全身立ち絵。額装せず、画面下端に立たせる */
-#sprite {
+.sprite {
   position: fixed;
   display: none;
   bottom: 0;
@@ -71,16 +71,25 @@ body { background: transparent; }
   /* 背景となじませる影。box-shadow だと矩形に影が出るので filter を使う */
   filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.55));
 }
-#sprite.sprite-in { animation: spriteIn 0.5s ease-out; }
+.sprite.sprite-in { animation: spriteIn 0.5s ease-out; }
 @keyframes spriteIn {
   from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* 表情の切り替え用。裏のレイヤーに次の表情を載せて重ね、180msで溶かす。
+   差分はすべて同じポーズ・同じシルエットなので、顔だけが変化して見える */
+#sprite-b {
+  opacity: 0;
+  transition: opacity 0.18s ease-out;
+  z-index: 1;
+}
+#sprite-b.is-shown { opacity: 1; }
+
 /* 狭い画面: 全身で立たせると、本文パネルの高さの都合で顔が必ず隠れる。
    表情差分が唯一のフィードバックなので、顔を切り出した円形にして常に見せる */
 @media (max-width: 1059px) {
-  #sprite {
+  .sprite {
     top: 12px;
     bottom: auto;
     right: 12px;
@@ -100,7 +109,7 @@ body { background: transparent; }
 
 /* 広い画面: 本文は左カラム、立ち絵は右に等身大で */
 @media (min-width: 1060px) {
-  #sprite {
+  .sprite {
     right: max(16px, calc(50vw - 680px));
     height: min(94vh, 960px);
     height: min(94dvh, 960px);
@@ -514,7 +523,8 @@ body { background: transparent; }
 
 @media (prefers-reduced-motion: reduce) {
   .bg-layer { transition: none; }
-  #sprite.sprite-in { animation: none; }
+  .sprite.sprite-in { animation: none; }
+  #sprite-b { transition: none; }
   .choice-btn { animation: none; }
   /* 本作は好感度を非公開にしており、ハートが唯一のフィードバック。
      消すと選択の良し悪しを知る手段が無くなるので、動きだけ止めて静止表示する */
