@@ -67,6 +67,7 @@ ffmpeg -y -i aligned.png -c:v libwebp -pix_fmt yuva420p -quality 88 assets/hanae
 | shy | 0.9067 | 0.648 | +0 | 1.0px |
 | soft | 0.9126 | 0.628 | +0 | 0.0px |
 | normal | 0.9035 | 0.636 | +0 | 0.0px |
+| surprise | 0.9044 | 0.624 | +1 | 1.5px |
 
 位置合わせの精度は、全表情の「目の高さ」を測ると 171.3〜172.4px に収まっている(ズレ1px以内)。
 
