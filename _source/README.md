@@ -36,8 +36,25 @@ ffmpeg -y -i _source/bg_kyoshitsu.png -vf "scale=1280:720" -c:v libwebp -quality
 ffmpeg -y -i cut.png -c:v libwebp -quality 92 assets/hanae_summer.webp
 ```
 
-立ち絵の背景透過は `rembg`(anime向けモデル)で行う。
+## 表情差分の作り方(1枚ずつ)
+
+ChatGPT に作らせる場合、**毎回わずかに違う構図・大きさで描かれる**。そのまま並べると
+クロスフェードで顔が飛ぶので、必ず位置合わせを通すこと。
 
 ```bash
-uvx --from "rembg[cli,cpu]" rembg i -m isnet-anime 入力.png 出力.png
+# 1) ChatGPT の出力を _source に置く(参照画像は _source/ref_hanae_summer.png)
+
+# 2) 背景を透過
+uvx --from "rembg[cli,cpu]" rembg i -m isnet-anime _source/xxx.png cut.png
+
+# 3) ベース画像へ位置合わせ(頭の位置と、上半身シルエットの一致度で倍率を決める)
+uv run --with pillow --with numpy python _source/align_sprite.py cut.png aligned.png
+
+# 4) webp 化して配置
+ffmpeg -y -i aligned.png -c:v libwebp -pix_fmt yuva420p -quality 88 assets/hanae_summer_<expr>.webp
 ```
+
+`align_sprite.py` は最後に「上半身シルエット IoU」を表示する。**0.90 未満なら警告が出る**ので、
+その場合はポーズか構図が元画像と違っている。作り直した方が早い。
+
+実績: trouble は IoU 0.9255、頭頂ぴったり、頭の中心のズレ 2.5px。
