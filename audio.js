@@ -9,16 +9,16 @@
 const AUDIO = (() => {
   const BGM_DIR = "assets/bgm/";
   // index.html の ?v= と同じ数字に揃えること
-  const BGM_V = "?v=21";
+  const BGM_V = "?v=22";
   const MUTE_KEY = "sentimentalHanaeMuted";
 
   const FADE_MS = 900;
   const FADE_STEP_MS = 40;
 
   // BGM 全体の音量。**ここ1箇所で全曲まとめて上下できる。**
-  // 本作は文字送りの音とハナエの反応が主役なので、曲は「ほんの少し聞こえる」
-  // くらいに留める(2026-08-25 本人指示)
-  const BGM_MASTER = 0.2;
+  // 本作は文字送りの音とハナエの反応が主役なので、曲は「かすかに聞こえる」
+  // くらいに留める(2026-08-26 本人指示。0.5 → 0.2 → 0.07 と2段階下げた)
+  const BGM_MASTER = 0.07;
 
   // 曲ごとの基準音量。BGM_MASTER を掛けた値が実際の音量になる。
   // 「静かな場面」を意図的に小さくするための相対差で、素材そのものの音量差では
