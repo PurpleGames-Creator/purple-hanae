@@ -9,14 +9,20 @@
 const AUDIO = (() => {
   const BGM_DIR = "assets/bgm/";
   // index.html の ?v= と同じ数字に揃えること
-  const BGM_V = "?v=18";
+  const BGM_V = "?v=19";
   const MUTE_KEY = "sentimentalHanaeMuted";
 
   const FADE_MS = 900;
   const FADE_STEP_MS = 40;
 
-  // 曲ごとの基準音量。「静かな場面」を意図的に小さくするための差で、
-  // 素材そのものの音量差ではない(素材は全曲 -16 LUFS に揃えてある)
+  // BGM 全体の音量。**ここ1箇所で全曲まとめて上下できる。**
+  // 本作は文字送りの音とハナエの反応が主役なので、曲は「ほんの少し聞こえる」
+  // くらいに留める(2026-08-25 本人指示)
+  const BGM_MASTER = 0.2;
+
+  // 曲ごとの基準音量。BGM_MASTER を掛けた値が実際の音量になる。
+  // 「静かな場面」を意図的に小さくするための相対差で、素材そのものの音量差では
+  // ない(素材は全曲 -16 LUFS に揃えてある)
   const TRACKS = {
     title: { file: "title", vol: 0.55 },
     daily1: { file: "daily1", vol: 0.5 },
@@ -66,7 +72,7 @@ const AUDIO = (() => {
   function targetVolume(key) {
     if (muted) return 0;
     const track = TRACKS[key];
-    return track ? track.vol : 0.5;
+    return (track ? track.vol : 0.5) * BGM_MASTER;
   }
 
   function clearFade() {
@@ -115,7 +121,13 @@ const AUDIO = (() => {
     }
     el.volume = 0;
     const p = el.play();
-    if (p && p.catch) p.catch((err) => { lastError = err && err.name; });
+    // AbortError は曲を切り替えた時に前の play() が打ち切られただけで、異常ではない。
+    // 実機の切り分けを濁らせるので記録しない
+    if (p && p.catch) {
+      p.catch((err) => {
+        if (err && err.name !== "AbortError") lastError = err.name;
+      });
+    }
     crossfade(el, key, fadeMs === undefined ? FADE_MS : fadeMs);
   }
 
