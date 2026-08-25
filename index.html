@@ -15,7 +15,8 @@
 <meta property="og:image" content="https://purplegames-creator.github.io/purple-hanae/assets/ogp.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💗</text></svg>">
-<link rel="stylesheet" href="style.css?v=16">
+<link rel="preload" as="image" href="assets/logo_title.webp?v=17">
+<link rel="stylesheet" href="style.css?v=17">
 </head>
 <body>
 
@@ -33,6 +34,7 @@
       <span id="hud-progress" class="hud-progress"></span>
       <span class="hud-actions">
         <button id="btn-speed" class="link-btn" type="button" aria-pressed="false">文字送り: 逐次</button>
+        <button id="btn-log" class="link-btn" type="button">これまで</button>
         <button id="btn-title" class="link-btn" type="button">タイトルへ</button>
       </span>
     </div>
@@ -40,7 +42,10 @@
   </div>
 
   <section id="screen-title" class="screen active">
-    <h1 class="game-title">センチメンタル・ハナエ</h1>
+    <h1 class="game-title">
+      <img class="game-logo" src="assets/logo_title.webp?v=17" width="960" height="463"
+           alt="センチメンタル・ハナエ" fetchpriority="high" decoding="async">
+    </h1>
     <p class="subtitle">文化祭実行委員として出会った、味村ハナエへの物語</p>
     <div class="name-form">
       <label for="player-name-input">あなたの名前</label>
@@ -88,7 +93,18 @@
 
 </main>
 
-<script src="game-data.js?v=16"></script>
-<script src="game.js?v=16"></script>
+<div id="log-overlay" class="log-overlay" role="dialog" aria-modal="true"
+     aria-labelledby="log-heading" aria-hidden="true">
+  <div class="log-panel">
+    <div class="log-head">
+      <h2 id="log-heading" class="log-heading">これまでの話</h2>
+      <button id="btn-log-close" class="link-btn" type="button">閉じる</button>
+    </div>
+    <div id="log-body" class="log-body" tabindex="0"></div>
+  </div>
+</div>
+
+<script src="game-data.js?v=17"></script>
+<script src="game.js?v=17"></script>
 </body>
 </html>

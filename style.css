@@ -103,8 +103,9 @@ body { background: transparent; }
     filter: none;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
   }
-  /* 円形アイコンと本文がぶつからないよう頭を空ける */
-  #app { padding-top: 100px; }
+  /* 円形アイコンと本文がぶつからないよう頭を空ける。
+     立ち絵が出ていない画面(タイトル等)まで空けると、ロゴが下に落ちる */
+  #app.sprite-on { padding-top: 100px; }
 }
 
 /* 広い画面: 本文は左カラム、立ち絵は右に等身大で */
@@ -153,8 +154,11 @@ body { background: transparent; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 4px 12px;
   margin-bottom: 6px;
+  /* ボタンが3つあり、375px 幅では1行に収まらない。
+     縮めずに折り返す(縮めると横スクロールが出る) */
+  flex-wrap: wrap;
 }
 .hud-progress {
   color: var(--text-dim);
@@ -180,6 +184,7 @@ body { background: transparent; }
   align-items: center;
   gap: 4px;
   flex-shrink: 0;
+  margin-left: auto;
 }
 .hud-bar {
   height: 3px;
@@ -198,13 +203,18 @@ body { background: transparent; }
 
 /* ---------------- タイトル ---------------- */
 
+/* タイトルは画像のロゴ。h1 のテキストは残さず alt に持たせている */
 .game-title {
-  font-size: 2.2rem;
+  margin: 32px 0 10px;
   text-align: center;
-  margin: 40px 0 6px;
-  letter-spacing: 0.05em;
-  color: var(--accent);
-  text-shadow: 0 0 18px rgba(255, 92, 138, 0.5), 0 2px 12px rgba(0, 0, 0, 0.8);
+}
+.game-logo {
+  display: block;
+  width: min(88%, 460px);
+  height: auto;
+  margin: 0 auto;
+  /* ロゴ自体が縁取りを持っているので、影は接地感を出す程度に留める */
+  filter: drop-shadow(0 6px 22px rgba(0, 0, 0, 0.55));
 }
 .subtitle {
   text-align: center;
@@ -212,6 +222,8 @@ body { background: transparent; }
   margin-bottom: 36px;
   font-size: 0.9rem;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+  /* 狭い画面で「語」だけが2行目に落ちるのを防ぐ */
+  word-break: auto-phrase;
 }
 .title-note {
   text-align: center;
@@ -219,6 +231,7 @@ body { background: transparent; }
   font-size: 0.8rem;
   margin-top: 24px;
   line-height: 1.7;
+  word-break: auto-phrase;
 }
 .name-form {
   display: flex;
@@ -544,7 +557,92 @@ body { background: transparent; }
 }
 
 @media (max-width: 420px) {
-  .game-title { font-size: 1.7rem; }
-  #app { padding: 24px 14px 96px; }
+  .game-title { margin-top: 20px; }
+  /* padding の一括指定にすると、上で入れた padding-top: 100px を打ち消して
+     立ち絵の円形アイコンが HUD に重なる。左右下だけを上書きする */
+  #app { padding-left: 14px; padding-right: 14px; padding-bottom: 96px; }
   .event-text { padding: 16px; }
+}
+
+/* ---------------- バックログ(これまでの話) ---------------- */
+
+/* #app の外に置いてある。中に入れると、本文の早送りタップを拾ってしまう */
+.log-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(12, 8, 18, 0.78);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  padding: 20px 16px;
+}
+.log-overlay.is-open { display: flex; }
+
+.log-panel {
+  margin: auto;
+  width: 100%;
+  max-width: 640px;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.log-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  flex-shrink: 0;
+}
+.log-heading {
+  margin: 0;
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+}
+.log-body {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px 18px 18px;
+}
+.log-item {
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.log-item:last-child { border-bottom: none; }
+.log-title {
+  margin: 0 0 8px;
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+}
+/* 本文は textContent で入れているので、改行はここで折る */
+.log-text,
+.log-react {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.8;
+  font-size: 0.9rem;
+  word-break: auto-phrase;
+}
+.log-choice {
+  margin: 12px 0 4px;
+  font-size: 0.88rem;
+  color: var(--accent);
+}
+.log-react {
+  color: var(--text-dim);
+}
+.log-empty {
+  margin: 0;
+  padding: 24px 0;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.88rem;
 }

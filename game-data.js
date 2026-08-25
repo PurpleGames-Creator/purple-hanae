@@ -372,6 +372,8 @@ const GAME_DATA = {
     F6_kouhai:   { bg: "bg_tennis",    sprite: "summer" },
 
     TITLE:       { bg: "bg_gym_night",    sprite: null },
+    // 広い画面のタイトル。狭い画面は立ち絵が円形アイコンになりロゴと重なるので TITLE を使う
+    TITLE_WIDE:  { bg: "bg_gym_night",    sprite: "summer", expr: "soft" },
     PROLOGUE:    { bg: "bg_ground_night", sprite: null },
     FREE:        { bg: "bg_classroom",    sprite: null },
     RIVAL:       { bg: "bg_gym_night",    sprite: null },

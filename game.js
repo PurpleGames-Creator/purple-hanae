@@ -7,7 +7,7 @@ const ASSET_DIR = "assets/";
 // 画像にもキャッシュバスターを付ける。付けないと、後から表情を差し替えたり
 // 追加したりした時に、古い画像や過去の404がブラウザに残り続ける。
 // index.html の ?v= と同じ数字に揃えること
-const ASSET_V = "?v=16";
+const ASSET_V = "?v=17";
 
 // 選択肢を描画してから受け付けるまでの猶予(誤タップ防止)と、1つずつ現れる間隔
 const CHOICE_LOCK_MS = 320;
@@ -31,6 +31,7 @@ function freshState() {
     foreshadowShown: false,
     senshu: false,
     finished: false,
+    log: [],
   };
 }
 
@@ -200,15 +201,24 @@ function setBackground(bgName) {
   currentBg = bgName;
 }
 
-// 表情差分ファイルがあれば使い、無ければ基本立ち絵にフォールバックする。
-// 追加する場合のファイル名: assets/hanae_summer_<expr>.webp
-// expr = joy / smile / normal / trouble / sad / angry
 // 未作成の表情ファイルを覚えておく。覚えないと、表情が変わるたびに
 // 同じファイルへ404リクエストが飛び続ける
 const missingSprites = new Set();
 
 // ベース立ち絵が担っている表情。専用ファイルを持たず hanae_<outfit>.webp を使う
 const BASE_EXPR = "smile";
+
+// assets/ に実在する表情差分。ファイル名は assets/hanae_<outfit>_<expr>.webp。
+// 先読みも、指定漏れ時のフォールバックも、ここだけを見る。
+// 新しい差分を assets/ に置いたら、ここにも足すこと
+const SPRITE_EXPRESSIONS = {
+  summer: ["normal", "soft", "trouble", "lonely", "angry", "surprise", "shy", "joy", "cry"],
+  winter: ["soft"],
+};
+
+function hasExpressionFile(outfit, expr) {
+  return !!expr && expr !== BASE_EXPR && (SPRITE_EXPRESSIONS[outfit] || []).includes(expr);
+}
 
 const SPRITE_FADE_MS = 180;
 let spriteFadeToken = 0;
@@ -227,9 +237,12 @@ function setSprite(outfit, expr) {
     return;
   }
   const base = `${ASSET_DIR}hanae_${outfit}.webp${ASSET_V}`;
-  // ベース画像そのものが smile なので、専用ファイルは持たない
-  const variant =
-    expr && expr !== BASE_EXPR ? `${ASSET_DIR}hanae_${outfit}_${expr}.webp${ASSET_V}` : base;
+  // ベース画像そのものが smile なので、専用ファイルは持たない。
+  // 実在しない表情は投げる前に base へ落とす(冬服は soft しか無いので、
+  // 夏服向けの表情がそのまま渡ると毎回404を踏むことになる)
+  const variant = hasExpressionFile(outfit, expr)
+    ? `${ASSET_DIR}hanae_${outfit}_${expr}.webp${ASSET_V}`
+    : base;
   const wanted = missingSprites.has(variant) ? base : variant;
   const current = img.getAttribute("src");
   img.style.display = "block";
@@ -314,8 +327,12 @@ function updateLayout() {
   const active = document.querySelector(".screen.active");
   const id = active ? active.id : "";
   const playing = id === "screen-event" || id === "screen-free" || id === "screen-confession";
-  const spriteVisible = el("sprite").style.display !== "none";
+  // 表示中かどうかは currentOutfit で見る。要素の inline style は初回描画前が
+  // 空文字なので、"none ではない" だと立ち絵を出す前から出ている扱いになる
+  const spriteVisible = !!currentOutfit;
   el("app").classList.toggle("col-left", playing || spriteVisible);
+  // 狭い画面は立ち絵が右上の円形アイコンになる。出ている時だけ頭を空ける
+  el("app").classList.toggle("sprite-on", spriteVisible);
 }
 
 function sceneFor(key) {
@@ -334,12 +351,9 @@ function preloadAssets() {
 // 表情差分は枚数が多く、まとめて起動時に読むとタイトルの表示が遅れる。
 // タイトルを出した後、暇な時に1枚ずつ読む。プレイ開始までには揃う。
 // 併せて、存在しない表情をここで記憶しておくので、本編中に404が飛ばなくなる
-const PRELOAD_EXPRESSIONS = [
-  "hanae_summer_normal", "hanae_summer_soft", "hanae_summer_trouble",
-  "hanae_summer_lonely", "hanae_summer_angry", "hanae_summer_surprise",
-  "hanae_summer_shy", "hanae_summer_joy", "hanae_summer_cry",
-  "hanae_winter_soft",
-];
+const PRELOAD_EXPRESSIONS = Object.entries(SPRITE_EXPRESSIONS).flatMap(
+  ([outfit, exprs]) => exprs.map((e) => `hanae_${outfit}_${e}`)
+);
 
 function preloadExpressions() {
   let i = 0;
@@ -365,7 +379,10 @@ function preloadExpressions() {
 
 function initTitleScreen() {
   showScreen("screen-title");
-  applyScene(sceneFor("TITLE"));
+  // 広い画面だけ、タイトルにもハナエを立たせる。狭い画面の立ち絵は右上の
+  // 円形アイコンになる作りなので、出すとロゴに重なってしまう
+  const wide = window.matchMedia && window.matchMedia("(min-width: 1060px)").matches;
+  applyScene(sceneFor(wide ? "TITLE_WIDE" : "TITLE"));
   renderEndingGallery();
   window.scrollTo(0, 0);
   const saved = loadGame();
@@ -399,6 +416,7 @@ function showPrologue() {
   btn.style.display = "none";
   btn.onclick = () => { advanceQueue(); };
   window.scrollTo(0, 0);
+  pushLog("プロローグ", GAME_DATA.prologue);
   typeText(el("prologue-text"), GAME_DATA.prologue, () => {
     btn.style.display = "block";
   }, "prologue");
@@ -411,7 +429,7 @@ function heartTier(points) {
   if (points >= 2) return { count: 2, cls: "heart-big", expr: "smile" };
   if (points >= 1) return { count: 1, cls: "heart-small", expr: "smile" };
   if (points === 0) return { count: 0, cls: "", expr: "normal" };
-  if (points <= -3) return { count: 1, cls: "heart-break", expr: "sad" };
+  if (points <= -3) return { count: 1, cls: "heart-break", expr: "lonely" };
   return { count: 1, cls: "heart-shrink", expr: "trouble" };
 }
 
@@ -553,6 +571,88 @@ function skipTyping() {
   if (finishTyping) finishTyping();
 }
 
+/* ---------------- バックログ(これまでの話) ---------------- */
+
+// 読み飛ばした本文を後から読み返すための履歴。
+// 「選び直す」と違って選択そのものは取り消せない。取り消せると、反応を見てから
+// 選び直す総当たりが成立してしまい、好感度を伏せている意味が無くなる
+const LOG_LIMIT = 40;
+
+function pushLog(title, body) {
+  if (!Array.isArray(state.log)) state.log = [];
+  const last = state.log[state.log.length - 1];
+  // リロードで同じイベントが出し直された時に、同じ話が二重に積まれないようにする
+  if (last && !last.c && last.t === title && last.b === body) return;
+  state.log.push({ t: title || "", b: body || "", c: "", r: "" });
+  if (state.log.length > LOG_LIMIT) state.log.splice(0, state.log.length - LOG_LIMIT);
+}
+
+// 選択を確定した時点で、直前の履歴に「選んだ内容」と「ハナエの反応」を足す
+function attachLogChoice(label, reaction) {
+  if (!Array.isArray(state.log) || !state.log.length) return;
+  const last = state.log[state.log.length - 1];
+  last.c = label || "";
+  last.r = reaction || "";
+}
+
+// 本文は textContent で入れて CSS の pre-wrap で折る。
+// innerHTML だと、シナリオに < が混ざった時に壊れる
+function logLine(cls, text) {
+  const p = document.createElement("p");
+  p.className = cls;
+  p.textContent = text;
+  return p;
+}
+
+function renderLog() {
+  const box = el("log-body");
+  box.innerHTML = "";
+  const entries = Array.isArray(state.log) ? state.log : [];
+  if (!entries.length) {
+    box.appendChild(logLine("log-empty", "まだ記録がありません。"));
+    return;
+  }
+  entries.forEach((e) => {
+    const item = document.createElement("section");
+    item.className = "log-item";
+    if (e.t) {
+      const h = document.createElement("h3");
+      h.className = "log-title";
+      h.textContent = e.t;
+      item.appendChild(h);
+    }
+    if (e.b) item.appendChild(logLine("log-text", e.b));
+    if (e.c) item.appendChild(logLine("log-choice", "→ " + e.c));
+    if (e.r) item.appendChild(logLine("log-react", e.r));
+    box.appendChild(item);
+  });
+}
+
+function isLogOpen() {
+  return el("log-overlay").classList.contains("is-open");
+}
+
+function openLog() {
+  renderLog();
+  const box = el("log-overlay");
+  box.classList.add("is-open");
+  box.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+  el("btn-log-close").focus();
+  // いま読んでいる場面(いちばん下)を開く。上から読み直したい時だけ遡ればよい
+  const scroller = el("log-body");
+  scroller.scrollTop = scroller.scrollHeight;
+}
+
+function closeLog() {
+  const box = el("log-overlay");
+  box.classList.remove("is-open");
+  box.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+  const btn = el("btn-log");
+  if (btn && btn.offsetParent !== null) btn.focus();
+}
+
 /* ---------------- イベント表示 ---------------- */
 
 function buildEventText(rawText) {
@@ -578,7 +678,11 @@ function showEvent(key, eventData, scene, onChoice) {
   choicesEl.style.display = "none";
   window.scrollTo(0, 0);
 
-  typeText(el("event-text"), buildEventText(eventData.text), () => {
+  // 伏線の差し込みまで済ませた「実際に表示した本文」を履歴に残す
+  const bodyText = buildEventText(eventData.text);
+  pushLog(eventData.title || "", bodyText);
+
+  typeText(el("event-text"), bodyText, () => {
     renderChoices(key, eventData, scene, choicesEl, onChoice);
   }, "t:" + key);
 }
@@ -601,19 +705,13 @@ function renderChoices(key, eventData, scene, choicesEl, onChoice) {
     btn.style.animationDelay = (i * CHOICE_STAGGER_MS) / 1000 + "s";
     btn.onclick = () => {
       if (choicesEl.classList.contains("is-locked")) return;
-      // 「選び直す」で戻せるよう、加算前の値を控えておく
-      const before = {
-        score: state.score,
-        rival: state.rival,
-        pushyCount: state.pushyCount,
-        passiveCount: state.passiveCount,
-      };
       choicesEl.style.display = "none";
       const points = choice.points || 0;
       state.score += points;
       state.rival = Math.max(0, state.rival + (choice.rival || 0));
       if (choice.tag === "pushy") state.pushyCount++;
       if (choice.tag === "passive") state.passiveCount++;
+      attachLogChoice(choice.label, choice.reaction);
       // 選択を確定した時点で保存する(リアクション表示中に閉じても巻き戻らない)
       saveGame();
       playHeartEffect(points);
@@ -634,21 +732,6 @@ function renderChoices(key, eventData, scene, choicesEl, onChoice) {
         nextBtn.textContent = "つづける";
         nextBtn.onclick = () => { onChoice(choice); };
         row.appendChild(nextBtn);
-
-        // 誤タップ救済。まだ確定していないので、この場でだけ選び直せる
-        const undoBtn = document.createElement("button");
-        undoBtn.className = "link-btn";
-        undoBtn.type = "button";
-        undoBtn.textContent = "選び直す";
-        undoBtn.onclick = () => {
-          Object.assign(state, before);
-          saveGame();
-          reactionEl.style.display = "none";
-          reactionEl.innerHTML = "";
-          if (scene && scene.sprite) setSprite(scene.sprite, null);
-          renderChoices(key, eventData, scene, choicesEl, onChoice);
-        };
-        row.appendChild(undoBtn);
 
         reactionEl.appendChild(row);
       }, "r:" + key + ":" + choice.id);
@@ -769,7 +852,9 @@ function startConfession() {
   btn.style.display = "none";
   btn.onclick = () => { resolveEnding(); };
   window.scrollTo(0, 0);
-  typeText(el("confession-text"), intro.replace("{name}", state.name), () => {
+  const introText = intro.replace("{name}", state.name);
+  pushLog("告白", introText);
+  typeText(el("confession-text"), introText, () => {
     btn.style.display = "block";
   }, state.senshu ? "confession:senshu" : "confession");
 }
@@ -819,6 +904,15 @@ document.addEventListener("DOMContentLoaded", () => {
   // 進行はセーブ済みなので、タイトルに戻っても「つづきから」で復帰できる
   el("btn-speed").onclick = toggleTextSpeed;
   renderSpeedLabel();
+  el("btn-log").onclick = openLog;
+  el("btn-log-close").onclick = closeLog;
+  // 余白をタップしても閉じる。パネルの中のタップは拾わない
+  el("log-overlay").addEventListener("click", (ev) => {
+    if (ev.target === el("log-overlay")) closeLog();
+  });
+  document.addEventListener("keydown", (ev) => {
+    if (ev.key === "Escape" && isLogOpen()) closeLog();
+  });
   el("btn-title").onclick = () => {
     clearInterval(typeTimer);
     finishTyping = null;
