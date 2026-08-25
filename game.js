@@ -7,7 +7,7 @@ const ASSET_DIR = "assets/";
 // 画像にもキャッシュバスターを付ける。付けないと、後から表情を差し替えたり
 // 追加したりした時に、古い画像や過去の404がブラウザに残り続ける。
 // index.html の ?v= と同じ数字に揃えること
-const ASSET_V = "?v=27";
+const ASSET_V = "?v=28";
 
 // 選択肢を描画してから受け付けるまでの猶予(誤タップ防止)と、1つずつ現れる間隔
 const CHOICE_LOCK_MS = 320;
@@ -921,7 +921,6 @@ function showEvent(key, eventData, scene, onChoice) {
   showScreen("screen-event");
   applyScene(scene);
   AUDIO.playBgm(bgmForKey(key));
-  el("event-title").textContent = eventData.title || "";
   el("event-reaction").innerHTML = "";
   el("event-reaction").style.display = "none";
   const choicesEl = el("event-choices");

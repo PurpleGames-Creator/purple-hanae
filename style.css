@@ -118,8 +118,8 @@ body { background: transparent; }
   #screen-confession > * {
     flex-shrink: 0;
   }
-  #event-title,
-  #confession-text {
+  #screen-event > :first-child,
+  #screen-confession > :first-child {
     margin-top: auto;
   }
 }
