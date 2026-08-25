@@ -137,9 +137,58 @@ function renderEndingGallery() {
 
 /* ---------------- 場面ごとの BGM ---------------- */
 
-// 曲は背景ではなく気分に当てる。背景7種に1曲ずつ割ると切り替わりすぎる
-const BGM_QUIET = ["E5", "E8", "E12", "E13", "E14", "E14B", "E19"];
-const BGM_TENSION = ["E16", "E17", "E18", "F5_nishino", "RIVAL"];
+// 曲は背景ではなく気分に当てる。背景7種に1曲ずつ割ると切り替わりすぎる。
+// 同じ気分の曲が複数あるものは、1周の中で全部使う。幕が進むごとに切り替えて、
+// 同じ準備期間でも時間が動いている感じを出す
+const BGM_BY_KEY = {
+  TITLE: "title",
+  PROLOGUE: "title",
+
+  // 出会い
+  E1: "daily1",
+  E2: "daily1",
+  E3: "daily1",
+
+  // 委員会が動き出す
+  E4: "daily2",
+  E6: "daily2",
+  E7: "daily2",
+
+  // 自由行動。選択画面と、そこから入る5イベントで1曲
+  FREE: "daily3",
+  F1_neji: "daily3",
+  F2_chusai: "daily3",
+  F3_kaidashi: "daily3",
+  F4_baiten: "daily3",
+  F6_kouhai: "daily3",
+
+  // 中盤
+  E9: "daily4",
+  E10: "daily4",
+  E11: "daily4",
+
+  // 誕生日。1イベントだけ専用にして、ここが特別だと分かるようにする
+  E15: "daily5",
+
+  // 静かな場面。夏のまだ距離がある静けさ(quiet1)と、本音が出る終盤(quiet2)で分ける。
+  // E19 は quiet1 に戻す —— 最後の夜だけ最初の静けさが返ってくる
+  E5: "quiet1",
+  E8: "quiet1",
+  E12: "quiet1",
+  E13: "quiet1",
+  E19: "quiet1",
+  E14: "quiet2",
+  E14B: "quiet2",
+  CONFESSION: "quiet2",
+
+  // 緊張
+  E16: "tension",
+  E17: "tension",
+  E18: "tension",
+  F5_nishino: "tension",
+  RIVAL: "tension",
+};
+
 const BGM_ENDING = {
   success: "end_true",
   successPerfect: "end_true",
@@ -149,37 +198,9 @@ const BGM_ENDING = {
   nishino: "end_rival",
 };
 
-// 日常曲は5曲ある。幕ごとに変え、さらに周回ごとにずらす。
-// 図鑑を埋めるには何周も要るので、最初に飽きるのはここ
-const PLAYS_KEY = "sentimentalHanaePlays";
-
-function playCount() {
-  try {
-    return parseInt(localStorage.getItem(PLAYS_KEY) || "0", 10) || 0;
-  } catch (e) {
-    return 0;
-  }
-}
-
-function bumpPlayCount() {
-  try {
-    localStorage.setItem(PLAYS_KEY, String((playCount() + 1) % 100));
-  } catch (e) {
-    /* 保存できなくても進行に影響させない */
-  }
-}
-
-function dailyTrack() {
-  const act = state.queueIndex < 9 ? 0 : state.queueIndex < 16 ? 1 : 2;
-  return "daily" + (((playCount() + act) % 5) + 1);
-}
-
+// 場面を足した時にここへ書き忘れても無音にはしない
 function bgmForKey(key) {
-  if (key === "TITLE" || key === "PROLOGUE") return "title";
-  if (key === "CONFESSION") return "quiet2";
-  if (BGM_QUIET.includes(key)) return "quiet1";
-  if (BGM_TENSION.includes(key)) return "tension";
-  return dailyTrack();
+  return BGM_BY_KEY[key] || "daily1";
 }
 
 /* ---------------- 画面制御 ---------------- */
@@ -448,7 +469,6 @@ function initTitleScreen() {
   }
   el("btn-start").onclick = () => {
     AUDIO.se("next");
-    bumpPlayCount();
     const nameInput = el("player-name-input").value.trim();
     state = freshState();
     state.name = nameInput || "あなた";
@@ -881,7 +901,7 @@ function renderChoices(key, eventData, scene, choicesEl, onChoice) {
 function showFreeSelect() {
   showScreen("screen-free");
   applyScene(sceneFor("FREE"));
-  AUDIO.playBgm(dailyTrack());
+  AUDIO.playBgm(bgmForKey("FREE"));
   el("free-remaining").textContent = `あと${state.freePicksLeft}つ選べます`;
   const list = el("free-list");
   list.innerHTML = "";
