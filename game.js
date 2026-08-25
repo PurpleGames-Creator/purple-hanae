@@ -7,7 +7,7 @@ const ASSET_DIR = "assets/";
 // 画像にもキャッシュバスターを付ける。付けないと、後から表情を差し替えたり
 // 追加したりした時に、古い画像や過去の404がブラウザに残り続ける。
 // index.html の ?v= と同じ数字に揃えること
-const ASSET_V = "?v=20";
+const ASSET_V = "?v=21";
 
 // 選択肢を描画してから受け付けるまでの猶予(誤タップ防止)と、1つずつ現れる間隔
 const CHOICE_LOCK_MS = 320;
@@ -399,8 +399,6 @@ function updateLayout() {
   // 空文字なので、"none ではない" だと立ち絵を出す前から出ている扱いになる
   const spriteVisible = !!currentOutfit;
   el("app").classList.toggle("col-left", playing || spriteVisible);
-  // 狭い画面は立ち絵が右上の円形アイコンになる。出ている時だけ頭を空ける
-  el("app").classList.toggle("sprite-on", spriteVisible);
 }
 
 function sceneFor(key) {
@@ -508,9 +506,9 @@ function showPrologue() {
   btn.onclick = () => { advanceQueue(); };
   window.scrollTo(0, 0);
   pushLog("プロローグ", GAME_DATA.prologue);
-  typeText(el("prologue-text"), GAME_DATA.prologue, () => {
+  playBlocks(el("prologue-text"), GAME_DATA.prologue, "prologue", () => {
     btn.style.display = "block";
-  }, "prologue");
+  });
 }
 
 /* ---------------- ハート演出 ---------------- */
@@ -742,6 +740,55 @@ function skipTyping() {
   if (finishTyping) finishTyping();
 }
 
+/* ---------------- 本文のページ送り ---------------- */
+
+// 本文は空行で区切られている。1イベントあたり3〜6ブロック、1ブロック平均40字。
+// まとめて出すと読むのが疲れるので、1ブロックずつ出してタップで送る
+function splitBlocks(raw) {
+  return raw
+    .split(/\n\s*\n/)
+    .map((b) => b.trim())
+    .filter(Boolean);
+}
+
+// 次のブロックを待っている時だけ入る。表示中は null(タップは早送りに使う)
+let pagerNext = null;
+
+function clearPager(elm) {
+  pagerNext = null;
+  if (elm) elm.classList.remove("has-next");
+}
+
+// ブロックを1つずつ出し、最後まで出し終えたら onDone を呼ぶ
+function playBlocks(elm, raw, readKey, onDone) {
+  const blocks = splitBlocks(raw);
+  clearPager(elm);
+  if (!blocks.length) {
+    if (onDone) onDone();
+    return;
+  }
+  let i = 0;
+  const show = () => {
+    const last = i === blocks.length - 1;
+    typeText(elm, blocks[i], () => {
+      if (last) {
+        clearPager(elm);
+        if (onDone) onDone();
+        return;
+      }
+      // ▼ を出してタップを待つ
+      elm.classList.add("has-next");
+      pagerNext = () => {
+        pagerNext = null;
+        elm.classList.remove("has-next");
+        i += 1;
+        show();
+      };
+    }, readKey ? readKey + "#" + i : null);
+  };
+  show();
+}
+
 /* ---------------- バックログ(これまでの話) ---------------- */
 
 // 読み飛ばした本文を後から読み返すための履歴。
@@ -854,9 +901,9 @@ function showEvent(key, eventData, scene, onChoice) {
   const bodyText = buildEventText(eventData.text);
   pushLog(eventData.title || "", bodyText);
 
-  typeText(el("event-text"), bodyText, () => {
+  playBlocks(el("event-text"), bodyText, "t:" + key, () => {
     renderChoices(key, eventData, scene, choicesEl, onChoice);
-  }, "t:" + key);
+  });
 }
 
 function renderChoices(key, eventData, scene, choicesEl, onChoice) {
@@ -1040,9 +1087,9 @@ function startConfession() {
   window.scrollTo(0, 0);
   const introText = intro.replace("{name}", state.name);
   pushLog("告白", introText);
-  typeText(el("confession-text"), introText, () => {
+  playBlocks(el("confession-text"), introText, state.senshu ? "confession:senshu" : "confession", () => {
     btn.style.display = "block";
-  }, state.senshu ? "confession:senshu" : "confession");
+  });
 }
 
 function resolveEnding() {
@@ -1073,7 +1120,14 @@ function resolveEnding() {
     ? "NEW — 最も到達が難しいエンディングです"
     : "NEW — 初めて見るエンディングです";
   el("ending-title").textContent = ending.title;
-  el("ending-text").innerHTML = ending.text.replace(/\n/g, "<br>");
+  // エンディングは本編で一番長い(パーフェクトは21ブロック)。ここもページ送りにする
+  const restartBtn = el("btn-restart");
+  restartBtn.style.display = "none";
+  el("ending-foot").style.display = "none";
+  playBlocks(el("ending-text"), ending.text, "end:" + endingKey, () => {
+    restartBtn.style.display = "block";
+    el("ending-foot").style.display = "block";
+  });
   const seen = loadSeenEndings();
   el("ending-note").textContent =
     `エンディングは全${GAME_DATA.endingOrder.length}種類(到達済み ${seen.length})。選択を変えると結末が変わります。`;
@@ -1120,15 +1174,20 @@ document.addEventListener("DOMContentLoaded", () => {
   el("btn-title").onclick = () => {
     clearTimeout(typeTimer);
     finishTyping = null;
+    pagerNext = null;
     saveGame();
     initTitleScreen();
   };
-  // 本文の表示中はどこをタップしても早送りできる(周回プレイヤーを待たせない)
-  ["screen-event", "screen-confession", "screen-prologue"].forEach((id) => {
+  // 表示中のタップは早送り、出し終わっていればページ送り。
+  // ボタンの上だけは拾わない(選択肢の誤爆を防ぐ)
+  ["screen-event", "screen-confession", "screen-prologue", "screen-ending"].forEach((id) => {
     el(id).addEventListener("click", (ev) => {
-      if (!finishTyping) return;
-      if (ev.target.closest("button")) return;
-      skipTyping();
+      if (ev.target.closest("button") || ev.target.closest("a")) return;
+      if (finishTyping) {
+        skipTyping();
+        return;
+      }
+      if (pagerNext) pagerNext();
     });
   });
   initTitleScreen();

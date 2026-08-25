@@ -86,26 +86,23 @@ body { background: transparent; }
 }
 #sprite-b.is-shown { opacity: 1; }
 
-/* 狭い画面: 全身で立たせると、本文パネルの高さの都合で顔が必ず隠れる。
-   表情差分が唯一のフィードバックなので、顔を切り出した円形にして常に見せる */
+/* 狭い画面も全身で立たせる。本文を1ブロックずつ送るようにしてパネルが小さく
+   なったので、本文を画面下に寄せれば顔が隠れない(以前は全文を一度に出していて
+   パネルが高く、顔が必ず裏に隠れるため円形アイコンに逃がしていた) */
 @media (max-width: 1059px) {
   .sprite {
-    top: 12px;
-    bottom: auto;
-    right: 12px;
-    width: 76px;
-    height: 76px;
-    border-radius: 50%;
-    object-fit: cover;
-    object-position: 50% 6%;
-    background: rgba(24, 16, 34, 0.88);
-    border: 2px solid rgba(255, 143, 177, 0.75);
-    filter: none;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    right: 0;
+    bottom: 0;
+    /* 大きめに取る。立ち絵を高くするほど顔の位置が上がり、下に寄せた本文と
+       重ならなくなる。横幅は画面から少しはみ出すが overflow-x で切れる */
+    height: min(84vh, 760px);
+    height: min(84dvh, 760px);
   }
-  /* 円形アイコンと本文がぶつからないよう頭を空ける。
-     立ち絵が出ていない画面(タイトル等)まで空けると、ロゴが下に落ちる */
-  #app.sprite-on { padding-top: 100px; }
+  /* 本文と選択肢を画面下に寄せる。立ち絵の顔は上に出るので重ならない */
+  #screen-event,
+  #screen-confession {
+    justify-content: flex-end;
+  }
 }
 
 /* 広い画面: 本文は左カラム、立ち絵は右に等身大で */
@@ -136,9 +133,9 @@ body { background: transparent; }
 @media (min-width: 1060px) {
   #app.col-left { margin-left: max(24px, calc(50vw - 660px)); margin-right: 0; }
 }
-/* 立ち絵が下端に立つので、最後の要素が隠れないよう余白を足す */
+/* 本文が下端に来るので、ホームインジケータに被らないぶんだけ空ける */
 @media (max-width: 1059px) {
-  #app { padding-bottom: 96px; }
+  #app { padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
 }
 
 .screen { display: none; flex: 1; flex-direction: column; }
@@ -303,6 +300,8 @@ body { background: transparent; }
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
 }
 .event-text {
+  /* 送りマーク(::after)の基準 */
+  position: relative;
   background: var(--panel);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
@@ -368,6 +367,21 @@ body { background: transparent; }
   font-size: 0.95rem;
   word-break: auto-phrase;
 }
+/* 次のブロックがある時だけ出す送りマーク */
+.event-text.has-next::after {
+  content: "▼";
+  position: absolute;
+  right: 12px;
+  bottom: 6px;
+  font-size: 0.65rem;
+  color: var(--accent);
+  animation: pagerBlink 1.1s ease-in-out infinite;
+}
+@keyframes pagerBlink {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 1; }
+}
+
 .reaction-actions {
   display: flex;
   align-items: center;
@@ -561,6 +575,7 @@ body { background: transparent; }
 
 @media (prefers-reduced-motion: reduce) {
   .tap-hint { animation: none; opacity: 0.8; }
+  .event-text.has-next::after { animation: none; opacity: 0.9; }
   .bg-layer { transition: none; }
   .sprite.sprite-in { animation: none; }
   #sprite-b { transition: none; }
@@ -579,7 +594,7 @@ body { background: transparent; }
   .game-title { margin-top: 20px; }
   /* padding の一括指定にすると、上で入れた padding-top: 100px を打ち消して
      立ち絵の円形アイコンが HUD に重なる。左右下だけを上書きする */
-  #app { padding-left: 14px; padding-right: 14px; padding-bottom: 96px; }
+  #app { padding-left: 14px; padding-right: 14px; }
   .event-text { padding: 16px; }
 }
 
