@@ -90,18 +90,37 @@ body { background: transparent; }
    なったので、本文を画面下に寄せれば顔が隠れない(以前は全文を一度に出していて
    パネルが高く、顔が必ず裏に隠れるため円形アイコンに逃がしていた) */
 @media (max-width: 1059px) {
+  /* 顔の位置は画面の「上端」から決める。下端から決めると画面の高さによって
+     顔の高さが変わり、機種によっては本文パネルに隠れる。
+     上端から決めると、立ち絵が小さい(＝画面が低い)ほど顔も上に来るので、
+     どの高さでも顔は必ず上から 52px 〜 40% の間に収まる */
   .sprite {
+    top: 52px;
+    bottom: auto;
     right: 0;
-    bottom: 0;
-    /* 大きめに取る。立ち絵を高くするほど顔の位置が上がり、下に寄せた本文と
-       重ならなくなる。横幅は画面から少しはみ出すが overflow-x で切れる */
-    height: min(84vh, 760px);
-    height: min(84dvh, 760px);
+    height: min(84vh, 900px);
+    height: min(84dvh, 900px);
   }
-  /* 本文と選択肢を画面下に寄せる。立ち絵の顔は上に出るので重ならない */
+  /* 本文と選択肢は画面の下 60% だけを使う。上 40% は顔のために必ず空ける。
+     収まらない時はこの中でスクロールさせ、顔の領域には絶対に食い込ませない */
   #screen-event,
   #screen-confession {
-    justify-content: flex-end;
+    flex: 0 1 auto;
+    margin-top: auto;
+    max-height: 60dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  /* 中身は縮ませない(縮むと枠の高さが揺れる)。
+     flex-end ではなく先頭の auto マージンで下に寄せる —— flex-end だと
+     はみ出した時に上端がスクロールで出せなくなる */
+  #screen-event > *,
+  #screen-confession > * {
+    flex-shrink: 0;
+  }
+  #event-title,
+  #confession-text {
+    margin-top: auto;
   }
 }
 
@@ -311,6 +330,12 @@ body { background: transparent; }
   line-height: 1.95;
   font-size: 0.98rem;
   margin-bottom: 20px;
+  /* 高さを固定する。ブロックごとの文章量で枠が伸び縮みすると、
+     読んでいる間ずっと画面が動いて酔う。1ブロックは最長52字。
+     flex-shrink を切らないと、flex の子として潰されて高さが揺れる */
+  height: calc(1.95em * 3 + 40px);
+  flex-shrink: 0;
+  overflow-y: auto;
   white-space: normal;
   word-break: auto-phrase;
   line-break: strict;
@@ -679,4 +704,29 @@ body { background: transparent; }
   text-align: center;
   color: var(--text-dim);
   font-size: 0.88rem;
+}
+
+/* ==========================================================================
+   狭い画面の本文まわり
+   基本ルールより後ろに置くこと。同じ詳細度なので、前に置くと負けて効かない
+   ========================================================================== */
+
+@media (max-width: 1059px) {
+  /* パネルは4行ぶんで固定。1ブロックは最長52字で、390px 幅なら4行に収まる。
+     画面が低い機種では 22dvh で頭打ちにする(高さは固定のまま) */
+  .event-text {
+    height: min(calc(1.95em * 4 + 40px), 22dvh);
+    margin-bottom: 14px;
+  }
+  /* 顔の領域を守るため、下に置くものは詰める */
+  .event-title { margin: 0 0 12px; font-size: 1rem; }
+  .choice-btn { padding: 12px 14px; }
+}
+
+/* 画面が低い機種はさらに詰める。選択肢4つ＋パネルが収まる境目がこのあたり */
+@media (max-width: 1059px) and (max-height: 800px) {
+  .event-text { font-size: 0.9rem; line-height: 1.75; padding: 14px 16px; }
+  .choice-btn { padding: 10px 14px; font-size: 0.88rem; }
+  .event-title { font-size: 0.95rem; margin-bottom: 10px; }
+  .event-choices { gap: 8px; }
 }

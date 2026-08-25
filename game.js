@@ -7,7 +7,7 @@ const ASSET_DIR = "assets/";
 // 画像にもキャッシュバスターを付ける。付けないと、後から表情を差し替えたり
 // 追加したりした時に、古い画像や過去の404がブラウザに残り続ける。
 // index.html の ?v= と同じ数字に揃えること
-const ASSET_V = "?v=22";
+const ASSET_V = "?v=27";
 
 // 選択肢を描画してから受け付けるまでの猶予(誤タップ防止)と、1つずつ現れる間隔
 const CHOICE_LOCK_MS = 320;
@@ -631,10 +631,6 @@ function renderSpeedLabel() {
 let typeTimer = null;
 let finishTyping = null; // 表示中に呼ぶと即座に全文表示する
 
-function reduceMotion() {
-  return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
-
 // raw は改行を \n で含む素のテキスト。1文字ずつ出し、タップで即全表示できる
 const TYPE_MS_READ = { narration: 8, line: 16 };
 
@@ -702,17 +698,15 @@ function typeText(elm, raw, onDone, readKey) {
     markRead(readKey);
     if (onDone) onDone();
   };
-  // 即時設定・アニメーション低減なら、待たせずに全文を出す
-  const instant = reduceMotion() || textSpeed === "instant";
+  // アニメーション低減はここでは見ない。文字送りは飾りではなく本作の読ませ方
+  // そのもので、止めると喋り音も鳴らなくなる。飛ばしたい人は HUD の「即時」で
+  const instant = textSpeed === "instant";
   if (instant || raw.length === 0) {
     done();
     return;
   }
-  // 先に完成形の高さを測って確保しておく。でないと文字が増えるたびに
-  // パネルが伸びて、下にあるものが動き続ける
-  elm.style.minHeight = "";
-  elm.innerHTML = html;
-  elm.style.minHeight = elm.offsetHeight + "px";
+  // パネルの高さは CSS で固定してある(ブロックごとに測ると、文章の長短で
+  // 枠がガタガタ動いて画面酔いの原因になる)
 
   const voices = voiceMapFor(raw);
   const speed = readKey && readSet.has(readKey) ? TYPE_MS_READ : TYPE_MS;
@@ -742,13 +736,52 @@ function skipTyping() {
 
 /* ---------------- 本文のページ送り ---------------- */
 
-// 本文は空行で区切られている。1イベントあたり3〜6ブロック、1ブロック平均40字。
-// まとめて出すと読むのが疲れるので、1ブロックずつ出してタップで送る
+// 1ブロックの上限。パネルの高さを固定して枠が動かないようにしたいので、
+// 長い段落は文単位に割ってこの長さに収める
+const BLOCK_MAX = 46;
+
+// 「。」「!」「?」で切る。閉じ括弧は前の文に付ける。
+// 正規表現の後読みは古い iOS Safari に無いので使わない
+function splitSentences(p) {
+  const out = [];
+  let buf = "";
+  for (let i = 0; i < p.length; i++) {
+    buf += p[i];
+    if ("。！？!?".indexOf(p[i]) >= 0) {
+      while (i + 1 < p.length && "」』）)".indexOf(p[i + 1]) >= 0) {
+        i += 1;
+        buf += p[i];
+      }
+      out.push(buf);
+      buf = "";
+    }
+  }
+  if (buf) out.push(buf);
+  return out;
+}
+
+// 本文を送り単位に切る。空行と改行で割り、それでも長いものは文で割って詰め直す
 function splitBlocks(raw) {
-  return raw
-    .split(/\n\s*\n/)
-    .map((b) => b.trim())
-    .filter(Boolean);
+  const out = [];
+  raw.split(/\n/).forEach((line) => {
+    const p = line.trim();
+    if (!p) return;
+    if (p.length <= BLOCK_MAX) {
+      out.push(p);
+      return;
+    }
+    let buf = "";
+    splitSentences(p).forEach((s) => {
+      if (buf && (buf + s).length > BLOCK_MAX) {
+        out.push(buf);
+        buf = s;
+      } else {
+        buf += s;
+      }
+    });
+    if (buf) out.push(buf);
+  });
+  return out;
 }
 
 // 次のブロックを待っている時だけ入る。表示中は null(タップは早送りに使う)

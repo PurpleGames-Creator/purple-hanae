@@ -9,7 +9,7 @@
 const AUDIO = (() => {
   const BGM_DIR = "assets/bgm/";
   // index.html の ?v= と同じ数字に揃えること
-  const BGM_V = "?v=22";
+  const BGM_V = "?v=27";
   const MUTE_KEY = "sentimentalHanaeMuted";
 
   const FADE_MS = 900;
@@ -179,11 +179,13 @@ const AUDIO = (() => {
 
   // 0 = 地の文 / 1 = ハナエ / 2 = ハナエ以外の登場人物 / 3 = 主人公
   // 地の文だけ triangle。「」の中は必ず square にして、喋りとして聞こえるようにする
+  // 昔のADVの喋り音。短すぎ・小さすぎると鳴っていないように聞こえるので、
+  // 40〜50ms・しっかりした音量を取る(BGM は下に敷くだけなので競合しない)
   const VOICES = [
-    { freq: 440, type: "triangle", gain: 0.05, ms: 30 },
-    { freq: 960, type: "square", gain: 0.045, ms: 26 },
-    { freq: 620, type: "square", gain: 0.045, ms: 28 },
-    { freq: 500, type: "square", gain: 0.045, ms: 28 },
+    { freq: 430, type: "triangle", gain: 0.17, ms: 46 },
+    { freq: 950, type: "square", gain: 0.19, ms: 44 },
+    { freq: 620, type: "square", gain: 0.18, ms: 46 },
+    { freq: 500, type: "square", gain: 0.18, ms: 46 },
   ];
 
   // 1文字ごとに鳴らすと、文字送りが速い時に音が繋がって1本の音に聞こえる。
@@ -205,29 +207,29 @@ const AUDIO = (() => {
   /* ---------------- 場面ごとの効果音 ---------------- */
 
   const CUES = {
-    choice: () => tone(560, 30, "triangle", 0.09),
-    next: () => tone(720, 45, "triangle", 0.08),
+    choice: () => tone(560, 34, "triangle", 0.22),
+    next: () => tone(720, 50, "triangle", 0.2),
     // 好感度を伏せているので、ハートが唯一のフィードバック。
     // 上がり幅を音程と音数で表す
-    heartSmall: () => tone(880, 90, "sine", 0.11, 1180),
+    heartSmall: () => tone(880, 95, "sine", 0.26, 1180),
     heartBig: () => {
-      tone(880, 90, "sine", 0.11, 1180);
-      setTimeout(() => tone(1180, 110, "sine", 0.1, 1480), 80);
+      tone(880, 95, "sine", 0.26, 1180);
+      setTimeout(() => tone(1180, 115, "sine", 0.24, 1480), 80);
     },
     heartHuge: () => {
-      tone(880, 90, "sine", 0.12, 1180);
-      setTimeout(() => tone(1180, 90, "sine", 0.11, 1480), 75);
-      setTimeout(() => tone(1480, 140, "sine", 0.1, 1760), 150);
+      tone(880, 95, "sine", 0.28, 1180);
+      setTimeout(() => tone(1180, 95, "sine", 0.26, 1480), 75);
+      setTimeout(() => tone(1480, 145, "sine", 0.24, 1760), 150);
     },
-    heartShrink: () => tone(520, 130, "triangle", 0.09, 400),
+    heartShrink: () => tone(520, 135, "triangle", 0.22, 400),
     heartBreak: () => {
-      tone(430, 180, "triangle", 0.11, 250);
-      setTimeout(() => tone(300, 260, "triangle", 0.09, 170), 130);
+      tone(430, 185, "triangle", 0.26, 250);
+      setTimeout(() => tone(300, 265, "triangle", 0.22, 170), 130);
     },
     ending: () => {
-      tone(660, 140, "sine", 0.1);
-      setTimeout(() => tone(880, 140, "sine", 0.1), 130);
-      setTimeout(() => tone(1100, 300, "sine", 0.1), 260);
+      tone(660, 145, "sine", 0.24);
+      setTimeout(() => tone(880, 145, "sine", 0.24), 130);
+      setTimeout(() => tone(1100, 305, "sine", 0.24), 260);
     },
   };
 
