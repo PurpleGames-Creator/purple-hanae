@@ -9,7 +9,7 @@
 const AUDIO = (() => {
   const BGM_DIR = "assets/bgm/";
   // index.html の ?v= と同じ数字に揃えること
-  const BGM_V = "?v=28";
+  const BGM_V = "?v=30";
   const MUTE_KEY = "sentimentalHanaeMuted";
 
   const FADE_MS = 900;
@@ -49,6 +49,10 @@ const AUDIO = (() => {
   /* ---------------- BGM ---------------- */
 
   const elements = new Map(); // key -> HTMLAudioElement
+  // iOS Safari は HTMLMediaElement.volume を無視する(音量はハードのボタン専用)。
+  // そのため <audio> を Web Audio の GainNode に通して、そちらで音量を決める。
+  // PC では volume が効くので今まで気付けなかった
+  const gains = new Map(); // HTMLAudioElement -> GainNode
   let currentKey = null;
   let currentEl = null;
   let fadeTimer = null;
@@ -75,6 +79,42 @@ const AUDIO = (() => {
     return (track ? track.vol : 0.5) * BGM_MASTER;
   }
 
+  // 要素1つにつき createMediaElementSource は一度しか呼べないので覚えておく。
+  // Web Audio が使えない環境では null を返し、el.volume にフォールバックする
+  function gainFor(el) {
+    if (gains.has(el)) return gains.get(el);
+    const c = ensureCtx();
+    if (!c) return null;
+    let node = null;
+    try {
+      const src = c.createMediaElementSource(el);
+      node = c.createGain();
+      node.gain.value = 0;
+      src.connect(node);
+      node.connect(c.destination);
+    } catch (e) {
+      node = null;
+    }
+    gains.set(el, node);
+    return node;
+  }
+
+  // 音量はできれば GainNode で、無理なら element の volume で設定する
+  function setVolume(el, v) {
+    const node = gainFor(el);
+    if (node) {
+      node.gain.value = v;
+      el.volume = 1;
+    } else {
+      el.volume = v;
+    }
+  }
+
+  function volumeOf(el) {
+    const node = gains.get(el);
+    return node ? node.gain.value : el.volume;
+  }
+
   function clearFade() {
     clearInterval(fadeTimer);
     fadeTimer = null;
@@ -85,7 +125,7 @@ const AUDIO = (() => {
   function crossfade(nextEl, nextKey, fadeMs) {
     clearFade();
     const prevEl = currentEl;
-    const prevFrom = prevEl ? prevEl.volume : 0;
+    const prevFrom = prevEl ? volumeOf(prevEl) : 0;
     const to = targetVolume(nextKey);
     const steps = Math.max(1, Math.round(fadeMs / FADE_STEP_MS));
     let n = 0;
@@ -96,8 +136,8 @@ const AUDIO = (() => {
     fadeTimer = setInterval(() => {
       n++;
       const t = Math.min(1, n / steps);
-      if (nextEl) nextEl.volume = Math.min(1, to * t);
-      if (prevEl && prevEl !== nextEl) prevEl.volume = Math.max(0, prevFrom * (1 - t));
+      if (nextEl) setVolume(nextEl, Math.min(1, to * t));
+      if (prevEl && prevEl !== nextEl) setVolume(prevEl, Math.max(0, prevFrom * (1 - t)));
       if (t >= 1) {
         clearFade();
         if (prevEl && prevEl !== nextEl) {
@@ -119,7 +159,7 @@ const AUDIO = (() => {
       currentEl = el;
       return;
     }
-    el.volume = 0;
+    setVolume(el, 0);
     const p = el.play();
     // AbortError は曲を切り替えた時に前の play() が打ち切られただけで、異常ではない。
     // 実機の切り分けを濁らせるので記録しない
@@ -245,6 +285,13 @@ const AUDIO = (() => {
   function unlock() {
     if (unlocked) return;
     unlocked = true;
+    // iOS 16.4+ : これを立てないと、本体側面のサイレントスイッチで
+    // Web Audio(文字送りの音)だけが消える
+    try {
+      if (navigator.audioSession) navigator.audioSession.type = "playback";
+    } catch (e) {
+      /* 未対応のブラウザでは何もしない */
+    }
     const c = ensureCtx();
     if (c && c.state === "suspended") c.resume().catch(() => {});
     if (currentKey) {
@@ -254,6 +301,22 @@ const AUDIO = (() => {
       currentEl = null;
       if (el) el.pause();
       playBgm(key, 400);
+    }
+  }
+
+  // タブから戻った時、iOS では AudioContext が止まったままのことがある。
+  // BGM も GainNode 経由になったので、止まると曲ごと無音になる
+  function resume() {
+    if (!unlocked) return;
+    const c = ensureCtx();
+    if (c && c.state === "suspended") c.resume().catch(() => {});
+    if (currentEl && currentEl.paused && !muted) {
+      const p = currentEl.play();
+      if (p && p.catch) {
+        p.catch((err) => {
+          if (err && err.name !== "AbortError") lastError = err.name;
+        });
+      }
     }
   }
 
@@ -267,7 +330,7 @@ const AUDIO = (() => {
     if (currentEl) {
       clearFade();
       if (muted) {
-        currentEl.volume = 0;
+        setVolume(currentEl, 0);
         currentEl.pause();
       } else {
         const p = currentEl.play();
@@ -280,6 +343,7 @@ const AUDIO = (() => {
 
   return {
     unlock,
+    resume,
     playBgm,
     stopBgm,
     blip,
@@ -293,7 +357,8 @@ const AUDIO = (() => {
       muted,
       track: currentKey,
       playing: !!(currentEl && !currentEl.paused),
-      volume: currentEl ? Math.round(currentEl.volume * 100) / 100 : null,
+      volume: currentEl ? Math.round(volumeOf(currentEl) * 1000) / 1000 : null,
+      gainNode: currentEl ? !!gains.get(currentEl) : null,
       ctx: ctx ? ctx.state : null,
       lastError,
     }),

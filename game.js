@@ -7,7 +7,7 @@ const ASSET_DIR = "assets/";
 // 画像にもキャッシュバスターを付ける。付けないと、後から表情を差し替えたり
 // 追加したりした時に、古い画像や過去の404がブラウザに残り続ける。
 // index.html の ?v= と同じ数字に揃えること
-const ASSET_V = "?v=28";
+const ASSET_V = "?v=30";
 
 // 選択肢を描画してから受け付けるまでの猶予(誤タップ防止)と、1つずつ現れる間隔
 const CHOICE_LOCK_MS = 320;
@@ -576,7 +576,7 @@ const TYPE_MS = { narration: 16, line: 32 };
 // 既読は速める。1周で約100タップ・本文6000字あり、図鑑を埋めるには何周も要る。
 // ただし即時にはしない — 文字送りの音が本作の手触りそのものなので、周回でも鳴らす
 const READ_KEY = "sentimentalHanaeRead";
-const SPEED_KEY = "sentimentalHanaeSpeed";
+// 文字送りの切り替えは持たない。常に1文字ずつ出す(2026-08-26 本人指示)
 
 let readSet = (() => {
   try {
@@ -584,15 +584,6 @@ let readSet = (() => {
     return new Set(Array.isArray(a) ? a : []);
   } catch (e) {
     return new Set();
-  }
-})();
-
-// "type" = 逐次表示(既定) / "instant" = 常に即時表示
-let textSpeed = (() => {
-  try {
-    return localStorage.getItem(SPEED_KEY) === "instant" ? "instant" : "type";
-  } catch (e) {
-    return "type";
   }
 })();
 
@@ -606,12 +597,6 @@ function markRead(key) {
   }
 }
 
-function toggleTextSpeed() {
-  textSpeed = textSpeed === "instant" ? "type" : "instant";
-  try { localStorage.setItem(SPEED_KEY, textSpeed); } catch (e) {}
-  renderSpeedLabel();
-}
-
 function renderSoundLabel() {
   const on = !AUDIO.isMuted();
   document.querySelectorAll(".js-sound").forEach((btn) => {
@@ -619,13 +604,6 @@ function renderSoundLabel() {
     btn.setAttribute("aria-pressed", on ? "true" : "false");
     btn.setAttribute("aria-label", on ? "音を消す" : "音を出す");
   });
-}
-
-function renderSpeedLabel() {
-  const btn = el("btn-speed");
-  if (!btn) return;
-  btn.textContent = textSpeed === "instant" ? "文字送り: 即時" : "文字送り: 逐次";
-  btn.setAttribute("aria-pressed", textSpeed === "instant" ? "true" : "false");
 }
 
 let typeTimer = null;
@@ -698,10 +676,7 @@ function typeText(elm, raw, onDone, readKey) {
     markRead(readKey);
     if (onDone) onDone();
   };
-  // アニメーション低減はここでは見ない。文字送りは飾りではなく本作の読ませ方
-  // そのもので、止めると喋り音も鳴らなくなる。飛ばしたい人は HUD の「即時」で
-  const instant = textSpeed === "instant";
-  if (instant || raw.length === 0) {
+  if (raw.length === 0) {
     done();
     return;
   }
@@ -933,8 +908,16 @@ function showEvent(key, eventData, scene, onChoice) {
   const bodyText = buildEventText(eventData.text);
   pushLog(eventData.title || "", bodyText);
 
-  playBlocks(el("event-text"), bodyText, "t:" + key, () => {
-    renderChoices(key, eventData, scene, choicesEl, onChoice);
+  // 本文と選択肢を同時に出すと、読み終える前に選ぶことになる。
+  // 最後のブロックを読んだあと、もう一度タップさせてから選択肢を出す
+  const textEl = el("event-text");
+  playBlocks(textEl, bodyText, "t:" + key, () => {
+    textEl.classList.add("has-next");
+    pagerNext = () => {
+      pagerNext = null;
+      textEl.classList.remove("has-next");
+      renderChoices(key, eventData, scene, choicesEl, onChoice);
+    };
   });
 }
 
@@ -1177,8 +1160,6 @@ document.addEventListener("DOMContentLoaded", () => {
   preloadAssets();
   preloadExpressions();
   // 進行はセーブ済みなので、タイトルに戻っても「つづきから」で復帰できる
-  el("btn-speed").onclick = toggleTextSpeed;
-  renderSpeedLabel();
   renderSoundLabel();
   document.querySelectorAll(".js-sound").forEach((btn) => {
     btn.onclick = () => {
@@ -1194,6 +1175,10 @@ document.addEventListener("DOMContentLoaded", () => {
     UNLOCK_EVENTS.forEach((n) => document.removeEventListener(n, unlockAudio));
   };
   UNLOCK_EVENTS.forEach((n) => document.addEventListener(n, unlockAudio));
+  // 画面をロックして戻ってくると音が止まったままになることがある
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") AUDIO.resume();
+  });
   el("btn-log").onclick = openLog;
   el("btn-log-close").onclick = closeLog;
   // 余白をタップしても閉じる。パネルの中のタップは拾わない
