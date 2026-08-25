@@ -7,7 +7,7 @@ const ASSET_DIR = "assets/";
 // 画像にもキャッシュバスターを付ける。付けないと、後から表情を差し替えたり
 // 追加したりした時に、古い画像や過去の404がブラウザに残り続ける。
 // index.html の ?v= と同じ数字に揃えること
-const ASSET_V = "?v=17";
+const ASSET_V = "?v=18";
 
 // 選択肢を描画してから受け付けるまでの猶予(誤タップ防止)と、1つずつ現れる間隔
 const CHOICE_LOCK_MS = 320;
@@ -133,6 +133,53 @@ function renderEndingGallery() {
     done.textContent = "全エンディング到達。おつかれさまでした。";
     box.appendChild(done);
   }
+}
+
+/* ---------------- 場面ごとの BGM ---------------- */
+
+// 曲は背景ではなく気分に当てる。背景7種に1曲ずつ割ると切り替わりすぎる
+const BGM_QUIET = ["E5", "E8", "E12", "E13", "E14", "E14B", "E19"];
+const BGM_TENSION = ["E16", "E17", "E18", "F5_nishino", "RIVAL"];
+const BGM_ENDING = {
+  success: "end_true",
+  successPerfect: "end_true",
+  friend: "end_false",
+  soretigai: "end_false",
+  awkward: "end_false",
+  nishino: "end_rival",
+};
+
+// 日常曲は5曲ある。幕ごとに変え、さらに周回ごとにずらす。
+// 図鑑を埋めるには何周も要るので、最初に飽きるのはここ
+const PLAYS_KEY = "sentimentalHanaePlays";
+
+function playCount() {
+  try {
+    return parseInt(localStorage.getItem(PLAYS_KEY) || "0", 10) || 0;
+  } catch (e) {
+    return 0;
+  }
+}
+
+function bumpPlayCount() {
+  try {
+    localStorage.setItem(PLAYS_KEY, String((playCount() + 1) % 100));
+  } catch (e) {
+    /* 保存できなくても進行に影響させない */
+  }
+}
+
+function dailyTrack() {
+  const act = state.queueIndex < 9 ? 0 : state.queueIndex < 16 ? 1 : 2;
+  return "daily" + (((playCount() + act) % 5) + 1);
+}
+
+function bgmForKey(key) {
+  if (key === "TITLE" || key === "PROLOGUE") return "title";
+  if (key === "CONFESSION") return "quiet2";
+  if (BGM_QUIET.includes(key)) return "quiet1";
+  if (BGM_TENSION.includes(key)) return "tension";
+  return dailyTrack();
 }
 
 /* ---------------- 画面制御 ---------------- */
@@ -383,6 +430,7 @@ function initTitleScreen() {
   // 円形アイコンになる作りなので、出すとロゴに重なってしまう
   const wide = window.matchMedia && window.matchMedia("(min-width: 1060px)").matches;
   applyScene(sceneFor(wide ? "TITLE_WIDE" : "TITLE"));
+  AUDIO.playBgm("title");
   renderEndingGallery();
   window.scrollTo(0, 0);
   const saved = loadGame();
@@ -390,6 +438,7 @@ function initTitleScreen() {
   if (saved && !saved.finished) {
     continueBtn.style.display = "inline-block";
     continueBtn.onclick = () => {
+      AUDIO.se("next");
       state = saved;
       el("player-name-input").value = state.name;
       advanceQueue();
@@ -398,6 +447,8 @@ function initTitleScreen() {
     continueBtn.style.display = "none";
   }
   el("btn-start").onclick = () => {
+    AUDIO.se("next");
+    bumpPlayCount();
     const nameInput = el("player-name-input").value.trim();
     state = freshState();
     state.name = nameInput || "あなた";
@@ -441,10 +492,20 @@ function exprFor(points, tag) {
   return base;
 }
 
+// 好感度を伏せているのでハートが唯一のフィードバック。上がり幅を音でも表す
+const HEART_SE = {
+  "heart-huge": "heartHuge",
+  "heart-big": "heartBig",
+  "heart-small": "heartSmall",
+  "heart-break": "heartBreak",
+  "heart-shrink": "heartShrink",
+};
+
 function playHeartEffect(points) {
   const layer = el("heart-layer");
   layer.innerHTML = "";
   const tier = heartTier(points);
+  if (HEART_SE[tier.cls]) AUDIO.se(HEART_SE[tier.cls]);
   if (tier.count === 0) return;
 
   // 立ち絵が出ている時は顔のあたりに出す。画面中央だと「画面の装飾」に見えて、
@@ -472,10 +533,10 @@ function playHeartEffect(points) {
 
 /* ---------------- 本文の逐次表示 ---------------- */
 
-const TYPE_SPEED_MS = 16;
-
-// 既読テキストは逐次表示しない。1周で約100タップ・本文6000字あり、
-// 図鑑を埋めるには何周も必要なので、2周目以降の待ち時間が体験を殺す
+// 1文字あたりの間隔。セリフは地の文よりゆっくり出す(喋る速さとして読めるように)
+const TYPE_MS = { narration: 16, line: 32 };
+// 既読は速める。1周で約100タップ・本文6000字あり、図鑑を埋めるには何周も要る。
+// ただし即時にはしない — 文字送りの音が本作の手触りそのものなので、周回でも鳴らす
 const READ_KEY = "sentimentalHanaeRead";
 const SPEED_KEY = "sentimentalHanaeSpeed";
 
@@ -513,6 +574,15 @@ function toggleTextSpeed() {
   renderSpeedLabel();
 }
 
+function renderSoundLabel() {
+  const on = !AUDIO.isMuted();
+  document.querySelectorAll(".js-sound").forEach((btn) => {
+    btn.textContent = on ? "♪ オン" : "♪ オフ";
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+    btn.setAttribute("aria-label", on ? "音を消す" : "音を出す");
+  });
+}
+
 function renderSpeedLabel() {
   const btn = el("btn-speed");
   if (!btn) return;
@@ -528,11 +598,65 @@ function reduceMotion() {
 }
 
 // raw は改行を \n で含む素のテキスト。1文字ずつ出し、タップで即全表示できる
+const TYPE_MS_READ = { narration: 8, line: 16 };
+
+// 「」の中はセリフ、外は地の文。セリフの9割はハナエなので、それを既定にして
+// 例外だけを名指しする。前後の地の文からの推測では、ハナエと西野が同じ場面に
+// いる時に取り違える(全59セリフを目視して確定させた結果がこの2つのリスト)。
+// 本文を書き換えるとここから外れてハナエの声になるだけで、壊れはしない
+const LINES_OTHER = new Set([
+  "「文化祭実行委員、集まってー」",
+  "「ハナエ、差し入れ。みんなでどうぞ」",
+  "「昔から、コイツ試合負けた日は決まってコレなんですわ」",
+  "「手伝うわ」",
+  "「せやろ、こう見えて器用やねん」",
+  "「ハナエさん、今度みんなでカラオケ行くらしいで、来る?」",
+  "「重そうやな、持とか?」",
+  "「そういえば、西野が『ハナエに告白しよかな』とか言うてたで」",
+]);
+const LINES_HERO = new Set(["「え、今から?」", "「よろしく」"]);
+
+// リストに無い新しいセリフ用の保険。地の文にハナエの名前が無く、他の登場人物の
+// 名前だけがある時は別人とみなす。「兄」は入れない —— ハナエ自身が兄の話を
+// 頻繁にするので、彼女のセリフを別人と誤判定する
+const OTHER_SPEAKERS = ["トウマ", "西野", "小森"];
+
+// 0 = 地の文 / 1 = ハナエ / 2 = ハナエ以外の登場人物 / 3 = 主人公
+function voiceMapFor(raw) {
+  const map = new Array(raw.length).fill(0);
+  let i = 0;
+  while (i < raw.length) {
+    const open = raw.indexOf("「", i);
+    if (open < 0) break;
+    let close = raw.indexOf("」", open + 1);
+    if (close < 0) close = raw.length - 1;
+    const quote = raw.slice(open, close + 1);
+    let voice = 1;
+    if (LINES_HERO.has(quote)) {
+      voice = 3;
+    } else if (LINES_OTHER.has(quote)) {
+      voice = 2;
+    } else {
+      const near =
+        raw.slice(Math.max(0, open - 24), open) + raw.slice(close + 1, close + 25);
+      if (!near.includes("ハナエ") && OTHER_SPEAKERS.some((n) => near.includes(n))) {
+        voice = 2;
+      }
+    }
+    for (let k = open; k <= close; k++) map[k] = voice;
+    i = close + 1;
+  }
+  return map;
+}
+
+// 記号では鳴らさない。句読点や鉤括弧まで鳴らすと、喋りではなく打鍵音に聞こえる
+const NO_BLIP = /[\s、。，．・…‥「」『』（）()！!？?ー―—〜~＿_]/;
+
 function typeText(elm, raw, onDone, readKey) {
-  clearInterval(typeTimer);
+  clearTimeout(typeTimer);
   const html = raw.replace(/\n/g, "<br>");
   const done = () => {
-    clearInterval(typeTimer);
+    clearTimeout(typeTimer);
     typeTimer = null;
     finishTyping = null;
     elm.innerHTML = html;
@@ -540,9 +664,8 @@ function typeText(elm, raw, onDone, readKey) {
     markRead(readKey);
     if (onDone) onDone();
   };
-  // 既読・即時設定・アニメーション低減のいずれかなら、待たせずに全文を出す
-  const instant =
-    reduceMotion() || textSpeed === "instant" || (readKey && readSet.has(readKey));
+  // 即時設定・アニメーション低減なら、待たせずに全文を出す
+  const instant = reduceMotion() || textSpeed === "instant";
   if (instant || raw.length === 0) {
     done();
     return;
@@ -553,18 +676,26 @@ function typeText(elm, raw, onDone, readKey) {
   elm.innerHTML = html;
   elm.style.minHeight = elm.offsetHeight + "px";
 
+  const voices = voiceMapFor(raw);
+  const speed = readKey && readSet.has(readKey) ? TYPE_MS_READ : TYPE_MS;
+
   let i = 0;
   elm.innerHTML = "";
   elm.classList.add("is-typing");
   finishTyping = done;
-  typeTimer = setInterval(() => {
+
+  const step = () => {
+    const ch = raw[i];
     i += 1;
+    elm.innerHTML = raw.slice(0, i).replace(/\n/g, "<br>");
+    if (!NO_BLIP.test(ch)) AUDIO.blip(voices[i - 1]);
     if (i >= raw.length) {
       done();
       return;
     }
-    elm.innerHTML = raw.slice(0, i).replace(/\n/g, "<br>");
-  }, TYPE_SPEED_MS);
+    typeTimer = setTimeout(step, voices[i] ? speed.line : speed.narration);
+  };
+  typeTimer = setTimeout(step, 0);
 }
 
 function skipTyping() {
@@ -669,6 +800,7 @@ function buildEventText(rawText) {
 function showEvent(key, eventData, scene, onChoice) {
   showScreen("screen-event");
   applyScene(scene);
+  AUDIO.playBgm(bgmForKey(key));
   el("event-title").textContent = eventData.title || "";
   el("event-reaction").innerHTML = "";
   el("event-reaction").style.display = "none";
@@ -705,6 +837,7 @@ function renderChoices(key, eventData, scene, choicesEl, onChoice) {
     btn.style.animationDelay = (i * CHOICE_STAGGER_MS) / 1000 + "s";
     btn.onclick = () => {
       if (choicesEl.classList.contains("is-locked")) return;
+      AUDIO.se("choice");
       choicesEl.style.display = "none";
       const points = choice.points || 0;
       state.score += points;
@@ -730,7 +863,10 @@ function renderChoices(key, eventData, scene, choicesEl, onChoice) {
         const nextBtn = document.createElement("button");
         nextBtn.className = "next-btn";
         nextBtn.textContent = "つづける";
-        nextBtn.onclick = () => { onChoice(choice); };
+        nextBtn.onclick = () => {
+          AUDIO.se("next");
+          onChoice(choice);
+        };
         row.appendChild(nextBtn);
 
         reactionEl.appendChild(row);
@@ -745,6 +881,7 @@ function renderChoices(key, eventData, scene, choicesEl, onChoice) {
 function showFreeSelect() {
   showScreen("screen-free");
   applyScene(sceneFor("FREE"));
+  AUDIO.playBgm(dailyTrack());
   el("free-remaining").textContent = `あと${state.freePicksLeft}つ選べます`;
   const list = el("free-list");
   list.innerHTML = "";
@@ -763,6 +900,7 @@ function showFreeSelect() {
     card.style.animationDelay = (i * CHOICE_STAGGER_MS) / 1000 + "s";
     card.onclick = () => {
       if (list.classList.contains("is-locked")) return;
+      AUDIO.se("choice");
       state.freeChosen.push(key);
       state.freeRemaining = state.freeRemaining.filter((k) => k !== key);
       state.freePicksLeft--;
@@ -847,10 +985,18 @@ function advanceEventThenNext(key) {
 function startConfession() {
   showScreen("screen-confession");
   applyScene(sceneFor("CONFESSION"));
+  AUDIO.playBgm(bgmForKey("CONFESSION"));
   const intro = state.senshu ? GAME_DATA.confessionIntroSenshu : GAME_DATA.confessionIntro;
   const btn = el("btn-confess");
   btn.style.display = "none";
-  btn.onclick = () => { resolveEnding(); };
+  btn.disabled = false;
+  // 曲を切って無音の一拍を置く。ここは音楽で押すより、止めた方が効く
+  btn.onclick = () => {
+    btn.disabled = true;
+    AUDIO.se("next");
+    AUDIO.stopBgm(450);
+    setTimeout(resolveEnding, 950);
+  };
   window.scrollTo(0, 0);
   const introText = intro.replace("{name}", state.name);
   pushLog("告白", introText);
@@ -879,6 +1025,8 @@ function resolveEnding() {
   const ending = GAME_DATA.endings[endingKey];
   showScreen("screen-ending");
   applyScene(GAME_DATA.endingScenes[endingKey]);
+  AUDIO.playBgm(BGM_ENDING[endingKey], 700);
+  if (isNew) setTimeout(() => AUDIO.se("ending"), 250);
   const badge = el("ending-new");
   badge.style.display = isNew ? "block" : "none";
   badge.textContent = endingKey === "successPerfect"
@@ -891,6 +1039,7 @@ function resolveEnding() {
     `エンディングは全${GAME_DATA.endingOrder.length}種類(到達済み ${seen.length})。選択を変えると結末が変わります。`;
   window.scrollTo(0, 0);
   el("btn-restart").onclick = () => {
+    AUDIO.se("next");
     state = freshState();
     initTitleScreen();
   };
@@ -904,6 +1053,21 @@ document.addEventListener("DOMContentLoaded", () => {
   // 進行はセーブ済みなので、タイトルに戻っても「つづきから」で復帰できる
   el("btn-speed").onclick = toggleTextSpeed;
   renderSpeedLabel();
+  renderSoundLabel();
+  document.querySelectorAll(".js-sound").forEach((btn) => {
+    btn.onclick = () => {
+      AUDIO.toggleMuted();
+      renderSoundLabel();
+    };
+  });
+  // iOS も Chrome も、最初のタップより前は音を出せない。
+  // 環境によって拾えるイベントが違うので、最初に来たものを使う
+  const UNLOCK_EVENTS = ["pointerdown", "touchstart", "mousedown", "click", "keydown"];
+  const unlockAudio = () => {
+    AUDIO.unlock();
+    UNLOCK_EVENTS.forEach((n) => document.removeEventListener(n, unlockAudio));
+  };
+  UNLOCK_EVENTS.forEach((n) => document.addEventListener(n, unlockAudio));
   el("btn-log").onclick = openLog;
   el("btn-log-close").onclick = closeLog;
   // 余白をタップしても閉じる。パネルの中のタップは拾わない
@@ -914,7 +1078,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (ev.key === "Escape" && isLogOpen()) closeLog();
   });
   el("btn-title").onclick = () => {
-    clearInterval(typeTimer);
+    clearTimeout(typeTimer);
     finishTyping = null;
     saveGame();
     initTitleScreen();

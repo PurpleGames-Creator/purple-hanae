@@ -225,6 +225,18 @@ body { background: transparent; }
   /* 狭い画面で「語」だけが2行目に落ちるのを防ぐ */
   word-break: auto-phrase;
 }
+.title-sound {
+  text-align: center;
+  margin: 10px 0 0;
+}
+.credits {
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.72rem;
+  margin: 18px 0 0;
+}
+.credits a { color: var(--text-dim); }
+
 .title-note {
   text-align: center;
   color: var(--text-dim);
