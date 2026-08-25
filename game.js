@@ -7,7 +7,7 @@ const ASSET_DIR = "assets/";
 // 画像にもキャッシュバスターを付ける。付けないと、後から表情を差し替えたり
 // 追加したりした時に、古い画像や過去の404がブラウザに残り続ける。
 // index.html の ?v= と同じ数字に揃えること
-const ASSET_V = "?v=19";
+const ASSET_V = "?v=20";
 
 // 選択肢を描画してから受け付けるまでの猶予(誤タップ防止)と、1つずつ現れる間隔
 const CHOICE_LOCK_MS = 320;
@@ -452,6 +452,7 @@ function initTitleScreen() {
   const wide = window.matchMedia && window.matchMedia("(min-width: 1060px)").matches;
   applyScene(sceneFor(wide ? "TITLE_WIDE" : "TITLE"));
   AUDIO.playBgm("title");
+  gateTitleForAudio();
   renderEndingGallery();
   window.scrollTo(0, 0);
   const saved = loadGame();
@@ -475,6 +476,25 @@ function initTitleScreen() {
     saveGame();
     showPrologue();
   };
+}
+
+// ブラウザは最初のタップより前に音を出させない。タイトルで最初に押すのは
+// 「はじめる」なので、そのままだと解錠した瞬間にタイトルを離れてしまい、
+// タイトルの曲が一度も鳴らない。初回だけタップを挟んで、曲が鳴ってから
+// メニューを出す(音を切っている人には挟まない)
+function gateTitleForAudio() {
+  const screen = el("screen-title");
+  if (AUDIO.isUnlocked() || AUDIO.isMuted()) {
+    screen.classList.remove("is-gated");
+    return;
+  }
+  screen.classList.add("is-gated");
+  const openTitle = () => {
+    AUDIO.unlock();
+    screen.classList.remove("is-gated");
+    document.removeEventListener("click", openTitle);
+  };
+  document.addEventListener("click", openTitle);
 }
 
 /* ---------------- プロローグ ---------------- */

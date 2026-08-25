@@ -205,7 +205,7 @@ body { background: transparent; }
 
 /* タイトルは画像のロゴ。h1 のテキストは残さず alt に持たせている */
 .game-title {
-  margin: 32px 0 10px;
+  margin: 32px 0 36px;
   text-align: center;
 }
 .game-logo {
@@ -216,15 +216,29 @@ body { background: transparent; }
   /* ロゴ自体が縁取りを持っているので、影は接地感を出す程度に留める */
   filter: drop-shadow(0 6px 22px rgba(0, 0, 0, 0.55));
 }
-.subtitle {
+/* 音を鳴らすための1タップを待っている間だけ出す */
+.tap-hint {
+  display: none;
   text-align: center;
   color: var(--text-dim);
-  margin-bottom: 36px;
-  font-size: 0.9rem;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
-  /* 狭い画面で「語」だけが2行目に落ちるのを防ぐ */
-  word-break: auto-phrase;
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  margin: 28px 0 0;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+  animation: tapPulse 2.2s ease-in-out infinite;
 }
+#screen-title.is-gated .tap-hint { display: block; }
+#screen-title.is-gated .title-menu { display: none; }
+@keyframes tapPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+.title-menu {
+  display: flex;
+  flex-direction: column;
+}
+
 .title-sound {
   text-align: center;
   margin: 10px 0 0;
@@ -237,14 +251,6 @@ body { background: transparent; }
 }
 .credits a { color: var(--text-dim); }
 
-.title-note {
-  text-align: center;
-  color: var(--text-dim);
-  font-size: 0.8rem;
-  margin-top: 24px;
-  line-height: 1.7;
-  word-break: auto-phrase;
-}
 .name-form {
   display: flex;
   flex-direction: column;
@@ -554,6 +560,7 @@ body { background: transparent; }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .tap-hint { animation: none; opacity: 0.8; }
   .bg-layer { transition: none; }
   .sprite.sprite-in { animation: none; }
   #sprite-b { transition: none; }

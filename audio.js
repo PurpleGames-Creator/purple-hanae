@@ -9,7 +9,7 @@
 const AUDIO = (() => {
   const BGM_DIR = "assets/bgm/";
   // index.html の ?v= と同じ数字に揃えること
-  const BGM_V = "?v=19";
+  const BGM_V = "?v=20";
   const MUTE_KEY = "sentimentalHanaeMuted";
 
   const FADE_MS = 900;
@@ -283,6 +283,7 @@ const AUDIO = (() => {
     blip,
     se,
     isMuted: () => muted,
+    isUnlocked: () => unlocked,
     toggleMuted: () => setMuted(!muted),
     // 実機で音が出ない時の切り分け用。ブラウザによって詰まる場所が違う
     state: () => ({

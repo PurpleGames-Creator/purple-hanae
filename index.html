@@ -15,8 +15,8 @@
 <meta property="og:image" content="https://purplegames-creator.github.io/purple-hanae/assets/ogp.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💗</text></svg>">
-<link rel="preload" as="image" href="assets/logo_title.webp?v=19">
-<link rel="stylesheet" href="style.css?v=19">
+<link rel="preload" as="image" href="assets/logo_title.webp?v=20">
+<link rel="stylesheet" href="style.css?v=20">
 </head>
 <body>
 
@@ -44,19 +44,20 @@
 
   <section id="screen-title" class="screen active">
     <h1 class="game-title">
-      <img class="game-logo" src="assets/logo_title.webp?v=19" width="960" height="463"
+      <img class="game-logo" src="assets/logo_title.webp?v=20" width="960" height="463"
            alt="センチメンタル・ハナエ" fetchpriority="high" decoding="async">
     </h1>
-    <p class="subtitle">文化祭実行委員として出会った、味村ハナエへの物語</p>
-    <div class="name-form">
-      <label for="player-name-input">あなたの名前</label>
-      <input type="text" id="player-name-input" maxlength="12" placeholder="名前を入力">
+    <p id="tap-hint" class="tap-hint">画面をタップ</p>
+    <div id="title-menu" class="title-menu">
+      <div class="name-form">
+        <label for="player-name-input">あなたの名前</label>
+        <input type="text" id="player-name-input" maxlength="12" placeholder="名前を入力">
+      </div>
+      <button id="btn-start" class="main-btn">はじめる</button>
+      <button id="btn-continue" class="main-btn secondary">つづきから</button>
+      <p class="title-sound"><button id="btn-sound-title" class="link-btn js-sound" type="button">♪ オン</button></p>
+      <div id="ending-gallery" class="ending-gallery"></div>
     </div>
-    <button id="btn-start" class="main-btn">はじめる</button>
-    <button id="btn-continue" class="main-btn secondary">つづきから</button>
-    <p class="title-note">好感度は表示されません。ハナエの反応だけが手がかりです。</p>
-    <p class="title-sound"><button id="btn-sound-title" class="link-btn js-sound" type="button">♪ オン</button></p>
-    <div id="ending-gallery" class="ending-gallery"></div>
   </section>
 
   <section id="screen-prologue" class="screen">
@@ -107,8 +108,8 @@
   </div>
 </div>
 
-<script src="game-data.js?v=19"></script>
-<script src="audio.js?v=19"></script>
-<script src="game.js?v=19"></script>
+<script src="game-data.js?v=20"></script>
+<script src="audio.js?v=20"></script>
+<script src="game.js?v=20"></script>
 </body>
 </html>
