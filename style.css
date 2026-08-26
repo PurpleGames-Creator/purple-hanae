@@ -110,6 +110,9 @@ body { background: transparent; }
     max-height: 60dvh;
     overflow-y: auto;
     overscroll-behavior: contain;
+    /* ここにスクロールバーが出ると、その幅ぶん本文の枠が縮んで
+       左右に動いて見える。指で送るだけの画面なので出さない */
+    scrollbar-width: none;
   }
   /* 中身は縮ませない(縮むと枠の高さが揺れる)。
      flex-end ではなく先頭の auto マージンで下に寄せる —— flex-end だと
@@ -336,6 +339,9 @@ body { background: transparent; }
   height: calc(1.95em * 3 + 40px);
   flex-shrink: 0;
   overflow-y: auto;
+  /* スクロールバーは出さない。出た瞬間にその幅ぶん中身が詰まって、
+     枠が左右に伸び縮みして見える(酔いの原因) */
+  scrollbar-width: none;
   white-space: normal;
   word-break: auto-phrase;
   line-break: strict;
@@ -729,4 +735,13 @@ body { background: transparent; }
   .choice-btn { padding: 10px 14px; font-size: 0.88rem; }
   .event-title { font-size: 0.95rem; margin-bottom: 10px; }
   .event-choices { gap: 8px; }
+}
+
+/* スクロールバーを幅ごと消す(WebKit)。出入りのたびに枠が左右に動くのを防ぐ */
+.event-text::-webkit-scrollbar,
+#screen-event::-webkit-scrollbar,
+#screen-confession::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
 }
