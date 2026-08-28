@@ -9,7 +9,7 @@
 const AUDIO = (() => {
   const BGM_DIR = "assets/bgm/";
   // index.html の ?v= と同じ数字に揃えること
-  const BGM_V = "?v=34";
+  const BGM_V = "?v=35";
   const MUTE_KEY = "sentimentalHanaeMuted";
 
   const FADE_MS = 900;
@@ -194,8 +194,9 @@ const AUDIO = (() => {
     return ctx;
   }
 
-  // 単音。attack/decay を持たせないと「プツッ」というノイズになる
-  function tone(freq, ms, type, gain, freqTo) {
+  // 単音。attack/decay を持たせないと「プツッ」というノイズになる。
+  // attackMs を渡すと立ち上がりを鈍らせられる(角が取れて柔らかい音になる)
+  function tone(freq, ms, type, gain, freqTo, attackMs) {
     if (muted) return;
     const c = ensureCtx();
     if (!c || c.state === "suspended") return;
@@ -207,7 +208,8 @@ const AUDIO = (() => {
     osc.frequency.setValueAtTime(freq, t0);
     if (freqTo) osc.frequency.exponentialRampToValueAtTime(freqTo, t0 + dur);
     g.gain.setValueAtTime(0, t0);
-    g.gain.linearRampToValueAtTime(gain, t0 + Math.min(0.008, dur * 0.3));
+    const attack = Math.min((attackMs || 8) / 1000, dur * 0.45);
+    g.gain.linearRampToValueAtTime(gain, t0 + attack);
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
     osc.connect(g);
     g.connect(seBus);
@@ -218,12 +220,24 @@ const AUDIO = (() => {
   /* ---------------- 文字送りの音 ---------------- */
 
   // 0 = 地の文 / 1 = ハナエ / 2 = ハナエ以外の登場人物 / 3 = 主人公
-  // 地の文だけ triangle。「」の中は必ず square にして、喋りとして聞こえるようにする
   // 昔のADVの喋り音。短すぎ・小さすぎると鳴っていないように聞こえるので、
-  // 40〜50ms・しっかりした音量を取る(BGM は下に敷くだけなので競合しない)
+  // 40〜60ms・しっかりした音量を取る(BGM は下に敷くだけなので競合しない)。
+  //
+  // ハナエだけ sine。以前は 950Hz の square だったが、矩形波は 2.8k/4.7k/6.6kHz に
+  // 強い倍音が並び、そこが人の耳のいちばん敏感な帯域に当たるので耳が痛くなる
+  // (本作のセリフの9割が彼女なので、この音がゲーム全体の手触りになる)。
+  // 倍音を持たない sine にして、立ち上がりを鈍らせ、880→700Hz へ軽く下げると
+  // 「ぴ」ではなく「ぽ」に近い、高いが柔らかい声になる。
+  // 他の話者は square のまま —— 音色そのものが誰の声かの手がかりになっている。
+  //
+  // OfflineAudioContext で描画して実測した値(2-5kHz = 耳が痛く感じる帯域の比率、
+  // A特性 = 人の耳の感度で重み付けした音量):
+  //   旧 950Hz square .19/44ms … 2-5kHz 12.5% / A特性 39.0dB(4人中いちばん大きい)
+  //   新 880Hz sine   .18/52ms … 2-5kHz  0.0% / A特性 37.6dB(西野の 37.3dB と同等)
+  // 長さは 52ms まで。BLIP_MIN_MS が 70ms なので、これ以上伸ばすと音が繋がる
   const VOICES = [
     { freq: 430, type: "triangle", gain: 0.17, ms: 46 },
-    { freq: 950, type: "square", gain: 0.19, ms: 44 },
+    { freq: 880, type: "sine", gain: 0.18, ms: 52, to: 700, attack: 12 },
     { freq: 620, type: "square", gain: 0.18, ms: 46 },
     { freq: 500, type: "square", gain: 0.18, ms: 46 },
   ];
@@ -239,9 +253,10 @@ const AUDIO = (() => {
     if (now - lastBlip < BLIP_MIN_MS) return;
     lastBlip = now;
     const v = VOICES[voice] || VOICES[0];
-    // 少しだけ音程を散らす。固定だと機械が喋っているように聞こえる
+    // 少しだけ音程を散らす。固定だと機械が喋っているように聞こえる。
+    // 下げ先にも同じ倍率を掛けて、音の下がり幅は変えない
     const detune = 1 + (Math.random() - 0.5) * 0.06;
-    tone(v.freq * detune, v.ms, v.type, v.gain);
+    tone(v.freq * detune, v.ms, v.type, v.gain, v.to ? v.to * detune : 0, v.attack);
   }
 
   /* ---------------- 場面ごとの効果音 ---------------- */
