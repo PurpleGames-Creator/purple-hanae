@@ -7,7 +7,7 @@ const ASSET_DIR = "assets/";
 // 画像にもキャッシュバスターを付ける。付けないと、後から表情を差し替えたり
 // 追加したりした時に、古い画像や過去の404がブラウザに残り続ける。
 // index.html の ?v= と同じ数字に揃えること
-const ASSET_V = "?v=36";
+const ASSET_V = "?v=37";
 
 // 選択肢を描画してから受け付けるまでの猶予(誤タップ防止)と、1つずつ現れる間隔
 const CHOICE_LOCK_MS = 320;
@@ -1120,9 +1120,13 @@ function renderChoices(key, eventData, scene, choicesEl, onChoice, onCommit) {
       // 点数だけ入った状態で同じイベントがもう一度出て、二重に加算される
       if (onCommit) onCommit(choice);
       saveGame();
+      // 表情は選択肢ごとの指定を最優先する。点数からの自動判定は指定漏れの保険。
+      // 本文中は不在の場面(E6)でも、反応では reactionSprite で顔を出す。
+      // ハートより先に出すこと —— ハートは立ち絵の顔めがけて飛ばすので、
+      // 立ち絵が出ていないと画面中央の飾りになってしまう
+      const outfit = scene && (scene.sprite || scene.reactionSprite);
+      if (outfit) setSprite(outfit, choice.expr || exprFor(points, choice.tag));
       playHeartEffect(points);
-      // 表情は選択肢ごとの指定を最優先する。点数からの自動判定は指定漏れの保険
-      if (scene && scene.sprite) setSprite(scene.sprite, choice.expr || exprFor(points, choice.tag));
 
       // 反応も本文と同じページ送りにする。1枠に地の文とセリフを混ぜないため、
       // 「〜」と地の文。の形の反応は2ブロックに割れる

@@ -335,20 +335,24 @@ const GAME_DATA = {
     ],
   },
 
-  confessionIntro: `文化祭最終日、後夜祭の片付けが終わった後。校庭の隅、誰もいない場所で、ハナエと二人きりになる。\n\n「なあ、話って何?」\n\nここまでの日々が、一気に頭を巡る。今しかない。\n\n{name}は、まっすぐにハナエを見て言った。\n\n「好きです。付き合ってください」`,
+  confessionIntro: `文化祭最終日、後夜祭の片付けが終わった後。校庭の隅、誰もいない場所で、ハナエと二人きりになる。\n\n「なあ、話って何?」\n\nここまでの日々が、一気に頭を巡る。今しかない。\n\n俺は、まっすぐにハナエを見て言った。\n\n「好きです。付き合ってください」`,
 
   // 「先手を打つ」を選んだ場合の告白(前日の夜。E19を経ずに告白へ飛ぶ)
-  confessionIntroSenshu: `その夜。まだ校庭の照明が半分だけ点いている時間に、ハナエを呼び出した。\n\n「なんなん、こんな時間に。明日本番やで」\n\n明日を待っていたら、たぶん間に合わない。理屈ではなく、そう思った。\n\n{name}は、息を整えてからハナエを見た。\n\n「好きです。付き合ってください」`,
+  confessionIntroSenshu: `その夜。まだ校庭の照明が半分だけ点いている時間に、ハナエを呼び出した。\n\n「なんなん、こんな時間に。明日本番やで」\n\n明日を待っていたら、たぶん間に合わない。理屈ではなく、そう思った。\n\n俺は、息を整えてからハナエを見た。\n\n「好きです。付き合ってください」`,
 
   // 各シーンの背景と立ち絵(演出データ。テキスト側とは分離して管理する)
   // sprite: "summer" | "winter" | null(ハナエが画面にいない場面)
+  // reactionSprite: 本文の時点では不在だが、選択後の反応では出す場面。
+  //   本作は「返ってくる言葉と、その顔だけが手がかり」なので、
+  //   反応だけは必ず顔を見せる
   scenes: {
     E1:  { bg: "bg_classroom",    sprite: "summer" },
     E2:  { bg: "bg_gym",          sprite: "summer" },
     E3:  { bg: "bg_gym",          sprite: "summer" },
     E4:  { bg: "bg_classroom",    sprite: "summer" },
     E5:  { bg: "bg_cafe",         sprite: "summer" },
-    E6:  { bg: "bg_classroom",    sprite: null    },
+    // 大会当日でハナエは会場にいる。反応(翌日 / 返信)では顔を出す
+    E6:  { bg: "bg_classroom",    sprite: null, reactionSprite: "summer" },
     E7:  { bg: "bg_gym",          sprite: "summer" },
     E8:  { bg: "bg_gym",          sprite: "summer", expr: "normal" },
     E9:  { bg: "bg_tennis",       sprite: "summer", expr: "normal" },
