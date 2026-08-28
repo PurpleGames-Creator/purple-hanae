@@ -101,10 +101,15 @@ body { background: transparent; }
     height: min(84vh, 900px);
     height: min(84dvh, 900px);
   }
+  /* エンディング画面だけは HUD を出さないので、HUD ぶんの 52px を空ける必要がない。
+     立ち絵を上端まで上げて、顔と本文パネルの間を 44px 稼ぐ(低い機種だと
+     エンディングは要素が多く、詰めるだけでは顔まで届いてしまう) */
+  body.is-ending .sprite { top: 8px; }
   /* 本文と選択肢は画面の下 60% だけを使う。上 40% は顔のために必ず空ける。
      収まらない時はこの中でスクロールさせ、顔の領域には絶対に食い込ませない */
   #screen-event,
-  #screen-confession {
+  #screen-confession,
+  #screen-ending {
     flex: 0 1 auto;
     margin-top: auto;
     max-height: 60dvh;
@@ -118,11 +123,13 @@ body { background: transparent; }
      flex-end ではなく先頭の auto マージンで下に寄せる —— flex-end だと
      はみ出した時に上端がスクロールで出せなくなる */
   #screen-event > *,
-  #screen-confession > * {
+  #screen-confession > *,
+  #screen-ending > * {
     flex-shrink: 0;
   }
   #screen-event > :first-child,
-  #screen-confession > :first-child {
+  #screen-confession > :first-child,
+  #screen-ending > :first-child {
     margin-top: auto;
   }
 }
@@ -549,13 +556,6 @@ body { background: transparent; }
   font-size: 0.8rem;
   margin: 12px 0 0;
 }
-.ending-back {
-  text-align: center;
-  font-size: 0.85rem;
-  margin-top: 18px;
-}
-.ending-back a { color: var(--accent); }
-
 /* キーボード操作時のフォーカス表示。マウス操作では出さない */
 .choice-btn:focus-visible,
 .free-card:focus-visible,
@@ -734,6 +734,12 @@ body { background: transparent; }
   /* 顔の領域を守るため、下に置くものは詰める */
   .event-title { margin: 0 0 12px; font-size: 1rem; }
   .choice-btn { padding: 12px 14px; }
+  /* エンディングは要素が多い(バッジ・見出し・本文・ボタン・脚注)。
+     既定の余白のままだと 60dvh に収まらず、はみ出したぶんが顔まで伸びる */
+  .ending-new { margin-top: 0; }
+  .ending-title { margin: 14px 0 14px; font-size: 1.05rem; }
+  .ending-note { font-size: 0.78rem; }
+  .credits { margin-top: 12px; }
 }
 
 /* 画面が低い機種はさらに詰める。選択肢4つ＋パネルが収まる境目がこのあたり */
@@ -742,12 +748,20 @@ body { background: transparent; }
   .choice-btn { padding: 10px 14px; font-size: 0.88rem; }
   .event-title { font-size: 0.95rem; margin-bottom: 10px; }
   .event-choices { gap: 8px; }
+  /* エンディングは脚注とボタンのぶんだけ背が高い。低い機種では 60dvh に入りきらず、
+     入りきらないぶんが上に伸びて顔に掛かるので、ここでさらに詰める */
+  .ending-new { font-size: 0.74rem; padding: 5px 12px; }
+  .ending-title { margin: 10px 0; font-size: 0.98rem; }
+  #btn-restart { padding: 11px 32px; font-size: 0.95rem; margin-bottom: 10px; }
+  .ending-note { font-size: 0.72rem; }
+  .credits { margin-top: 8px; }
 }
 
 /* スクロールバーを幅ごと消す(WebKit)。出入りのたびに枠が左右に動くのを防ぐ */
 .event-text::-webkit-scrollbar,
 #screen-event::-webkit-scrollbar,
-#screen-confession::-webkit-scrollbar {
+#screen-confession::-webkit-scrollbar,
+#screen-ending::-webkit-scrollbar {
   width: 0;
   height: 0;
   display: none;
