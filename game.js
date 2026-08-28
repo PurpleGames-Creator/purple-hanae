@@ -7,7 +7,7 @@ const ASSET_DIR = "assets/";
 // 画像にもキャッシュバスターを付ける。付けないと、後から表情を差し替えたり
 // 追加したりした時に、古い画像や過去の404がブラウザに残り続ける。
 // index.html の ?v= と同じ数字に揃えること
-const ASSET_V = "?v=33";
+const ASSET_V = "?v=34";
 
 // 選択肢を描画してから受け付けるまでの猶予(誤タップ防止)と、1つずつ現れる間隔
 const CHOICE_LOCK_MS = 320;
@@ -622,60 +622,71 @@ let finishTyping = null; // 表示中に呼ぶと即座に全文表示する
 // raw は改行を \n で含む素のテキスト。1文字ずつ出し、タップで即全表示できる
 const TYPE_MS_READ = { narration: 8, line: 16 };
 
+/* ---------------- 話者 ---------------- */
+
 // 「」の中はセリフ、外は地の文。セリフの9割はハナエなので、それを既定にして
 // 例外だけを名指しする。前後の地の文からの推測では、ハナエと西野が同じ場面に
-// いる時に取り違える(全59セリフを目視して確定させた結果がこの2つのリスト)。
-// 本文を書き換えるとここから外れてハナエの声になるだけで、壊れはしない
-const LINES_OTHER = new Set([
-  "「文化祭実行委員、集まってー」",
-  "「ハナエ、差し入れ。みんなでどうぞ」",
-  "「昔から、コイツ試合負けた日は決まってコレなんですわ」",
-  "「手伝うわ」",
-  "「せやろ、こう見えて器用やねん」",
-  "「ハナエさん、今度みんなでカラオケ行くらしいで、来る?」",
-  "「重そうやな、持とか?」",
-  "「そういえば、西野が『ハナエに告白しよかな』とか言うてたで」",
+// いる時に取り違える(全セリフを目視して確定させた結果がこのリスト)。
+// 本文を書き換えるとここから外れてハナエ扱いになるだけで、壊れはしない。
+// voice は AUDIO.blip の音色。0 = 地の文 / 1 = ハナエ / 2 = ハナエ以外 / 3 = 主人公
+const SPEAKERS = {
+  hanae:     { name: () => "ハナエ", voice: 1 },
+  hero:      { name: () => state.name || "俺", voice: 3 },
+  nishino:   { name: () => "西野", voice: 2 },
+  touma:     { name: () => "トウマ", voice: 2 },
+  komori:    { name: () => "小森", voice: 2 },
+  iin:       { name: () => "委員", voice: 2 },
+  broadcast: { name: () => "放送", voice: 2 },
+  // E1 でまだ名乗っていないハナエ。ここで名前を出すと
+  // 「それが味村ハナエとの、最初の会話だった」という締めが先に割れる
+  unknown:   { name: () => "？？？", voice: 1 },
+};
+
+const SPEAKER_BY_LINE = new Map([
+  ["「文化祭実行委員、集まってー」", "broadcast"],
+  ["「あ、ちょうどええわ。そっちの机、こっち持ってきてくれる?」", "unknown"],
+  ["「ハナエ、差し入れ。みんなでどうぞ」", "touma"],
+  ["「昔から、コイツ試合負けた日は決まってコレなんですわ」", "touma"],
+  ["「そういえば、西野が『ハナエに告白しよかな』とか言うてたで」", "iin"],
+  ["「手伝うわ」", "nishino"],
+  ["「せやろ、こう見えて器用やねん」", "nishino"],
+  ["「ハナエさん、今度みんなでカラオケ行くらしいで、来る?」", "nishino"],
+  ["「重そうやな、持とか?」", "nishino"],
+  // 西野に礼を言っているのはハナエ。地の文に西野しか出てこないので推測が外れる
+  ["「あ……うん、おおきに」", "hanae"],
+  ["「え、今から?」", "hero"],
+  ["「よろしく」", "hero"],
+  ["「好きです。付き合ってください」", "hero"],
 ]);
-const LINES_HERO = new Set(["「え、今から?」", "「よろしく」"]);
 
 // リストに無い新しいセリフ用の保険。地の文にハナエの名前が無く、他の登場人物の
 // 名前だけがある時は別人とみなす。「兄」は入れない —— ハナエ自身が兄の話を
 // 頻繁にするので、彼女のセリフを別人と誤判定する
-const OTHER_SPEAKERS = ["トウマ", "西野", "小森"];
+const OTHER_SPEAKERS = [
+  { word: "トウマ", key: "touma" },
+  { word: "西野", key: "nishino" },
+  { word: "小森", key: "komori" },
+];
 
-// 0 = 地の文 / 1 = ハナエ / 2 = ハナエ以外の登場人物 / 3 = 主人公
-function voiceMapFor(raw) {
-  const map = new Array(raw.length).fill(0);
-  let i = 0;
-  while (i < raw.length) {
-    const open = raw.indexOf("「", i);
-    if (open < 0) break;
-    let close = raw.indexOf("」", open + 1);
-    if (close < 0) close = raw.length - 1;
-    const quote = raw.slice(open, close + 1);
-    let voice = 1;
-    if (LINES_HERO.has(quote)) {
-      voice = 3;
-    } else if (LINES_OTHER.has(quote)) {
-      voice = 2;
-    } else {
-      const near =
-        raw.slice(Math.max(0, open - 24), open) + raw.slice(close + 1, close + 25);
-      if (!near.includes("ハナエ") && OTHER_SPEAKERS.some((n) => near.includes(n))) {
-        voice = 2;
-      }
-    }
-    for (let k = open; k <= close; k++) map[k] = voice;
-    i = close + 1;
+function speakerKeyFor(quote, raw, open, close) {
+  const fixed = SPEAKER_BY_LINE.get(quote);
+  if (fixed) return fixed;
+  const near =
+    raw.slice(Math.max(0, open - 24), open) + raw.slice(close + 1, close + 25);
+  if (!near.includes("ハナエ")) {
+    const other = OTHER_SPEAKERS.find((s) => near.includes(s.word));
+    if (other) return other.key;
   }
-  return map;
+  return "hanae";
 }
 
 // 記号では鳴らさない。句読点や鉤括弧まで鳴らすと、喋りではなく打鍵音に聞こえる
-const NO_BLIP = /[\s、。，．・…‥「」『』（）()！!？?ー―—〜~＿_]/;
+const NO_BLIP = /[\s、。，．・…‥「」『』【】（）()！!？?ー―—〜~＿_]/;
 
-function typeText(elm, raw, onDone, readKey) {
+function typeText(elm, block, onDone, readKey) {
   clearTimeout(typeTimer);
+  const raw = block.text;
+  const voice = block.voice;
   const html = raw.replace(/\n/g, "<br>");
   const done = () => {
     clearTimeout(typeTimer);
@@ -693,11 +704,14 @@ function typeText(elm, raw, onDone, readKey) {
   // パネルの高さは CSS で固定してある(ブロックごとに測ると、文章の長短で
   // 枠がガタガタ動いて画面酔いの原因になる)
 
-  const voices = voiceMapFor(raw);
   const speed = readKey && readSet.has(readKey) ? TYPE_MS_READ : TYPE_MS;
+  // ブロックの中に地の文とセリフが混ざることはもう無いので、間隔も音色も
+  // ブロックごとに1つで足りる(混ざっていた頃は1文字ずつ引いていた)
+  const per = voice === 0 ? speed.narration : speed.line;
 
-  let i = 0;
-  elm.innerHTML = "";
+  // 話者ラベル(【ハナエ「)は名札なので1文字ずつ出さない。喋り出しは括弧の中から
+  let i = Math.min(block.lead || 0, raw.length - 1);
+  elm.innerHTML = raw.slice(0, i);
   elm.classList.add("is-typing");
   finishTyping = done;
 
@@ -705,12 +719,12 @@ function typeText(elm, raw, onDone, readKey) {
     const ch = raw[i];
     i += 1;
     elm.innerHTML = raw.slice(0, i).replace(/\n/g, "<br>");
-    if (!NO_BLIP.test(ch)) AUDIO.blip(voices[i - 1]);
+    if (!NO_BLIP.test(ch)) AUDIO.blip(voice);
     if (i >= raw.length) {
       done();
       return;
     }
-    typeTimer = setTimeout(step, voices[i] ? speed.line : speed.narration);
+    typeTimer = setTimeout(step, per);
   };
   typeTimer = setTimeout(step, 0);
 }
@@ -745,26 +759,138 @@ function splitSentences(p) {
   return out;
 }
 
-// 本文を送り単位に切る。空行と改行で割り、それでも長いものは文で割って詰め直す
+/* ---------------- 地の文とセリフの分離 ---------------- */
+
+// 1つの枠に地の文とセリフを混ぜない。混ぜると文字送りの音が途中で入れ替わり、
+// 地の文の音と会話の音が交ざって耳障りになる(2026-08-28 本人指示)。
+// セリフは【名前「〜」】の形にして、誰が喋っているかを一目で分かるようにする。
+
+// 言い切っているか(地の文の断片を繋ぎ直すかの判定に使う)
+const SENT_END = /[。！？!?]$/;
+
+// セリフを別ブロックに出すと、地の文の側に引用の「と」だけが残る。
+// (「素直でよろしい」と軽く言われる。→ 「と軽く言われる。」)
+function stripQuoteParticle(text) {
+  return text.replace(/^\s*(?:と|って)(?=.)/, "").replace(/^[、，]\s*/, "");
+}
+
+// 1行を [{kind:"n"|"q", text, key}] に割る。
+// raw と offset は話者推測(前後24字を見る)のために受け取る
+function splitVoiceParts(line, raw, offset) {
+  const toks = [];
+  let i = 0;
+  while (i < line.length) {
+    const open = line.indexOf("「", i);
+    if (open < 0) {
+      toks.push({ kind: "n", text: line.slice(i) });
+      break;
+    }
+    const close = line.indexOf("」", open + 1);
+    if (close < 0) {
+      // 閉じ括弧が無い行は割らない(壊れたデータで本文が消えるより出した方がよい)
+      toks.push({ kind: "n", text: line.slice(i) });
+      break;
+    }
+    if (open > i) toks.push({ kind: "n", text: line.slice(i, open) });
+    const quote = line.slice(open, close + 1);
+    toks.push({
+      kind: "q",
+      text: quote,
+      key: speakerKeyFor(quote, raw, offset + open, offset + close),
+    });
+    i = close + 1;
+  }
+  toks.forEach((t, k) => {
+    if (t.kind === "n" && k > 0 && toks[k - 1].kind === "q") {
+      t.text = stripQuoteParticle(t.text);
+    }
+  });
+
+  const out = [];
+  for (let k = 0; k < toks.length; k++) {
+    const t = toks[k];
+    if (t.kind === "q") {
+      out.push(t);
+      continue;
+    }
+    const txt = t.text.trim();
+    if (!txt) continue;
+    // セリフの前の地の文が言い切っていない時は、セリフの後ろの地の文と繋いで
+    // 1つの文に戻す(「一瞬驚いた顔をして、」＋「と珍しく照れる。」)。
+    // 言い切っている文はその場に残す —— 動かすと前後関係が変わってしまう
+    const sents = splitSentences(txt);
+    const tail =
+      sents.length && !SENT_END.test(sents[sents.length - 1]) ? sents.pop() : "";
+    if (tail && toks[k + 1] && toks[k + 1].kind === "q" && toks[k + 2] && toks[k + 2].kind === "n") {
+      const head = sents.join("");
+      if (head) out.push({ kind: "n", text: head });
+      out.push({ kind: "n", text: tail + toks[k + 2].text.trim() });
+      toks[k + 2].text = "";
+      continue;
+    }
+    out.push({ kind: "n", text: txt });
+  }
+  return out;
+}
+
+// セリフ1つを【名前「〜」】のブロックにする。
+// 長いセリフは文で割り、そのつど「」を閉じ直す(括弧が開きっぱなしにならない)
+function dialogueBlocks(quote, key) {
+  const speaker = SPEAKERS[key] || SPEAKERS.hanae;
+  const label = speaker.name();
+  const lead = label.length + 2; // 【名前「 まではラベルなので一気に出す
+  const wrap = (body) => ({
+    text: "【" + label + "「" + body + "」】",
+    voice: speaker.voice,
+    lead: lead,
+  });
+  const inner = quote.slice(1, -1);
+  const limit = Math.max(16, BLOCK_MAX - (label.length + 4));
+  if (inner.length <= limit) return [wrap(inner)];
+  const out = [];
+  let buf = "";
+  splitSentences(inner).forEach((sen) => {
+    if (buf && (buf + sen).length > limit) {
+      out.push(wrap(buf.replace(/[。、]$/, "")));
+      buf = sen;
+    } else {
+      buf += sen;
+    }
+  });
+  if (buf) out.push(wrap(buf.replace(/[。、]$/, "")));
+  return out;
+}
+
+function narrationBlocks(text) {
+  if (text.length <= BLOCK_MAX) return [{ text: text, voice: 0, lead: 0 }];
+  const out = [];
+  let buf = "";
+  splitSentences(text).forEach((sen) => {
+    if (buf && (buf + sen).length > BLOCK_MAX) {
+      out.push({ text: buf, voice: 0, lead: 0 });
+      buf = sen;
+    } else {
+      buf += sen;
+    }
+  });
+  if (buf) out.push({ text: buf, voice: 0, lead: 0 });
+  return out;
+}
+
+// 本文を送り単位に切る。改行で割り、地の文とセリフに分け、長いものは文で割る
 function splitBlocks(raw) {
   const out = [];
-  raw.split(/\n/).forEach((line) => {
+  let offset = 0;
+  raw.split("\n").forEach((line) => {
+    const lead = line.length - line.replace(/^\s+/, "").length;
     const p = line.trim();
-    if (!p) return;
-    if (p.length <= BLOCK_MAX) {
-      out.push(p);
-      return;
+    if (p) {
+      splitVoiceParts(p, raw, offset + lead).forEach((part) => {
+        if (part.kind === "q") out.push(...dialogueBlocks(part.text, part.key));
+        else out.push(...narrationBlocks(part.text));
+      });
     }
-    let buf = "";
-    splitSentences(p).forEach((s) => {
-      if (buf && (buf + s).length > BLOCK_MAX) {
-        out.push(buf);
-        buf = s;
-      } else {
-        buf += s;
-      }
-    });
-    if (buf) out.push(buf);
+    offset += line.length + 1;
   });
   return out;
 }
@@ -831,6 +957,14 @@ function attachLogChoice(label, reaction) {
   last.r = reaction || "";
 }
 
+// 履歴も本編と同じ割り方で見せる(セリフは【名前「〜」】)。
+// 表示と履歴で見え方が違うと、読み返した時に別物に見える
+function logBody(text) {
+  return splitBlocks(text)
+    .map((b) => b.text)
+    .join("\n");
+}
+
 // 本文は textContent で入れて CSS の pre-wrap で折る。
 // innerHTML だと、シナリオに < が混ざった時に壊れる
 function logLine(cls, text) {
@@ -857,9 +991,9 @@ function renderLog() {
       h.textContent = e.t;
       item.appendChild(h);
     }
-    if (e.b) item.appendChild(logLine("log-text", e.b));
+    if (e.b) item.appendChild(logLine("log-text", logBody(e.b)));
     if (e.c) item.appendChild(logLine("log-choice", "→ " + e.c));
-    if (e.r) item.appendChild(logLine("log-react", e.r));
+    if (e.r) item.appendChild(logLine("log-react", logBody(e.r)));
     box.appendChild(item);
   });
 }
@@ -908,6 +1042,9 @@ function showEvent(key, eventData, scene, onChoice) {
   AUDIO.playBgm(bgmForKey(key));
   el("event-reaction").innerHTML = "";
   el("event-reaction").style.display = "none";
+  el("reaction-actions").innerHTML = "";
+  el("reaction-actions").style.display = "none";
+  el("screen-event").classList.remove("is-reacting");
   const choicesEl = el("event-choices");
   choicesEl.innerHTML = "";
   // 本文を読み終わるまで選択肢は出さない。連打で読み飛ばして誤爆するのを防ぐ
@@ -963,15 +1100,18 @@ function renderChoices(key, eventData, scene, choicesEl, onChoice) {
       // 表情は選択肢ごとの指定を最優先する。点数からの自動判定は指定漏れの保険
       if (scene && scene.sprite) setSprite(scene.sprite, choice.expr || exprFor(points, choice.tag));
 
+      // 反応も本文と同じページ送りにする。1枠に地の文とセリフを混ぜないため、
+      // 「〜」と地の文。の形の反応は2ブロックに割れる
       const reactionEl = el("event-reaction");
       reactionEl.style.display = "block";
       reactionEl.innerHTML = "";
-      const body = document.createElement("div");
-      reactionEl.appendChild(body);
-      typeText(body, choice.reaction || "", () => {
-        const row = document.createElement("div");
-        row.className = "reaction-actions";
-
+      // ボタンは枠の外に置く。枠の中に入れると、高さ固定の枠から押し出される
+      const actions = el("reaction-actions");
+      actions.innerHTML = "";
+      actions.style.display = "none";
+      // 横向きの携帯だけ、反応を出している間は本文を畳む(CSS 側で判定)
+      el("screen-event").classList.add("is-reacting");
+      playBlocks(reactionEl, choice.reaction || "", "r:" + key + ":" + choice.id, () => {
         const nextBtn = document.createElement("button");
         nextBtn.className = "next-btn";
         nextBtn.textContent = "つづける";
@@ -979,10 +1119,9 @@ function renderChoices(key, eventData, scene, choicesEl, onChoice) {
           AUDIO.se("next");
           onChoice(choice);
         };
-        row.appendChild(nextBtn);
-
-        reactionEl.appendChild(row);
-      }, "r:" + key + ":" + choice.id);
+        actions.appendChild(nextBtn);
+        actions.style.display = "flex";
+      });
     };
     choicesEl.appendChild(btn);
   });
