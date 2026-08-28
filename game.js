@@ -7,7 +7,7 @@ const ASSET_DIR = "assets/";
 // 画像にもキャッシュバスターを付ける。付けないと、後から表情を差し替えたり
 // 追加したりした時に、古い画像や過去の404がブラウザに残り続ける。
 // index.html の ?v= と同じ数字に揃えること
-const ASSET_V = "?v=31";
+const ASSET_V = "?v=32";
 
 // 選択肢を描画してから受け付けるまでの猶予(誤タップ防止)と、1つずつ現れる間隔
 const CHOICE_LOCK_MS = 320;
@@ -390,11 +390,17 @@ function applyScene(scene) {
 
 // 広い画面では、立ち絵が出ている間だけ本文を左カラムに寄せる。
 // 常に寄せるとタイトル画面まで左に偏り、立ち絵の有無で切り替えるだけだと
-// プレイ中に本文の位置が飛ぶので、「プレイ中」も条件に含める
+// プレイ中に本文の位置が飛ぶので、「プレイ中」も条件に含める。
+// プロローグは立ち絵を出さない(sprite: null)ので、ここに入れておかないと
+// タイトル(左)→プロローグ(中央)→本編(左)と枠が左右に飛ぶ
 function updateLayout() {
   const active = document.querySelector(".screen.active");
   const id = active ? active.id : "";
-  const playing = id === "screen-event" || id === "screen-free" || id === "screen-confession";
+  const playing =
+    id === "screen-prologue" ||
+    id === "screen-event" ||
+    id === "screen-free" ||
+    id === "screen-confession";
   // 表示中かどうかは currentOutfit で見る。要素の inline style は初回描画前が
   // 空文字なので、"none ではない" だと立ち絵を出す前から出ている扱いになる
   const spriteVisible = !!currentOutfit;

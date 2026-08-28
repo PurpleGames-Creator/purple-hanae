@@ -338,6 +338,11 @@ body { background: transparent; }
      flex-shrink を切らないと、flex の子として潰されて高さが揺れる */
   height: calc(1.95em * 3 + 40px);
   flex-shrink: 0;
+  /* 横幅も固定する。プロローグ・本編・告白・エンディングで同じ値を使い、
+     画面が変わっても枠が広がったり縮んだりしないようにする。
+     広い画面では #app の内寸(640 - 左右 padding 40)＝600px で頭打ち */
+  width: 100%;
+  max-width: 600px;
   overflow-y: auto;
   /* スクロールバーは出さない。出た瞬間にその幅ぶん中身が詰まって、
      枠が左右に伸び縮みして見える(酔いの原因) */
@@ -346,10 +351,12 @@ body { background: transparent; }
   word-break: auto-phrase;
   line-break: strict;
 }
-/* プロローグは本編より少し大きく、行間を広く取って回想の距離感を出す */
+/* プロローグは本編より少し大きく、行間を広く取って回想の距離感を出す。
+   ただし横幅と左位置は本編と揃える —— ここを狭めて中央寄せにすると、
+   広い画面でプロローグから本編に移った瞬間に枠が 560px → 600px に広がり、
+   左にも動いて見える(狭い画面では両方 #app 幅なので気づかない) */
 .prologue-text {
-  margin: auto auto 28px;
-  max-width: 560px;
+  margin: auto 0 28px;
   font-size: 1.02rem;
   line-height: 2.15;
   letter-spacing: 0.02em;
