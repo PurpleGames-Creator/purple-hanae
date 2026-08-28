@@ -7,7 +7,7 @@ const ASSET_DIR = "assets/";
 // 画像にもキャッシュバスターを付ける。付けないと、後から表情を差し替えたり
 // 追加したりした時に、古い画像や過去の404がブラウザに残り続ける。
 // index.html の ?v= と同じ数字に揃えること
-const ASSET_V = "?v=35";
+const ASSET_V = "?v=36";
 
 // 選択肢を描画してから受け付けるまでの猶予(誤タップ防止)と、1つずつ現れる間隔
 const CHOICE_LOCK_MS = 320;
@@ -235,7 +235,10 @@ function renderHud(screenId) {
 
   const left = stepsLeft();
   let label;
-  if (screenId === "screen-confession") label = "文化祭 最終日 ―― 後夜祭のあと";
+  // 先手を打つと E19 を捨てて前日の夜に告白する。本文と食い違わせない
+  if (screenId === "screen-confession") {
+    label = state.senshu ? "文化祭 前日の夜" : "文化祭 最終日 ―― 後夜祭のあと";
+  }
   else if (left <= 1) label = "文化祭 前日";
   else label = `文化祭まで あと${left}日`;
   el("hud-progress").textContent = label;
@@ -583,7 +586,7 @@ function playHeartEffect(points) {
 
 // 1文字あたりの間隔。セリフは地の文よりゆっくり出す(喋る速さとして読めるように)
 const TYPE_MS = { narration: 16, line: 32 };
-// 既読は速める。1周で約100タップ・本文6000字あり、図鑑を埋めるには何周も要る。
+// 既読は速める。1周で約150タップ・本文6000字あり、図鑑を埋めるには何周も要る。
 // ただし即時にはしない — 文字送りの音が本作の手触りそのものなので、周回でも鳴らす
 const READ_KEY = "sentimentalHanaeRead";
 // 文字送りの切り替えは持たない。常に1文字ずつ出す(2026-08-26 本人指示)
@@ -683,11 +686,21 @@ function speakerKeyFor(quote, raw, open, close) {
 // 記号では鳴らさない。句読点や鉤括弧まで鳴らすと、喋りではなく打鍵音に聞こえる
 const NO_BLIP = /[\s、。，．・…‥「」『』【】（）()！!？?ー―—〜~＿_]/;
 
+// 改行だけ <br> にして、それ以外は文字として出す。プレイヤーが入力した名前が
+// 本文に混ざるので、素通しすると "<" ひとつで表示が壊れる
+function toHtml(text) {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\n/g, "<br>");
+}
+
 function typeText(elm, block, onDone, readKey) {
   clearTimeout(typeTimer);
   const raw = block.text;
   const voice = block.voice;
-  const html = raw.replace(/\n/g, "<br>");
+  const html = toHtml(raw);
   const done = () => {
     clearTimeout(typeTimer);
     typeTimer = null;
@@ -711,14 +724,14 @@ function typeText(elm, block, onDone, readKey) {
 
   // 話者ラベル(【ハナエ「)は名札なので1文字ずつ出さない。喋り出しは括弧の中から
   let i = Math.min(block.lead || 0, raw.length - 1);
-  elm.innerHTML = raw.slice(0, i);
+  elm.innerHTML = toHtml(raw.slice(0, i));
   elm.classList.add("is-typing");
   finishTyping = done;
 
   const step = () => {
     const ch = raw[i];
     i += 1;
-    elm.innerHTML = raw.slice(0, i).replace(/\n/g, "<br>");
+    elm.innerHTML = toHtml(raw.slice(0, i));
     if (!NO_BLIP.test(ch)) AUDIO.blip(voice);
     if (i >= raw.length) {
       done();
@@ -767,6 +780,11 @@ function splitSentences(p) {
 
 // 言い切っているか(地の文の断片を繋ぎ直すかの判定に使う)
 const SENT_END = /[。！？!?]$/;
+
+// 断片を繋ぎ直す時に読点を入れるか。助詞で終わっていればそのまま次の語に続くので
+// 入れない(「西野が」＋「加わってきた。」)。体言や連用形で終わる時は入れる
+// (「翌日」＋「困惑される。」→「翌日、困惑される。」)
+const TAIL_PARTICLE = /[がをにへとでもはのやか]$/;
 
 // セリフを別ブロックに出すと、地の文の側に引用の「と」だけが残る。
 // (「素直でよろしい」と軽く言われる。→ 「と軽く言われる。」)
@@ -824,7 +842,8 @@ function splitVoiceParts(line, raw, offset) {
     if (tail && toks[k + 1] && toks[k + 1].kind === "q" && toks[k + 2] && toks[k + 2].kind === "n") {
       const head = sents.join("");
       if (head) out.push({ kind: "n", text: head });
-      out.push({ kind: "n", text: tail + toks[k + 2].text.trim() });
+      const joiner = /[、，]$/.test(tail) || TAIL_PARTICLE.test(tail) ? "" : "、";
+      out.push({ kind: "n", text: tail + joiner + toks[k + 2].text.trim() });
       toks[k + 2].text = "";
       continue;
     }
@@ -1036,7 +1055,9 @@ function buildEventText(rawText) {
   return text;
 }
 
-function showEvent(key, eventData, scene, onChoice) {
+// onCommit は「選択を押した瞬間」に呼ぶ。ここで進行状態まで確定させて保存する。
+// onChoice は「つづける」を押した後の画面遷移だけを担当する
+function showEvent(key, eventData, scene, onChoice, onCommit) {
   showScreen("screen-event");
   applyScene(scene);
   AUDIO.playBgm(bgmForKey(key));
@@ -1063,12 +1084,12 @@ function showEvent(key, eventData, scene, onChoice) {
     pagerNext = () => {
       pagerNext = null;
       textEl.classList.remove("has-next");
-      renderChoices(key, eventData, scene, choicesEl, onChoice);
+      renderChoices(key, eventData, scene, choicesEl, onChoice, onCommit);
     };
   });
 }
 
-function renderChoices(key, eventData, scene, choicesEl, onChoice) {
+function renderChoices(key, eventData, scene, choicesEl, onChoice, onCommit) {
   choicesEl.innerHTML = "";
   choicesEl.style.display = "flex";
 
@@ -1094,7 +1115,10 @@ function renderChoices(key, eventData, scene, choicesEl, onChoice) {
       if (choice.tag === "pushy") state.pushyCount++;
       if (choice.tag === "passive") state.passiveCount++;
       attachLogChoice(choice.label, choice.reaction);
-      // 選択を確定した時点で保存する(リアクション表示中に閉じても巻き戻らない)
+      // 進行(queueIndex など)も選択と同時に確定させてから保存する。
+      // ここを「つづける」まで遅らせると、反応を読んでいる途中で閉じた時に
+      // 点数だけ入った状態で同じイベントがもう一度出て、二重に加算される
+      if (onCommit) onCommit(choice);
       saveGame();
       playHeartEffect(points);
       // 表情は選択肢ごとの指定を最優先する。点数からの自動判定は指定漏れの保険
@@ -1155,19 +1179,23 @@ function showFreeSelect() {
       state.freeChosen.push(key);
       state.freeRemaining = state.freeRemaining.filter((k) => k !== key);
       state.freePicksLeft--;
-      showEvent(key, data, sceneFor(key), () => {
-        if (state.freePicksLeft > 0) {
-          saveGame();
-          showFreeSelect();
-        } else {
+      showEvent(
+        key,
+        data,
+        sceneFor(key),
+        () => {
+          if (state.freePicksLeft > 0) showFreeSelect();
+          else advanceQueue();
+        },
+        () => {
+          if (state.freePicksLeft > 0) return;
+          // 3つ選び終えた。西野の場面を避けたぶんはここでライバル度に乗せる
           if (!state.freeChosen.includes("F5_nishino")) {
             state.rival = Math.max(0, state.rival + GAME_DATA.SKIP_F5_RIVAL_PENALTY);
           }
           state.queueIndex++;
-          saveGame();
-          advanceQueue();
         }
-      });
+      );
     };
     list.appendChild(card);
   });
@@ -1203,17 +1231,21 @@ function advanceQueue() {
   if (key === "E19" && state.rival >= GAME_DATA.RIVAL_FAIL_THRESHOLD && !state.rivalInsertShown) {
     state.rivalInsertShown = true;
     saveGame();
-    showEvent("RIVAL", GAME_DATA.rivalInsert, sceneFor("RIVAL"), (choice) => {
-      if (choice.flag === "senshu") {
+    showEvent(
+      "RIVAL",
+      GAME_DATA.rivalInsert,
+      sceneFor("RIVAL"),
+      (choice) => {
+        if (choice.flag === "senshu") advanceQueue();
+        else advanceEventThenNext(key);
+      },
+      (choice) => {
         // 先手を打つ: 西野エンドは回避できるが、最後の一日(E19)を捨てることになる
+        if (choice.flag !== "senshu") return;
         state.senshu = true;
         state.queueIndex = QUEUE.length;
-        saveGame();
-        advanceQueue();
-        return;
       }
-      advanceEventThenNext(key);
-    });
+    );
     return;
   }
 
@@ -1222,13 +1254,18 @@ function advanceQueue() {
 
 function advanceEventThenNext(key) {
   const eventData = GAME_DATA.events[key];
-  showEvent(key, eventData, sceneFor(key), (choice) => {
-    if (GAME_DATA.perfectRoute[key]) {
-      state.perfect[key] = choice.id === GAME_DATA.perfectRoute[key];
+  showEvent(
+    key,
+    eventData,
+    sceneFor(key),
+    () => advanceQueue(),
+    (choice) => {
+      if (GAME_DATA.perfectRoute[key]) {
+        state.perfect[key] = choice.id === GAME_DATA.perfectRoute[key];
+      }
+      state.queueIndex++;
     }
-    state.queueIndex++;
-    advanceQueue();
-  });
+  );
 }
 
 /* ---------------- 告白・エンディング ---------------- */

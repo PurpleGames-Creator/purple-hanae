@@ -770,7 +770,7 @@ body { background: transparent; }
     font-size: 0.88rem;
     line-height: 1.7;
     padding: 12px 14px;
-    height: min(calc(1.85em * 3 + 30px), 18dvh);
+    height: min(calc(1.85em * 3 + 30px), 20dvh);
   }
   .choice-btn { padding: 10px 14px; font-size: 0.88rem; }
   .event-title { font-size: 0.95rem; margin-bottom: 10px; }
@@ -782,6 +782,14 @@ body { background: transparent; }
   #btn-restart { padding: 11px 32px; font-size: 0.95rem; margin-bottom: 10px; }
   .ending-note { font-size: 0.72rem; }
   .credits { margin-top: 8px; }
+}
+
+/* 320px 級の狭い画面は1行に入る字数が減り、同じブロックでも行数が増える。
+   枠の高さは 22dvh で頭打ちなので、行間と余白を詰めて4行を収める
+   (実測: 320x568 で本文3件が 6px はみ出していた) */
+@media (max-width: 360px) {
+  .event-text { line-height: 1.7; padding: 12px 14px; }
+  .event-reaction { line-height: 1.6; padding: 10px 12px; }
 }
 
 /* 横向きの携帯は高さが足りず、本文と反応の2枚＋ボタンが 60dvh に収まらない。
