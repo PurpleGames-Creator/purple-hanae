@@ -7,7 +7,7 @@ const ASSET_DIR = "assets/";
 // 画像にもキャッシュバスターを付ける。付けないと、後から表情を差し替えたり
 // 追加したりした時に、古い画像や過去の404がブラウザに残り続ける。
 // index.html の ?v= と同じ数字に揃えること
-const ASSET_V = "?v=39";
+const ASSET_V = "?v=40";
 
 // 選択肢を描画してから受け付けるまでの猶予(誤タップ防止)と、1つずつ現れる間隔
 const CHOICE_LOCK_MS = 320;
@@ -1372,6 +1372,10 @@ document.addEventListener("DOMContentLoaded", () => {
     UNLOCK_EVENTS.forEach((n) => document.removeEventListener(n, unlockAudio));
   };
   UNLOCK_EVENTS.forEach((n) => document.addEventListener(n, unlockAudio));
+  // 解錠しても最初の1曲が鳴り出さないことがある(読み込み待ち・play() の空振り)。
+  // 操作のたびに鳴っているか確かめて、止まっていれば鳴らし直す。
+  // 鳴っていれば何もしないので、押すたびに曲が頭出しされることはない
+  document.addEventListener("pointerdown", () => AUDIO.resume(), { passive: true });
   // 画面をロックして戻ってくると音が止まったままになることがある
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") AUDIO.resume();

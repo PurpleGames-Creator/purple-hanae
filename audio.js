@@ -9,7 +9,7 @@
 const AUDIO = (() => {
   const BGM_DIR = "assets/bgm/";
   // index.html の ?v= と同じ数字に揃えること
-  const BGM_V = "?v=39";
+  const BGM_V = "?v=40";
   const MUTE_KEY = "sentimentalHanaeMuted";
 
   const FADE_MS = 900;
@@ -69,6 +69,19 @@ const AUDIO = (() => {
   let fadeTimer = null;
   let unlocked = false;
   let lastError = null;
+  let aborts = 0;
+
+  // 1曲 1.5〜1.9MB ある。タップしてから取りに行くと、曲が届く前に
+  // プレイヤーが次の場面へ進んでしまうので、鳴らすと決まった時点で読み始める
+  function preloadTrack(el) {
+    if (!el || el.preload === "auto") return;
+    el.preload = "auto";
+    try {
+      el.load();
+    } catch (e) {
+      /* 読み込めなくても play() 時に取りに行くので致命ではない */
+    }
+  }
 
   // 起動時には読まない。その曲が要る場面に入って初めて取りに行く
   function elementFor(key) {
@@ -164,19 +177,25 @@ const AUDIO = (() => {
     if (key === currentKey && currentEl && !currentEl.paused) return;
     const el = elementFor(key);
     if (!el) return;
-    // 初回のタップより前は再生が拒否される。鳴らせるようになってから同じ曲を張り直す
+    // 初回のタップより前は再生が拒否される。鳴らせるようになってから同じ曲を張り直す。
+    // 読み込みだけは先に始めておく —— タイトルは「画面をタップ」で必ず待ちが入るので、
+    // その間に読み終えておけば、タップした瞬間から鳴る
     if (!unlocked) {
       currentKey = key;
       currentEl = el;
+      preloadTrack(el);
       return;
     }
+    preloadTrack(el);
     setVolume(el, 0);
     const p = el.play();
-    // AbortError は曲を切り替えた時に前の play() が打ち切られただけで、異常ではない。
-    // 実機の切り分けを濁らせるので記録しない
+    // AbortError は曲の切り替えで前の play() が打ち切られただけのことが多いが、
+    // 握り潰すと「鳴らないのに何も記録が残らない」状態になる。数だけ数えておく
     if (p && p.catch) {
       p.catch((err) => {
-        if (err && err.name !== "AbortError") lastError = err.name;
+        if (!err) return;
+        if (err.name === "AbortError") aborts += 1;
+        else lastError = err.name;
       });
     }
     crossfade(el, key, fadeMs === undefined ? FADE_MS : fadeMs);
@@ -322,11 +341,29 @@ const AUDIO = (() => {
     if (c && c.state === "suspended") c.resume().catch(() => {});
     if (currentKey) {
       const key = currentKey;
+      // playBgm の「同じ曲なら何もしない」判定を外すために先に空にする。
+      // ここで el.pause() を挟まないこと —— 一度も再生していない要素に
+      // pause() → play() を続けると、環境によっては play() が AbortError で
+      // 黙って弾かれ、タイトル曲だけ永遠に鳴らないままになる
       currentKey = null;
-      const el = currentEl;
       currentEl = null;
-      if (el) el.pause();
       playBgm(key, 400);
+    }
+    // 解錠直後の1回目は、読み込みが間に合わなかったり黙って弾かれたりする。
+    // 少し置いて鳴っているか確かめ、止まっていれば鳴らし直す
+    setTimeout(ensurePlaying, 400);
+    setTimeout(ensurePlaying, 1500);
+  }
+
+  // 鳴らすつもりの曲が実際に鳴っているかを見て、止まっていたら鳴らし直す
+  function ensurePlaying() {
+    if (!unlocked || muted) return;
+    if (!currentEl || !currentEl.paused) return;
+    const p = currentEl.play();
+    if (p && p.catch) {
+      p.catch((err) => {
+        if (err) lastError = err.name;
+      });
     }
   }
 
@@ -336,14 +373,7 @@ const AUDIO = (() => {
     if (!unlocked) return;
     const c = ensureCtx();
     if (c && c.state === "suspended") c.resume().catch(() => {});
-    if (currentEl && currentEl.paused && !muted) {
-      const p = currentEl.play();
-      if (p && p.catch) {
-        p.catch((err) => {
-          if (err && err.name !== "AbortError") lastError = err.name;
-        });
-      }
-    }
+    ensurePlaying();
   }
 
   function setMuted(next) {
@@ -386,7 +416,10 @@ const AUDIO = (() => {
       volume: currentEl ? Math.round(volumeOf(currentEl) * 1000) / 1000 : null,
       gainNode: currentEl ? !!gains.get(currentEl) : null,
       ctx: ctx ? ctx.state : null,
+      // readyState 0 = まだ何も読めていない / 4 = 最後まで読めている
+      ready: currentEl ? currentEl.readyState : null,
       lastError,
+      aborts,
     }),
   };
 })();
