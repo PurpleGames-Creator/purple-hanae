@@ -509,6 +509,8 @@ body { background: transparent; }
   color: var(--text-dim);
   font-size: 0.82rem;
   margin-top: 4px;
+  /* 文の切れ目で入れた改行をそのまま出す(textContent で入れるため) */
+  white-space: pre-line;
 }
 .ending-new {
   display: none;

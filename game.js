@@ -7,7 +7,7 @@ const ASSET_DIR = "assets/";
 // 画像にもキャッシュバスターを付ける。付けないと、後から表情を差し替えたり
 // 追加したりした時に、古い画像や過去の404がブラウザに残り続ける。
 // index.html の ?v= と同じ数字に揃えること
-const ASSET_V = "?v=38";
+const ASSET_V = "?v=39";
 
 // 選択肢を描画してから受け付けるまでの猶予(誤タップ防止)と、1つずつ現れる間隔
 const CHOICE_LOCK_MS = 320;
@@ -727,7 +727,7 @@ function typeText(elm, block, onDone, readKey) {
   // ブロックごとに1つで足りる(混ざっていた頃は1文字ずつ引いていた)
   const per = voice === 0 ? speed.narration : speed.line;
 
-  // 話者ラベル(【ハナエ「)は名札なので1文字ずつ出さない。喋り出しは括弧の中から
+  // 話者ラベル(ハナエ「)は名札なので1文字ずつ出さない。喋り出しは括弧の中から
   let i = Math.min(block.lead || 0, raw.length - 1);
   elm.innerHTML = toHtml(raw.slice(0, i));
   elm.classList.add("is-typing");
@@ -781,7 +781,7 @@ function splitSentences(p) {
 
 // 1つの枠に地の文とセリフを混ぜない。混ぜると文字送りの音が途中で入れ替わり、
 // 地の文の音と会話の音が交ざって耳障りになる(2026-08-28 本人指示)。
-// セリフは【名前「〜」】の形にして、誰が喋っているかを一目で分かるようにする。
+// セリフは 名前「〜」 の形にして、誰が喋っているかを一目で分かるようにする。
 
 // 言い切っているか(地の文の断片を繋ぎ直すかの判定に使う)
 const SENT_END = /[。！？!?]$/;
@@ -857,19 +857,19 @@ function splitVoiceParts(line, raw, offset) {
   return out;
 }
 
-// セリフ1つを【名前「〜」】のブロックにする。
+// セリフ1つを 名前「〜」 のブロックにする。
 // 長いセリフは文で割り、そのつど「」を閉じ直す(括弧が開きっぱなしにならない)
 function dialogueBlocks(quote, key) {
   const speaker = SPEAKERS[key] || SPEAKERS.hanae;
   const label = speaker.name();
-  const lead = label.length + 2; // 【名前「 まではラベルなので一気に出す
+  const lead = label.length + 1; // 名前「 まではラベルなので一気に出す
   const wrap = (body) => ({
-    text: "【" + label + "「" + body + "」】",
+    text: label + "「" + body + "」",
     voice: speaker.voice,
     lead: lead,
   });
   const inner = quote.slice(1, -1);
-  const limit = Math.max(16, BLOCK_MAX - (label.length + 4));
+  const limit = Math.max(16, BLOCK_MAX - (label.length + 2));
   if (inner.length <= limit) return [wrap(inner)];
   const out = [];
   let buf = "";
@@ -981,7 +981,7 @@ function attachLogChoice(label, reaction) {
   last.r = reaction || "";
 }
 
-// 履歴も本編と同じ割り方で見せる(セリフは【名前「〜」】)。
+// 履歴も本編と同じ割り方で見せる(セリフは 名前「〜」)。
 // 表示と履歴で見え方が違うと、読み返した時に別物に見える
 function logBody(text) {
   return splitBlocks(text)
@@ -1339,8 +1339,10 @@ function resolveEnding() {
     el("ending-foot").style.display = "block";
   });
   const seen = loadSeenEndings();
+  // 1行に詰めると狭い画面で3行に折れて読みにくい。文の切れ目で必ず改行する
+  // (.ending-note は white-space: pre-line)
   el("ending-note").textContent =
-    `エンディングは全${GAME_DATA.endingOrder.length}種類(到達済み ${seen.length})。選択を変えると結末が変わります。`;
+    `エンディングは全${GAME_DATA.endingOrder.length}種類(到達済み ${seen.length})。\n選択を変えると結末が変わります。`;
   window.scrollTo(0, 0);
   el("btn-restart").onclick = () => {
     AUDIO.se("next");

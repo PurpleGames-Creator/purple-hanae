@@ -9,7 +9,7 @@
 const AUDIO = (() => {
   const BGM_DIR = "assets/bgm/";
   // index.html の ?v= と同じ数字に揃えること
-  const BGM_V = "?v=38";
+  const BGM_V = "?v=39";
   const MUTE_KEY = "sentimentalHanaeMuted";
 
   const FADE_MS = 900;
