@@ -7,7 +7,7 @@ const ASSET_DIR = "assets/";
 // 画像にもキャッシュバスターを付ける。付けないと、後から表情を差し替えたり
 // 追加したりした時に、古い画像や過去の404がブラウザに残り続ける。
 // index.html の ?v= と同じ数字に揃えること
-const ASSET_V = "?v=37";
+const ASSET_V = "?v=38";
 
 // 選択肢を描画してから受け付けるまでの猶予(誤タップ防止)と、1つずつ現れる間隔
 const CHOICE_LOCK_MS = 320;
@@ -500,12 +500,17 @@ function gateTitleForAudio() {
     return;
   }
   screen.classList.add("is-gated");
+  // クリックだけで待つと、キーボードで操作した時に「音は鳴り出したのに
+  // メニューが出ない」状態になる(解錠側は keydown も拾っているため)。
+  // pointerdown は入れない —— 押した指がそのまま出てきたボタンに落ちてしまう
   const openTitle = () => {
     AUDIO.unlock();
     screen.classList.remove("is-gated");
     document.removeEventListener("click", openTitle);
+    document.removeEventListener("keydown", openTitle);
   };
   document.addEventListener("click", openTitle);
+  document.addEventListener("keydown", openTitle);
 }
 
 /* ---------------- プロローグ ---------------- */
