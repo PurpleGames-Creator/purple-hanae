@@ -15,8 +15,8 @@
 <meta property="og:image" content="https://purplegames-creator.github.io/purple-hanae/assets/ogp.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💗</text></svg>">
-<link rel="preload" as="image" href="assets/logo_title.webp?v=43">
-<link rel="stylesheet" href="style.css?v=43">
+<link rel="preload" as="image" href="assets/logo_title.webp?v=44">
+<link rel="stylesheet" href="style.css?v=44">
 </head>
 <body>
 
@@ -43,14 +43,16 @@
 
   <section id="screen-title" class="screen active">
     <h1 class="game-title">
-      <img class="game-logo" src="assets/logo_title.webp?v=43" width="960" height="463"
+      <img class="game-logo" src="assets/logo_title.webp?v=44" width="960" height="463"
            alt="センチメンタル・ハナエ" fetchpriority="high" decoding="async">
     </h1>
     <p id="tap-hint" class="tap-hint">画面をタップ</p>
     <div id="title-menu" class="title-menu">
       <div class="name-form">
-        <label for="player-name-input">あなたの名前</label>
-        <input type="text" id="player-name-input" maxlength="12" placeholder="名前を入力">
+        <label for="player-name-input">あなたの名前(必須)</label>
+        <input type="text" id="player-name-input" maxlength="12" placeholder="名前を入力"
+               autocomplete="off" aria-describedby="name-error">
+        <p id="name-error" class="name-error" role="alert"></p>
       </div>
       <button id="btn-start" class="main-btn">はじめる</button>
       <button id="btn-continue" class="main-btn secondary">つづきから</button>
@@ -111,8 +113,8 @@
   </div>
 </div>
 
-<script src="game-data.js?v=43"></script>
-<script src="audio.js?v=43"></script>
-<script src="game.js?v=43"></script>
+<script src="game-data.js?v=44"></script>
+<script src="audio.js?v=44"></script>
+<script src="game.js?v=44"></script>
 </body>
 </html>

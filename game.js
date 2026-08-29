@@ -479,11 +479,39 @@ function initTitleScreen() {
   } else {
     continueBtn.style.display = "none";
   }
-  el("btn-start").onclick = () => {
+  // 名前は主人公の一人称(プロローグの「俺は◯◯。」やセリフの名札)に使うので必須。
+  // 空のまま押せてしまうと「俺は。」になるため、入力があるまで進ませない
+  const nameInput = el("player-name-input");
+  const nameError = el("name-error");
+  const startBtn = el("btn-start");
+  const syncStart = () => {
+    const ok = nameInput.value.trim().length > 0;
+    startBtn.classList.toggle("is-off", !ok);
+    if (ok) {
+      nameInput.classList.remove("invalid", "shake");
+      nameError.textContent = "";
+    }
+  };
+  nameInput.oninput = syncStart;
+  // Enter でも始められるように(スマホの「完了」もここに来る)
+  nameInput.onkeydown = (e) => {
+    if (e.key === "Enter") { e.preventDefault(); startBtn.click(); }
+  };
+  syncStart();
+  startBtn.onclick = () => {
+    const name = nameInput.value.trim();
+    if (!name) {
+      AUDIO.se("heartShrink");
+      nameError.textContent = "名前を入力してください";
+      nameInput.classList.remove("shake");
+      void nameInput.offsetWidth;  // 連打しても揺れ直すよう、アニメーションを巻き戻す
+      nameInput.classList.add("invalid", "shake");
+      nameInput.focus();
+      return;
+    }
     AUDIO.se("next");
-    const nameInput = el("player-name-input").value.trim();
     state = freshState();
-    state.name = nameInput || "あなた";
+    state.name = name;
     saveGame();
     showPrologue();
   };
@@ -515,6 +543,12 @@ function gateTitleForAudio() {
 
 /* ---------------- プロローグ ---------------- */
 
+// game-data.js に埋めた {name} をプレイヤー名に差し替える。
+// 名前に $& のような置換記号が入っても壊れないよう、置換値は関数で返す
+function withName(text) {
+  return String(text).replace(/\{name\}/g, () => state.name || "俺");
+}
+
 // 新規プレイの時だけ出す回想フレーム。「つづきから」では出さない
 function showPrologue() {
   showScreen("screen-prologue");
@@ -523,8 +557,9 @@ function showPrologue() {
   btn.style.display = "none";
   btn.onclick = () => { advanceQueue(); };
   window.scrollTo(0, 0);
-  pushLog("プロローグ", GAME_DATA.prologue);
-  playBlocks(el("prologue-text"), GAME_DATA.prologue, "prologue", () => {
+  const prologueText = withName(GAME_DATA.prologue);
+  pushLog("プロローグ", prologueText);
+  playBlocks(el("prologue-text"), prologueText, "prologue", () => {
     btn.style.display = "block";
   });
 }
@@ -1296,7 +1331,7 @@ function startConfession() {
     setTimeout(resolveEnding, 950);
   };
   window.scrollTo(0, 0);
-  const introText = intro.replace("{name}", state.name);
+  const introText = withName(intro);
   pushLog("告白", introText);
   playBlocks(el("confession-text"), introText, state.senshu ? "confession:senshu" : "confession", () => {
     btn.style.display = "block";

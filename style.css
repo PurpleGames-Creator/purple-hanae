@@ -295,6 +295,24 @@ body { background: transparent; }
   font-size: 1rem;
 }
 #player-name-input::placeholder { color: rgba(255,255,255,0.4); }
+#player-name-input.invalid {
+  border-color: #ff5c8a;
+  box-shadow: 0 0 0 3px rgba(255, 92, 138, 0.25);
+}
+#player-name-input.shake { animation: nameShake 0.4s; }
+@keyframes nameShake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+/* 出したり消したりで下のボタンが動かないよう、1行ぶんの高さを常に確保する */
+.name-error {
+  margin: 0;
+  min-height: 1.2em;
+  font-size: 0.8rem;
+  line-height: 1.2;
+  color: #ff8fa8;
+}
 
 .main-btn {
   display: block;
@@ -312,6 +330,10 @@ body { background: transparent; }
 }
 .main-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(255, 92, 138, 0.45); }
 .main-btn:active { transform: translateY(0); }
+/* 名前が空の間は「はじめる」を沈ませて、押せないことを見た目でも伝える
+   (押すこと自体は許す —— 押した時に理由を出したいので) */
+.main-btn.is-off { opacity: 0.45; box-shadow: none; }
+.main-btn.is-off:hover { transform: none; box-shadow: none; }
 .main-btn.secondary {
   background: rgba(10, 6, 16, 0.55);
   border: 1px solid rgba(255,255,255,0.35);
