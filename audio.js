@@ -9,11 +9,14 @@
 const AUDIO = (() => {
   const BGM_DIR = "assets/bgm/";
   // index.html の ?v= と同じ数字に揃えること
-  const BGM_V = "?v=40";
+  const BGM_V = "?v=41";
   const MUTE_KEY = "sentimentalHanaeMuted";
 
   const FADE_MS = 900;
   const FADE_STEP_MS = 40;
+  // 「画面をタップ」で音が解禁される瞬間だけ、ゆっくり立ち上げる。
+  // 場面の切り替え(900ms)と同じ速さだと、無音からいきなり鳴り出したように聞こえる
+  const UNLOCK_FADE_MS = 2200;
 
   // BGM 全体の音量。**ここ1箇所で全曲まとめて上下できる。**
   // 本作は文字送りの音とハナエの反応が主役なので、曲は「かすかに聞こえる」
@@ -160,7 +163,11 @@ const AUDIO = (() => {
     fadeTimer = setInterval(() => {
       n++;
       const t = Math.min(1, n / steps);
-      if (nextEl) setVolume(nextEl, Math.min(1, to * t));
+      // 無音から立ち上げる時だけ、ゆっくり始まる曲線(t²)にする。
+      // 音量を時間に比例させると、人の耳には最初から鳴っているように聞こえるため。
+      // 曲の切り替えでこれをやると、前の曲が消えた後に谷ができるので直線のまま
+      const rise = prevEl ? t : t * t;
+      if (nextEl) setVolume(nextEl, Math.min(1, to * rise));
       if (prevEl && prevEl !== nextEl) setVolume(prevEl, Math.max(0, prevFrom * (1 - t)));
       if (t >= 1) {
         clearFade();
@@ -347,7 +354,7 @@ const AUDIO = (() => {
       // 黙って弾かれ、タイトル曲だけ永遠に鳴らないままになる
       currentKey = null;
       currentEl = null;
-      playBgm(key, 400);
+      playBgm(key, UNLOCK_FADE_MS);
     }
     // 解錠直後の1回目は、読み込みが間に合わなかったり黙って弾かれたりする。
     // 少し置いて鳴っているか確かめ、止まっていれば鳴らし直す
@@ -355,7 +362,8 @@ const AUDIO = (() => {
     setTimeout(ensurePlaying, 1500);
   }
 
-  // 鳴らすつもりの曲が実際に鳴っているかを見て、止まっていたら鳴らし直す
+  // 鳴らすつもりの曲が実際に鳴っているかを見て、止まっていたら鳴らし直す。
+  // 音量には触らないので、立ち上げの途中で呼ばれてもフェードはやり直さない
   function ensurePlaying() {
     if (!unlocked || muted) return;
     if (!currentEl || !currentEl.paused) return;
