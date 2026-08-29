@@ -7,7 +7,7 @@ const ASSET_DIR = "assets/";
 // 画像にもキャッシュバスターを付ける。付けないと、後から表情を差し替えたり
 // 追加したりした時に、古い画像や過去の404がブラウザに残り続ける。
 // index.html の ?v= と同じ数字に揃えること
-const ASSET_V = "?v=41";
+const ASSET_V = "?v=43";
 
 // 選択肢を描画してから受け付けるまでの猶予(誤タップ防止)と、1つずつ現れる間隔
 const CHOICE_LOCK_MS = 320;
@@ -1067,9 +1067,9 @@ function showEvent(key, eventData, scene, onChoice, onCommit) {
   applyScene(scene);
   AUDIO.playBgm(bgmForKey(key));
   el("event-reaction").innerHTML = "";
-  el("event-reaction").style.display = "none";
+  el("reaction-wrap").classList.remove("is-shown");
   el("reaction-actions").innerHTML = "";
-  el("reaction-actions").style.display = "none";
+  el("reaction-actions").classList.remove("is-shown");
   el("screen-event").classList.remove("is-reacting");
   const choicesEl = el("event-choices");
   choicesEl.innerHTML = "";
@@ -1136,12 +1136,13 @@ function renderChoices(key, eventData, scene, choicesEl, onChoice, onCommit) {
       // 反応も本文と同じページ送りにする。1枠に地の文とセリフを混ぜないため、
       // 「〜」と地の文。の形の反応は2ブロックに割れる
       const reactionEl = el("event-reaction");
-      reactionEl.style.display = "block";
+      el("reaction-wrap").classList.add("is-shown");
       reactionEl.innerHTML = "";
-      // ボタンは枠の外に置く。枠の中に入れると、高さ固定の枠から押し出される
+      // ボタンは枠の中の右下に浮かせる。枠の下に置くと、出た瞬間にその高さぶん
+      // 枠が上へ動いてしまう(画面下端に寄せているため)
       const actions = el("reaction-actions");
       actions.innerHTML = "";
-      actions.style.display = "none";
+      actions.classList.remove("is-shown");
       // 横向きの携帯だけ、反応を出している間は本文を畳む(CSS 側で判定)
       el("screen-event").classList.add("is-reacting");
       playBlocks(reactionEl, choice.reaction || "", "r:" + key + ":" + choice.id, () => {
@@ -1153,7 +1154,7 @@ function renderChoices(key, eventData, scene, choicesEl, onChoice, onCommit) {
           onChoice(choice);
         };
         actions.appendChild(nextBtn);
-        actions.style.display = "flex";
+        actions.classList.add("is-shown");
       });
     };
     choicesEl.appendChild(btn);
