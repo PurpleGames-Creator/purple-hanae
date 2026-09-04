@@ -42,6 +42,10 @@ function freshState() {
     rivalInsertShown: false,
     foreshadowShown: false,
     senshu: false,
+    // 序盤(E1〜E8)の無神経な選択の回数。閾値を超えると似顔絵の場面(E8B)が挟まる
+    rudeEarly: 0,
+    nigaoeShown: false,
+    nigaoe: false,
     finished: false,
     log: [],
   };
@@ -51,6 +55,8 @@ let state = freshState();
 
 // メインの進行キュー(FREEは自由行動選択フェーズを表す)
 const QUEUE = GAME_DATA.order.slice();
+// いま出している場面のキー。キューに無い場面(自由行動の各イベント・噂・似顔絵)の日付を引くのに使う
+let currentEventKey = null;
 
 const el = (id) => document.getElementById(id);
 
@@ -134,6 +140,7 @@ function renderEndingGallery() {
     cell.className = "gallery-cell";
     if (got) cell.classList.add("is-got");
     if (k === "successPerfect") cell.classList.add("is-special");
+    if (k === "nigaoe") cell.classList.add("is-bad");
     cell.textContent = got ? GAME_DATA.endingLabels[k] : "???";
     grid.appendChild(cell);
   });
@@ -165,6 +172,7 @@ const BGM_BY_KEY = {
   E4: "daily2",
   E6: "daily2",
   E7: "daily2",
+  E8B: "daily2",
 
   // 自由行動。選択画面と、そこから入る5イベントで1曲
   FREE: "daily3",
@@ -261,14 +269,14 @@ function dateLabel(screenId) {
   const L = GAME_DATA.dateLabels || {};
   // 先手を打つと E19 を捨てて前日の夜に告白する。本文と食い違わせない
   if (screenId === "screen-confession") return state.senshu ? (L.senshu || "") : (L.confession || "");
-  const key = QUEUE[state.queueIndex];
-  if (key === "FREE") {
-    const done = 3 - state.freePicksLeft;
-    // 選択画面ではこれから選ぶ日、イベント中は選んだ日
-    const idx = screenId === "screen-free" ? done : done - 1;
-    return (GAME_DATA.freeDates || [])[idx] || "";
-  }
-  if (key === "E19") return L.eve || D.E19 || "";
+  const free = GAME_DATA.freeDates || [];
+  const done = 3 - state.freePicksLeft;
+  // 自由行動の選択画面は、これから選ぶ日
+  if (screenId === "screen-free") return free[done] || "";
+  const key = currentEventKey || QUEUE[state.queueIndex];
+  // 自由行動の各イベントは、選んだ日
+  if (GAME_DATA.freePool[key]) return free[done - 1] || "";
+  if (key === "E19" || key === "RIVAL") return L.eve || D.E19 || "";
   return D[key] || "";
 }
 
@@ -322,6 +330,8 @@ let spriteFadeToken = 0;
 function setSprite(outfit, expr) {
   const img = el("sprite");
   const alt = el("sprite-b");
+  // 素材がまだ無い服(四十一歳の立ち絵など)は、届いて SPRITE_EXPRESSIONS に登録するまで出さない
+  if (outfit && !SPRITE_EXPRESSIONS[outfit]) outfit = null;
   if (!outfit) {
     spriteFadeToken++;
     img.style.display = "none";
@@ -415,7 +425,25 @@ function applyScene(scene) {
   setSprite(scene.sprite, scene.expr || null);
   setTint(scene.tint || null);
   setWeather(scene.weather || null);
+  setCg(scene.cg || null);
   updateLayout();
+}
+
+// 一枚絵(似顔絵など)。ファイルが無ければ出さない(素材が届くまで文だけで成立させる)
+function setCg(name) {
+  const cg = el("cg");
+  if (!cg) return;
+  if (!name) {
+    cg.classList.remove("is-shown");
+    cg.removeAttribute("src");
+    return;
+  }
+  cg.onerror = () => {
+    cg.classList.remove("is-shown");
+    cg.removeAttribute("src");
+  };
+  cg.onload = () => cg.classList.add("is-shown");
+  cg.src = `${ASSET_DIR}${name}.webp${ASSET_V}`;
 }
 
 // 画面全体に薄く掛ける色(夕方・雨・嵐)。指定の無い場面では消す
@@ -543,7 +571,7 @@ function preloadAssets() {
   Object.values(GAME_DATA.scenes).forEach((s) => { if (s.bg) names.add(s.bg); });
   Object.values(GAME_DATA.endingScenes).forEach((s) => { if (s.bg) names.add(s.bg); });
   names.forEach((n) => { new Image().src = `${ASSET_DIR}${n}.webp${ASSET_V}`; });
-  ["summer", "winter"].forEach((o) => { new Image().src = `${ASSET_DIR}hanae_${o}.webp${ASSET_V}`; });
+  Object.keys(SPRITE_EXPRESSIONS).forEach((o) => { new Image().src = `${ASSET_DIR}hanae_${o}.webp${ASSET_V}`; });
 }
 
 // 表情差分は枚数が多く、まとめて起動時に読むとタイトルの表示が遅れる。
@@ -578,8 +606,10 @@ function preloadExpressions() {
 function initTitleScreen() {
   showScreen("screen-title");
   lastTelop = "";
+  currentEventKey = null;
   setTint(null);
   setWeather(null);
+  setCg(null);
   // 広い画面だけ、タイトルにもハナエを立たせる。狭い画面の立ち絵は右上の
   // 円形アイコンになる作りなので、出すとロゴに重なってしまう
   const wide = window.matchMedia && window.matchMedia("(min-width: 1000px)").matches;
@@ -909,6 +939,19 @@ function speakerKeyFor(quote, raw, open, close) {
   return "hanae";
 }
 
+// 行頭の 名前「〜」 は、その人のセリフとして扱う(名前は名札に出し、本文には残さない)。
+// 地の文からの推測に頼らずに済むので、新しいセリフを足す時はこの形で書く
+const NAME_SPEAKERS = {
+  "俺": "hero",
+  "ハナエ": "hanae",
+  "西野": "nishino",
+  "トウマ": "touma",
+  "小森": "komori",
+  "委員": "iin",
+  "放送": "broadcast",
+};
+const NAME_MARK = /(?:^|[\s、。！？!?」])(俺|ハナエ|西野|トウマ|小森|委員|放送)$/;
+
 // 記号では鳴らさない。句読点や鉤括弧まで鳴らすと、喋りではなく打鍵音に聞こえる
 const NO_BLIP = /[\s、。，．・…‥「」『』【】（）()！!？?ー―—〜~＿_]/;
 
@@ -1062,12 +1105,20 @@ function splitVoiceParts(line, raw, offset) {
       toks.push({ kind: "n", text: line.slice(i) });
       break;
     }
-    if (open > i) toks.push({ kind: "n", text: line.slice(i, open) });
+    // 直前が 名前 なら、その人のセリフ。名前は地の文から外す
+    let narrEnd = open;
+    let forced = null;
+    const mark = line.slice(i, open).match(NAME_MARK);
+    if (mark) {
+      forced = NAME_SPEAKERS[mark[1]];
+      narrEnd = open - mark[1].length;
+    }
+    if (narrEnd > i) toks.push({ kind: "n", text: line.slice(i, narrEnd) });
     const quote = line.slice(open, close + 1);
     toks.push({
       kind: "q",
       text: quote,
-      key: speakerKeyFor(quote, raw, offset + open, offset + close),
+      key: forced || speakerKeyFor(quote, raw, offset + open, offset + close),
     });
     i = close + 1;
   }
@@ -1181,7 +1232,7 @@ function clearPager(elm) {
 }
 
 // ブロックを1つずつ出し、最後まで出し終えたら onDone を呼ぶ
-function playBlocks(elm, raw, readKey, onDone) {
+function playBlocks(elm, raw, readKey, onDone, onBlock) {
   const blocks = splitBlocks(raw);
   clearPager(elm);
   if (!blocks.length) {
@@ -1191,6 +1242,7 @@ function playBlocks(elm, raw, readKey, onDone) {
   let i = 0;
   const show = () => {
     const last = i === blocks.length - 1;
+    if (onBlock) onBlock(i, blocks[i]);
     typeText(elm, blocks[i], () => {
       if (last) {
         clearPager(elm);
@@ -1320,6 +1372,7 @@ function buildEventText(rawText, key) {
 // onCommit は「選択を押した瞬間」に呼ぶ。ここで進行状態まで確定させて保存する。
 // onChoice は「つづける」を押した後の画面遷移だけを担当する
 function showEvent(key, eventData, scene, onChoice, onCommit) {
+  currentEventKey = key;
   showScreen("screen-event");
   applyScene(scene);
   AUDIO.playBgm(bgmForKey(key));
@@ -1385,7 +1438,10 @@ function renderChoices(key, eventData, scene, choicesEl, onChoice, onCommit) {
       const points = choice.points || 0;
       state.score += points;
       state.rival = Math.max(0, state.rival + (choice.rival || 0));
-      if (choice.tag === "pushy") state.pushyCount++;
+      if (choice.tag === "pushy") {
+        state.pushyCount++;
+        if ((GAME_DATA.earlyEvents || []).includes(key)) state.rudeEarly++;
+      }
       if (choice.tag === "passive") state.passiveCount++;
       attachLogChoice(choice.label, choice.reaction);
       // 進行(queueIndex など)も選択と同時に確定させてから保存する。
@@ -1449,6 +1505,7 @@ function showReaction(key, choice, scene, points, onChoice) {
 /* ---------------- 自由行動フェーズ ---------------- */
 
 function showFreeSelect() {
+  currentEventKey = null;
   showScreen("screen-free");
   applyScene(sceneFor("FREE"));
   AUDIO.playBgm(bgmForKey("FREE"));
@@ -1521,6 +1578,15 @@ function advanceQueue() {
       advanceQueue();
       return;
     }
+    // 序盤に無神経な選択を重ねていたら、自由行動の前に似顔絵の場面を挟む。
+    // どの選択肢でも似顔絵はハナエの手に渡る(= nigaoe)。最下位の結末で戻ってくる
+    if (!state.nigaoeShown && state.rudeEarly >= GAME_DATA.NIGAOE_RUDE_THRESHOLD && GAME_DATA.events.E8B) {
+      state.nigaoeShown = true;
+      state.nigaoe = true;
+      saveGame();
+      showEvent("E8B", GAME_DATA.events.E8B, sceneFor("E8B"), () => advanceQueue(), () => {});
+      return;
+    }
     showFreeSelect();
     return;
   }
@@ -1575,6 +1641,7 @@ function advanceEventThenNext(key) {
 /* ---------------- 告白・エンディング ---------------- */
 
 function startConfession() {
+  currentEventKey = null;
   showScreen("screen-confession");
   applyScene(sceneFor("CONFESSION"));
   AUDIO.playBgm(bgmForKey("CONFESSION"));
@@ -1616,6 +1683,9 @@ function resolveEnding() {
     endingKey = allPerfect ? "successPerfect" : "success";
   } else if (state.score >= GAME_DATA.FRIEND_THRESHOLD) {
     endingKey = "friend";
+  } else if (state.nigaoe && GAME_DATA.endings.nigaoe) {
+    // 似顔絵を持たれたまま点数も低い: 最下位
+    endingKey = "nigaoe";
   } else {
     endingKey = state.pushyCount > state.passiveCount ? "awkward" : "soretigai";
   }
@@ -1639,9 +1709,15 @@ function resolveEnding() {
   const restartBtn = el("btn-restart");
   restartBtn.style.display = "none";
   el("ending-foot").style.display = "none";
+  // 途中で場面が変わる結末(パーフェクトの冬、似顔絵の二十四年後)は、その枠に来た時に切り替える
+  const changes = ending.sceneChanges || [];
   playBlocks(el("ending-text"), ending.text, "end:" + endingKey, () => {
     restartBtn.style.display = "block";
     el("ending-foot").style.display = "block";
+  }, (i, block) => {
+    changes.forEach((c) => {
+      if (block.text.indexOf(c.marker) === 0) applyScene(c.scene);
+    });
   });
   const seen = loadSeenEndings();
   // 1行に詰めると狭い画面で3行に折れて読みにくい。文の切れ目で必ず改行する

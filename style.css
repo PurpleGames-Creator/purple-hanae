@@ -679,6 +679,11 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
   border-color: rgba(255, 143, 177, 0.55);
   background: rgba(255, 143, 177, 0.14);
 }
+.gallery-cell.is-bad.is-got {
+  color: var(--text-dim);
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(60, 50, 70, 0.5);
+}
 .gallery-cell.is-special.is-got {
   border-color: var(--gold-line);
   background: var(--gold-fill);
@@ -1234,4 +1239,27 @@ body.is-title .petals { display: block; }
   8%   { opacity: 0.9; }
   92%  { opacity: 0.7; }
   100% { transform: translate3d(var(--sway, 30px), 108vh, 0) rotate(320deg); opacity: 0; }
+}
+
+/* ---------------- 一枚絵(似顔絵など) ---------------- */
+
+/* 写真を立てかけたように少し傾けて出す。立ち絵より手前、本文より奥 */
+.cg {
+  position: fixed;
+  z-index: 1;
+  left: 5%;
+  top: 14%;
+  width: min(32vw, 360px);
+  height: auto;
+  border: 6px solid #fff;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
+  transform: rotate(-4deg) scale(0.96);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.cg.is-shown { opacity: 1; transform: rotate(-4deg) scale(1); }
+.cg:not([src]) { display: none; }
+@media (max-width: 999px) {
+  .cg { left: 4%; top: auto; bottom: 62dvh; width: 40vw; }
 }
