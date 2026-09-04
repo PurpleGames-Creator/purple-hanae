@@ -7,16 +7,20 @@
 const GAME_DATA = {
 
   // セーブ互換バージョン。イベント追加・点数調整をしたら必ず上げる(古いセーブは破棄される)
-  SAVE_VERSION: 5,
+  SAVE_VERSION: 6,
 
   // 開始値
   START_SCORE: 50,
   START_RIVAL: 0,
-  // モンテカルロで元プロトタイプと同難易度になるよう調整した値
-  // (ランダムプレイ時 success 約14% / bad 約2% / 西野エンド約11%。
-  //  イベントや自由行動プールを増減したら必ず再計測し、SAVE_VERSION も上げること)
-  SUCCESS_THRESHOLD: 68,
-  FRIEND_THRESHOLD: 38,
+  // モンテカルロで決めた値(2026-09-04 全面改善 WP6 で 68/38 → 76/52 に引き上げ)。
+  // 68/38 だと「失礼・消極的な選択肢を避けるだけで成功 96%」「ランダムでも友達 73%」で、
+  // 不成立の結末に誰も辿り着けなかった。3つのプレイヤーモデルで再計測した結果:
+  //   一様ランダム                     success 3% / friend 60% / 不成立 26%(うち似顔絵 8%) / 西野 11%
+  //   ふつう(6割は無タグから選ぶ)      success 71% / perfect 1% / friend 25%
+  //   初回(失礼・消極的を避ける)        success 96% / perfect 4%
+  // イベントや自由行動プールを増減したら必ず再計測し、SAVE_VERSION も上げること
+  SUCCESS_THRESHOLD: 76,
+  FRIEND_THRESHOLD: 52,
   RIVAL_FAIL_THRESHOLD: 8,
   SKIP_F5_RIVAL_PENALTY: 3,
   ACT3_RIVAL_DRIFT: 1,
