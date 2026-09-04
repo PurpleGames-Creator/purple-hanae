@@ -287,7 +287,7 @@ const AUDIO = (() => {
   // OfflineAudioContext で描画して実測した値(2-5kHz = 耳が痛く感じる帯域の比率、
   // A特性 = 人の耳の感度で重み付けした音量):
   //   旧 950Hz square .19/44ms … 2-5kHz 12.5% / A特性 39.0dB(4人中いちばん大きい)
-  //   新 880Hz sine   .18/52ms … 2-5kHz  0.0% / A特性 37.6dB(西野の 37.3dB と同等)
+  //   新 880Hz sine   .18/52ms … 2-5kHz  0.0% / A特性 37.6dB(吉沢の 37.3dB と同等)
   // 長さは 52ms まで。BLIP_MIN_MS が 70ms なので、これ以上伸ばすと音が繋がる
   const VOICES = [
     { freq: 430, type: "triangle", gain: 0.17, ms: 46 },

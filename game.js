@@ -933,16 +933,16 @@ const TYPE_MS_READ = { narration: 8, line: 16 };
 /* ---------------- 話者 ---------------- */
 
 // 「」の中はセリフ、外は地の文。セリフの9割はハナエなので、それを既定にして
-// 例外だけを名指しする。前後の地の文からの推測では、ハナエと西野が同じ場面に
+// 例外だけを名指しする。前後の地の文からの推測では、ハナエと吉沢が同じ場面に
 // いる時に取り違える(全セリフを目視して確定させた結果がこのリスト)。
 // 本文を書き換えるとここから外れてハナエ扱いになるだけで、壊れはしない。
 // voice は AUDIO.blip の音色。0 = 地の文 / 1 = ハナエ / 2 = ハナエ以外 / 3 = 主人公
 const SPEAKERS = {
   hanae:     { name: () => "ハナエ", voice: 1 },
   hero:      { name: () => state.name || "俺", voice: 3 },
-  nishino:   { name: () => "西野", voice: 2 },
+  nishino:   { name: () => "吉沢", voice: 2 },
   touma:     { name: () => "トウマ", voice: 2 },
-  komori:    { name: () => "小森", voice: 2 },
+  komori:    { name: () => "山崎", voice: 2 },
   iin:       { name: () => "委員", voice: 2 },
   broadcast: { name: () => "放送", voice: 2 },
   // E1 でまだ名乗っていないハナエ。ここで名前を出すと
@@ -955,12 +955,12 @@ const SPEAKER_BY_LINE = new Map([
   ["「あ、ちょうどええわ。そっちの机、こっち持ってきてくれる?」", "unknown"],
   ["「ハナエ、差し入れ。みんなでどうぞ」", "touma"],
   ["「昔から、コイツ試合負けた日は決まってコレなんですわ」", "touma"],
-  ["「そういえば、西野が『ハナエに告白しよかな』とか言うてたで」", "iin"],
+  ["「そういえば、吉沢が『ハナエに告白しよかな』とか言うてたで」", "iin"],
   ["「手伝うわ」", "nishino"],
   ["「せやろ、こう見えて器用やねん」", "nishino"],
   ["「ハナエさん、今度みんなでカラオケ行くらしいで、来る?」", "nishino"],
   ["「重そうやな、持とか?」", "nishino"],
-  // 西野に礼を言っているのはハナエ。地の文に西野しか出てこないので推測が外れる
+  // 吉沢に礼を言っているのはハナエ。地の文に吉沢しか出てこないので推測が外れる
   ["「あ……うん、おおきに」", "hanae"],
   ["「え、今から?」", "hero"],
   ["「よろしく」", "hero"],
@@ -972,8 +972,8 @@ const SPEAKER_BY_LINE = new Map([
 // 頻繁にするので、彼女のセリフを別人と誤判定する
 const OTHER_SPEAKERS = [
   { word: "トウマ", key: "touma" },
-  { word: "西野", key: "nishino" },
-  { word: "小森", key: "komori" },
+  { word: "吉沢", key: "nishino" },
+  { word: "山崎", key: "komori" },
 ];
 
 function speakerKeyFor(quote, raw, open, close) {
@@ -993,13 +993,13 @@ function speakerKeyFor(quote, raw, open, close) {
 const NAME_SPEAKERS = {
   "俺": "hero",
   "ハナエ": "hanae",
-  "西野": "nishino",
+  "吉沢": "nishino",
   "トウマ": "touma",
-  "小森": "komori",
+  "山崎": "komori",
   "委員": "iin",
   "放送": "broadcast",
 };
-const NAME_MARK = /(?:^|[\s、。！？!?」])(俺|ハナエ|西野|トウマ|小森|委員|放送)$/;
+const NAME_MARK = /(?:^|[\s、。！？!?」])(俺|ハナエ|吉沢|トウマ|山崎|委員|放送)$/;
 
 // 記号では鳴らさない。句読点や鉤括弧まで鳴らすと、喋りではなく打鍵音に聞こえる
 const NO_BLIP = /[\s、。，．・…‥「」『』【】（）()！!？?ー―—〜~＿_]/;
@@ -1136,7 +1136,7 @@ function splitSentences(p) {
 const SENT_END = /[。！？!?]$/;
 
 // 断片を繋ぎ直す時に読点を入れるか。助詞で終わっていればそのまま次の語に続くので
-// 入れない(「西野が」＋「加わってきた。」)。体言や連用形で終わる時は入れる
+// 入れない(「吉沢が」＋「加わってきた。」)。体言や連用形で終わる時は入れる
 // (「翌日」＋「困惑される。」→「翌日、困惑される。」)
 const TAIL_PARTICLE = /[がをにへとでもはのやか]$/;
 
@@ -1420,7 +1420,7 @@ function buildEventText(rawText, key) {
     state.foreshadowShown = true;
     text += GAME_DATA.foreshadowLine;
   }
-  // 噂を聞いて「様子を見る」を選んだ後の E19 だけ、西野の影を一行足す
+  // 噂を聞いて「様子を見る」を選んだ後の E19 だけ、吉沢の影を一行足す
   if (key === "E19" && state.rivalInsertShown && !state.senshu && GAME_DATA.events.E19.rumorLine) {
     text += GAME_DATA.events.E19.rumorLine;
   }
@@ -1610,7 +1610,7 @@ function showFreeSelect() {
         },
         () => {
           if (state.freePicksLeft > 0) return;
-          // 3つ選び終えた。西野の場面を避けたぶんはここでライバル度に乗せる
+          // 3つ選び終えた。吉沢の場面を避けたぶんはここでライバル度に乗せる
           if (!state.freeChosen.includes("F5_nishino")) {
             state.rival = Math.max(0, state.rival + GAME_DATA.SKIP_F5_RIVAL_PENALTY);
           }
@@ -1670,7 +1670,7 @@ function advanceQueue() {
         else advanceEventThenNext(key);
       },
       (choice) => {
-        // 先手を打つ: 西野エンドは回避できるが、最後の一日(E19)を捨てることになる
+        // 先手を打つ: 吉沢エンドは回避できるが、最後の一日(E19)を捨てることになる
         if (choice.flag !== "senshu") return;
         state.senshu = true;
         state.queueIndex = QUEUE.length;

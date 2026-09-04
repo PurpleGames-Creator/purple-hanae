@@ -37,10 +37,10 @@ ffmpeg -y -i _source/bgm/日常・準備期間.mp3 \
 | 日常・準備期間5.mp3 | `daily5.m4a` | 〃 |
 | 静かな場面.mp3 | `quiet1.m4a` | 喫茶店・雨・E19 |
 | 静かな場面2.mp3 | `quiet2.m4a` | 告白 |
-| 緊張・不穏.mp3 | `tension.m4a` | トラブル・西野・噂 |
+| 緊張・不穏.mp3 | `tension.m4a` | トラブル・吉沢・噂 |
 | エンド成立.mp3 | `end_true.m4a` | 成立エンド2種 |
 | エンド不成立.mp3 | `end_false.m4a` | 友達・すれ違い・気まずい |
-| エンド不成立2.mp3 | `end_rival.m4a` | 西野エンド |
+| エンド不成立2.mp3 | `end_rival.m4a` | 吉沢エンド |
 
 ## クレジット表記
 
