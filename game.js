@@ -488,6 +488,10 @@ function setWeather(kind) {
 // (初出 1.44秒 → 2.88秒、既読 1.06秒 → 2.12秒)。in / out は溶ける速さで、
 // total からこれを引いた時間だけ出したままにする
 const TELOP_MS = { in: 260, out: 420, total: 2880, totalRead: 2120, reduced: 1200 };
+// 暗転を押して飛ばした時、その指がそのまま本文の送りに落ちないよう、
+// 少しの間だけ画面のタップを無視する(1周で23回出るので、飛ばせる方が周回しやすい)
+const TAP_GUARD_MS = 400;
+let tapGuardUntil = 0;
 let lastTelop = "";
 
 function placeFor(scene) {
@@ -512,12 +516,27 @@ function showTelop(date, place, read) {
   const total = read ? TELOP_MS.totalRead : TELOP_MS.total;
   const hold = reduced ? TELOP_MS.reduced : total - TELOP_MS.out;
   return new Promise((resolve) => {
-    setTimeout(() => {
+    let done = false;
+    let timer = null;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      document.removeEventListener("pointerdown", skip, true);
+      document.removeEventListener("keydown", skip, true);
       box.classList.remove("is-in");
       box.classList.add("is-out");
       resolve();
       setTimeout(() => box.classList.remove("is-out"), TELOP_MS.out + 60);
-    }, hold);
+    };
+    // 押したら待たずに本文へ。押した指が本文の送りに流れ込まないようガードを張る
+    const skip = () => {
+      tapGuardUntil = Date.now() + TAP_GUARD_MS;
+      finish();
+    };
+    document.addEventListener("pointerdown", skip, true);
+    document.addEventListener("keydown", skip, true);
+    timer = setTimeout(finish, hold);
   });
 }
 
@@ -1830,6 +1849,8 @@ document.addEventListener("DOMContentLoaded", () => {
   ["screen-event", "screen-confession", "screen-prologue", "screen-ending"].forEach((id) => {
     el(id).addEventListener("click", (ev) => {
       if (ev.target.closest("button") || ev.target.closest("a")) return;
+      // 暗転を飛ばした指がそのまま本文を送ってしまうのを防ぐ
+      if (Date.now() < tapGuardUntil) return;
       if (finishTyping) {
         skipTyping();
         return;
