@@ -484,7 +484,10 @@ function setWeather(kind) {
 
 /* ---------------- 場面転換のテロップ ---------------- */
 
-const TELOP_MS = { in: 260, hold: 760, out: 420 };
+// 暗転が出てから消え切るまでの合計。2026-09-04 に本人指示で2倍にした
+// (初出 1.44秒 → 2.88秒、既読 1.06秒 → 2.12秒)。in / out は溶ける速さで、
+// total からこれを引いた時間だけ出したままにする
+const TELOP_MS = { in: 260, out: 420, total: 2880, totalRead: 2120, reduced: 1200 };
 let lastTelop = "";
 
 function placeFor(scene) {
@@ -505,7 +508,9 @@ function showTelop(date, place, read) {
   const reduced = reducedMotion();
   box.classList.remove("is-out");
   box.classList.add("is-in");
-  const hold = reduced ? 600 : TELOP_MS.in + (read ? 380 : TELOP_MS.hold);
+  // hold = 出してからフェードアウトを始めるまで。実際に見えている時間は hold + out
+  const total = read ? TELOP_MS.totalRead : TELOP_MS.total;
+  const hold = reduced ? TELOP_MS.reduced : total - TELOP_MS.out;
   return new Promise((resolve) => {
     setTimeout(() => {
       box.classList.remove("is-in");
