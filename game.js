@@ -476,7 +476,7 @@ function initTitleScreen() {
   showScreen("screen-title");
   // 広い画面だけ、タイトルにもハナエを立たせる。狭い画面の立ち絵は右上の
   // 円形アイコンになる作りなので、出すとロゴに重なってしまう
-  const wide = window.matchMedia && window.matchMedia("(min-width: 1060px)").matches;
+  const wide = window.matchMedia && window.matchMedia("(min-width: 1000px)").matches;
   applyScene(sceneFor(wide ? "TITLE_WIDE" : "TITLE"));
   AUDIO.playBgm("title");
   gateTitleForAudio();
@@ -670,8 +670,59 @@ function renderSoundLabel() {
   const on = !AUDIO.isMuted();
   document.querySelectorAll(".js-sound").forEach((btn) => {
     btn.textContent = on ? "♪ オン" : "♪ オフ";
-    btn.setAttribute("aria-pressed", on ? "true" : "false");
-    btn.setAttribute("aria-label", on ? "音を消す" : "音を出す");
+    btn.setAttribute("aria-label", "音の設定を開く");
+  });
+  const mute = el("btn-mute");
+  if (mute) mute.textContent = on ? "音を消す" : "音を出す";
+  const lv = AUDIO.getLevels();
+  const bgm = el("vol-bgm"), se = el("vol-se");
+  if (bgm) { bgm.value = Math.round(lv.bgm * 100); el("vol-bgm-out").textContent = bgm.value; }
+  if (se) { se.value = Math.round(lv.se * 100); el("vol-se-out").textContent = se.value; }
+}
+
+/* ---------------- 音の設定パネル ---------------- */
+
+function isSoundPanelOpen() {
+  return !el("sound-panel").hidden;
+}
+
+function openSoundPanel() {
+  renderSoundLabel();
+  el("sound-panel").hidden = false;
+  el("vol-bgm").focus();
+}
+
+function closeSoundPanel() {
+  el("sound-panel").hidden = true;
+}
+
+function initSoundPanel() {
+  document.querySelectorAll(".js-sound").forEach((btn) => {
+    btn.onclick = () => (isSoundPanelOpen() ? closeSoundPanel() : openSoundPanel());
+  });
+  el("btn-sound-close").onclick = closeSoundPanel;
+  el("btn-mute").onclick = () => {
+    AUDIO.toggleMuted();
+    renderSoundLabel();
+  };
+  const bind = (kind, input, out, preview) => {
+    input.oninput = () => {
+      AUDIO.setLevel(kind, input.value / 100);
+      out.textContent = input.value;
+    };
+    // 離した時に一度鳴らして、いまの大きさを聞かせる
+    input.onchange = () => { if (preview) preview(); };
+  };
+  bind("bgm", el("vol-bgm"), el("vol-bgm-out"), null);
+  bind("se", el("vol-se"), el("vol-se-out"), () => AUDIO.se("heartSmall"));
+  // パネルの外をタップしたら閉じる。開くボタン自身のタップは除く
+  document.addEventListener("pointerdown", (ev) => {
+    if (!isSoundPanelOpen()) return;
+    if (ev.target.closest("#sound-panel") || ev.target.closest(".js-sound")) return;
+    closeSoundPanel();
+  });
+  document.addEventListener("keydown", (ev) => {
+    if (ev.key === "Escape" && isSoundPanelOpen()) closeSoundPanel();
   });
 }
 
@@ -752,11 +803,37 @@ function toHtml(text) {
     .replace(/\n/g, "<br>");
 }
 
+// 名札。枠(.textbox)の data-speaker に話者名を入れ、CSS の ::before が左上に出す。
+// 地の文では外す。本文は名前を含まない body を流す
+function setSpeakerTab(elm, block) {
+  const box = elm.closest(".textbox") || elm;
+  if (block.speaker) {
+    box.dataset.speaker = block.speaker;
+    box.dataset.voice = String(block.voice);
+  } else {
+    delete box.dataset.speaker;
+    delete box.dataset.voice;
+  }
+}
+
+function clearSpeakerTab(box) {
+  if (!box) return;
+  delete box.dataset.speaker;
+  delete box.dataset.voice;
+}
+
+// 読み上げ用。1文字ずつの書き換えをそのまま読ませると煩いので、出し終えた全文だけ渡す
+function announce(text) {
+  const live = el("sr-live");
+  if (live) live.textContent = text;
+}
+
 function typeText(elm, block, onDone, readKey) {
   clearTimeout(typeTimer);
-  const raw = block.text;
+  const raw = block.body !== undefined ? block.body : block.text;
   const voice = block.voice;
   const html = toHtml(raw);
+  setSpeakerTab(elm, block);
   const done = () => {
     clearTimeout(typeTimer);
     typeTimer = null;
@@ -764,6 +841,7 @@ function typeText(elm, block, onDone, readKey) {
     elm.innerHTML = html;
     elm.classList.remove("is-typing");
     markRead(readKey);
+    announce(block.text);
     if (onDone) onDone();
   };
   if (raw.length === 0) {
@@ -778,9 +856,9 @@ function typeText(elm, block, onDone, readKey) {
   // ブロックごとに1つで足りる(混ざっていた頃は1文字ずつ引いていた)
   const per = voice === 0 ? speed.narration : speed.line;
 
-  // 話者ラベル(ハナエ「)は名札なので1文字ずつ出さない。喋り出しは括弧の中から
-  let i = Math.min(block.lead || 0, raw.length - 1);
-  elm.innerHTML = toHtml(raw.slice(0, i));
+  // 話者名は枠の名札に出してあるので、本文は括弧から1文字ずつ
+  let i = 0;
+  elm.innerHTML = "";
   elm.classList.add("is-typing");
   finishTyping = done;
 
@@ -914,8 +992,12 @@ function dialogueBlocks(quote, key) {
   const speaker = SPEAKERS[key] || SPEAKERS.hanae;
   const label = speaker.name();
   const lead = label.length + 1; // 名前「 まではラベルなので一気に出す
+  // text はバックログ用の全文(名前「〜」)、body は枠に流す本文(「〜」だけ)。
+  // 名前は typeText が枠の名札に出すので、本文には含めない
   const wrap = (body) => ({
     text: label + "「" + body + "」",
+    body: "「" + body + "」",
+    speaker: label,
     voice: speaker.voice,
     lead: lead,
   });
@@ -937,18 +1019,19 @@ function dialogueBlocks(quote, key) {
 }
 
 function narrationBlocks(text) {
-  if (text.length <= BLOCK_MAX) return [{ text: text, voice: 0, lead: 0 }];
+  const mk = (t) => ({ text: t, body: t, speaker: "", voice: 0, lead: 0 });
+  if (text.length <= BLOCK_MAX) return [mk(text)];
   const out = [];
   let buf = "";
   splitSentences(text).forEach((sen) => {
     if (buf && (buf + sen).length > BLOCK_MAX) {
-      out.push({ text: buf, voice: 0, lead: 0 });
+      out.push(mk(buf));
       buf = sen;
     } else {
       buf += sen;
     }
   });
-  if (buf) out.push({ text: buf, voice: 0, lead: 0 });
+  if (buf) out.push(mk(buf));
   return out;
 }
 
@@ -1123,6 +1206,7 @@ function showEvent(key, eventData, scene, onChoice, onCommit) {
   AUDIO.playBgm(bgmForKey(key));
   el("event-reaction").innerHTML = "";
   el("reaction-wrap").classList.remove("is-shown");
+  clearSpeakerTab(el("reaction-wrap"));
   el("reaction-actions").innerHTML = "";
   el("reaction-actions").classList.remove("is-shown");
   el("screen-event").classList.remove("is-reacting");
@@ -1236,7 +1320,16 @@ function showFreeSelect() {
     const data = GAME_DATA.freePool[key];
     const card = document.createElement("button");
     card.className = "free-card";
-    card.textContent = data.title;
+    const cardTitle = document.createElement("span");
+    cardTitle.className = "free-card-title";
+    cardTitle.textContent = data.title;
+    card.appendChild(cardTitle);
+    if (data.blurb) {
+      const blurb = document.createElement("span");
+      blurb.className = "free-blurb";
+      blurb.textContent = data.blurb;
+      card.appendChild(blurb);
+    }
     card.style.animationDelay = (i * CHOICE_STAGGER_MS) / 1000 + "s";
     card.onclick = () => {
       if (list.classList.contains("is-locked")) return;
@@ -1413,13 +1506,8 @@ document.addEventListener("DOMContentLoaded", () => {
   preloadAssets();
   preloadExpressions();
   // 進行はセーブ済みなので、タイトルに戻っても「つづきから」で復帰できる
+  initSoundPanel();
   renderSoundLabel();
-  document.querySelectorAll(".js-sound").forEach((btn) => {
-    btn.onclick = () => {
-      AUDIO.toggleMuted();
-      renderSoundLabel();
-    };
-  });
   // iOS も Chrome も、最初のタップより前は音を出せない。
   // 環境によって拾えるイベントが違うので、最初に来たものを使う
   const UNLOCK_EVENTS = ["pointerdown", "touchstart", "mousedown", "click", "keydown"];

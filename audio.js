@@ -64,6 +64,19 @@ const AUDIO = (() => {
     }
   })();
 
+  // プレイヤーが決める音量(0〜1)。BGM は BGM_MASTER に掛け、効果音は seBus に掛ける。
+  // 作者側の基準(BGM_MASTER / TRACKS / VOICES)には触らず、その上に乗せるだけ
+  const LEVEL_KEY = "sentimentalHanaeLevels";
+  const clamp01 = (v, d) => (typeof v === "number" && v >= 0 && v <= 1 ? v : d);
+  let levels = (() => {
+    try {
+      const o = JSON.parse(localStorage.getItem(LEVEL_KEY) || "{}");
+      return { bgm: clamp01(o.bgm, 1), se: clamp01(o.se, 1) };
+    } catch (e) {
+      return { bgm: 1, se: 1 };
+    }
+  })();
+
   /* ---------------- BGM ---------------- */
 
   const elements = new Map(); // key -> HTMLAudioElement
@@ -107,7 +120,7 @@ const AUDIO = (() => {
   function targetVolume(key) {
     if (muted) return 0;
     const track = TRACKS[key];
-    return (track ? track.vol : 0.5) * BGM_MASTER;
+    return (track ? track.vol : 0.5) * BGM_MASTER * levels.bgm;
   }
 
   // 要素1つにつき createMediaElementSource は一度しか呼べないので覚えておく。
@@ -230,7 +243,7 @@ const AUDIO = (() => {
     if (!Ctor) return null;
     ctx = new Ctor();
     seBus = ctx.createGain();
-    seBus.gain.value = 1;
+    seBus.gain.value = levels.se;
     seBus.connect(ctx.destination);
     return ctx;
   }
@@ -388,6 +401,21 @@ const AUDIO = (() => {
     ensurePlaying();
   }
 
+  function setLevel(kind, v) {
+    if (kind !== "bgm" && kind !== "se") return;
+    levels[kind] = Math.min(1, Math.max(0, Number(v) || 0));
+    try {
+      localStorage.setItem(LEVEL_KEY, JSON.stringify(levels));
+    } catch (e) {
+      /* 保存できなくても再生には影響させない */
+    }
+    if (kind === "se" && seBus) seBus.gain.value = levels.se;
+    // 鳴っている曲には即座に効かせる。フェード中なら次の刻みで新しい目標値に寄る
+    if (kind === "bgm" && currentEl && currentKey && !fadeTimer && !muted) {
+      setVolume(currentEl, targetVolume(currentKey));
+    }
+  }
+
   function setMuted(next) {
     muted = !!next;
     try {
@@ -419,6 +447,8 @@ const AUDIO = (() => {
     isMuted: () => muted,
     isUnlocked: () => unlocked,
     toggleMuted: () => setMuted(!muted),
+    getLevels: () => ({ bgm: levels.bgm, se: levels.se }),
+    setLevel,
     // 実機で音が出ない時の切り分け用。ブラウザによって詰まる場所が違う
     state: () => ({
       unlocked,

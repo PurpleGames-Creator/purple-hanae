@@ -15,8 +15,8 @@
 <meta property="og:image" content="https://purplegames-creator.github.io/purple-hanae/assets/ogp.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💗</text></svg>">
-<link rel="preload" as="image" href="assets/logo_title.webp?v=46">
-<link rel="stylesheet" href="style.css?v=46">
+<link rel="preload" as="image" href="assets/logo_title.webp?v=47">
+<link rel="stylesheet" href="style.css?v=47">
 </head>
 <body>
 
@@ -43,7 +43,7 @@
 
   <section id="screen-title" class="screen active">
     <h1 class="game-title">
-      <img class="game-logo" src="assets/logo_title.webp?v=46" width="960" height="463"
+      <img class="game-logo" src="assets/logo_title.webp?v=47" width="960" height="463"
            alt="センチメンタル・ハナエ" fetchpriority="high" decoding="async">
     </h1>
     <p id="tap-hint" class="tap-hint">画面をタップ</p>
@@ -62,14 +62,18 @@
   </section>
 
   <section id="screen-prologue" class="screen">
-    <div id="prologue-text" class="event-text prologue-text"></div>
+    <div class="textbox prologue-box">
+      <div id="prologue-text" class="event-text prologue-text"></div>
+    </div>
     <button id="btn-prologue-next" class="main-btn">はじめる</button>
   </section>
 
   <section id="screen-event" class="screen">
-    <div id="event-text" class="event-text"></div>
+    <div class="textbox">
+      <div id="event-text" class="event-text"></div>
+    </div>
     <div id="event-choices" class="event-choices"></div>
-    <div id="reaction-wrap" class="reaction-wrap">
+    <div id="reaction-wrap" class="textbox reaction-wrap">
       <div id="event-reaction" class="event-reaction"></div>
       <div id="reaction-actions" class="reaction-actions"></div>
     </div>
@@ -84,14 +88,18 @@
 
   <section id="screen-confession" class="screen">
     <h2 class="event-title">告白</h2>
-    <div id="confession-text" class="event-text"></div>
+    <div class="textbox">
+      <div id="confession-text" class="event-text"></div>
+    </div>
     <button id="btn-confess" class="main-btn">気持ちを伝える</button>
   </section>
 
   <section id="screen-ending" class="screen">
     <p id="ending-new" class="ending-new"></p>
     <h2 id="ending-title" class="ending-title"></h2>
-    <div id="ending-text" class="event-text"></div>
+    <div class="textbox">
+      <div id="ending-text" class="event-text"></div>
+    </div>
     <button id="btn-restart" class="main-btn">もう一度プレイする</button>
     <div id="ending-foot">
       <p id="ending-note" class="ending-note">エンディングは全6種類。
@@ -101,6 +109,28 @@
   </section>
 
 </main>
+
+<!-- 読み上げ用。1文字ずつ出す本文をそのまま読ませると煩いので、1ブロック出し終えるたびに全文を入れる -->
+<div id="sr-live" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+<!-- 音の設定。#app の外に置く(中に置くと本文の早送りタップを拾う) -->
+<div id="sound-panel" class="sound-panel" role="dialog" aria-label="音の設定" hidden>
+  <div class="sound-head">
+    <span class="sound-heading">音の設定</span>
+    <button id="btn-sound-close" class="link-btn" type="button">閉じる</button>
+  </div>
+  <label class="sound-row">
+    <span class="sound-label">音楽</span>
+    <input type="range" id="vol-bgm" min="0" max="100" step="5" value="100">
+    <output id="vol-bgm-out" for="vol-bgm">100</output>
+  </label>
+  <label class="sound-row">
+    <span class="sound-label">効果音</span>
+    <input type="range" id="vol-se" min="0" max="100" step="5" value="100">
+    <output id="vol-se-out" for="vol-se">100</output>
+  </label>
+  <button id="btn-mute" class="sound-mute" type="button">音を消す</button>
+</div>
 
 <div id="log-overlay" class="log-overlay" role="dialog" aria-modal="true"
      aria-labelledby="log-heading" aria-hidden="true">
@@ -113,8 +143,8 @@
   </div>
 </div>
 
-<script src="game-data.js?v=46"></script>
-<script src="audio.js?v=46"></script>
-<script src="game.js?v=46"></script>
+<script src="game-data.js?v=47"></script>
+<script src="audio.js?v=47"></script>
+<script src="game.js?v=47"></script>
 </body>
 </html>

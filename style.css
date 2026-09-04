@@ -89,7 +89,7 @@ body { background: transparent; }
 /* 狭い画面も全身で立たせる。本文を1ブロックずつ送るようにしてパネルが小さく
    なったので、本文を画面下に寄せれば顔が隠れない(以前は全文を一度に出していて
    パネルが高く、顔が必ず裏に隠れるため円形アイコンに逃がしていた) */
-@media (max-width: 1059px) {
+@media (max-width: 999px) {
   /* 顔の位置は画面の「上端」から決める。下端から決めると画面の高さによって
      顔の高さが変わり、機種によっては本文パネルに隠れる。
      上端から決めると、立ち絵が小さい(＝画面が低い)ほど顔も上に来るので、
@@ -114,6 +114,8 @@ body { background: transparent; }
     margin-top: auto;
     max-height: 60dvh;
     overflow-y: auto;
+    /* 名札が枠の上端から 13px はみ出す。スクロール領域の縁で刈られないよう上に余白を取る */
+    padding-top: 16px;
     overscroll-behavior: contain;
     /* ここにスクロールバーが出ると、その幅ぶん本文の枠が縮んで
        左右に動いて見える。指で送るだけの画面なので出さない */
@@ -134,10 +136,10 @@ body { background: transparent; }
   }
 }
 
-/* 広い画面: 本文は左カラム、立ち絵は右に等身大で */
-@media (min-width: 1060px) {
+/* 広い画面: 本文窓は画面下、立ち絵は右に等身大で(窓が脚に掛かるのは ADV の定石) */
+@media (min-width: 1000px) {
   .sprite {
-    right: max(16px, calc(50vw - 680px));
+    right: max(40px, calc(50vw - 600px));
     height: min(94vh, 960px);
     height: min(94dvh, 960px);
   }
@@ -157,13 +159,8 @@ body { background: transparent; }
   z-index: 2;
 }
 
-/* 広い画面では本文を左カラムに寄せて、右側を立ち絵に明け渡す。
-   同じ詳細度の #app 指定より後に置くこと(先に書くとカスケードで負ける) */
-@media (min-width: 1060px) {
-  #app.col-left { margin-left: max(24px, calc(50vw - 660px)); margin-right: 0; }
-}
 /* 本文が下端に来るので、ホームインジケータに被らないぶんだけ空ける */
-@media (max-width: 1059px) {
+@media (max-width: 999px) {
   #app { padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
 }
 
@@ -350,28 +347,34 @@ body { background: transparent; }
   margin: 20px 0 16px;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
 }
-.event-text {
-  /* 送りマーク(::after)の基準 */
+/* 本文の枠は2層。外側(.textbox)が箱の見た目と名札を持ち、内側(.event-text)が
+   固定高さのスクロール領域。名札は箱の上端に掛けて出すので、外側は overflow を切らない
+   (内側に付けると overflow: auto に名札ごと刈られる) */
+.textbox {
   position: relative;
   background: var(--panel);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 14px;
+  margin-bottom: 20px;
+  /* 横幅を固定する。プロローグ・本編・告白・エンディングで同じ値を使い、
+     画面が変わっても枠が広がったり縮んだりしないようにする。
+     狭い画面では #app の内寸(640 - 左右 padding 40)＝600px で頭打ち */
+  width: 100%;
+  max-width: 600px;
+  /* flex-shrink を切らないと、flex の子として潰されて高さが揺れる */
+  flex-shrink: 0;
+}
+.event-text {
+  /* 送りマーク(::after)の基準 */
+  position: relative;
   padding: 20px;
   line-height: 1.95;
   font-size: 0.98rem;
-  margin-bottom: 20px;
   /* 高さを固定する。ブロックごとの文章量で枠が伸び縮みすると、
-     読んでいる間ずっと画面が動いて酔う。1ブロックは最長52字。
-     flex-shrink を切らないと、flex の子として潰されて高さが揺れる */
+     読んでいる間ずっと画面が動いて酔う。1ブロックは最長52字 */
   height: calc(1.95em * 3 + 40px);
-  flex-shrink: 0;
-  /* 横幅も固定する。プロローグ・本編・告白・エンディングで同じ値を使い、
-     画面が変わっても枠が広がったり縮んだりしないようにする。
-     広い画面では #app の内寸(640 - 左右 padding 40)＝600px で頭打ち */
-  width: 100%;
-  max-width: 600px;
   overflow-y: auto;
   /* スクロールバーは出さない。出た瞬間にその幅ぶん中身が詰まって、
      枠が左右に伸び縮みして見える(酔いの原因) */
@@ -382,14 +385,36 @@ body { background: transparent; }
 }
 /* プロローグは本編より少し大きく、行間を広く取って回想の距離感を出す。
    ただし横幅と左位置は本編と揃える —— ここを狭めて中央寄せにすると、
-   広い画面でプロローグから本編に移った瞬間に枠が 560px → 600px に広がり、
-   左にも動いて見える(狭い画面では両方 #app 幅なので気づかない) */
+   広い画面でプロローグから本編に移った瞬間に枠の幅と位置が飛ぶ(その8) */
+.prologue-box { margin: auto 0 28px; }
 .prologue-text {
-  margin: auto 0 28px;
   font-size: 1.02rem;
   line-height: 2.15;
   letter-spacing: 0.02em;
 }
+
+/* 名札。話者のいる枠だけ、左上の縁に掛けて出す(地の文では出ない)。
+   data-speaker / data-voice は typeText がブロックごとに付け替える。
+   色は声と同じ区分: ハナエ=ピンク / 主人公=紫 / その他=灰 */
+.textbox[data-speaker]::before {
+  content: attr(data-speaker);
+  position: absolute;
+  top: -13px;
+  left: 14px;
+  z-index: 2;
+  padding: 3px 14px;
+  border-radius: 999px;
+  background: var(--accent-strong);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: bold;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+.textbox[data-voice="3"]::before { background: var(--purple); }
+.textbox[data-voice="2"]::before { background: #5e5876; }
 
 .event-choices {
   display: flex;
@@ -421,33 +446,26 @@ body { background: transparent; }
   border-color: var(--accent);
   transform: translateX(2px);
 }
-/* 反応の枠と「つづける」を1つの入れ物にまとめる。
+/* 反応の枠と「つづける」を1つの入れ物にまとめる(.textbox の色違い)。
    ボタンを枠の外(下)に置くと、出た瞬間にその高さぶん枠が上へ動く。
    画面下端に寄せている作りなので、下に何かが増えると全部が持ち上がって酔う */
 .reaction-wrap {
   display: none;
-  position: relative;
   margin-top: 20px;
-  flex-shrink: 0;
+  margin-bottom: 0;
+  background: rgba(138, 92, 246, 0.28);
+  border: 1px solid rgba(138, 92, 246, 0.5);
 }
 .reaction-wrap.is-shown { display: block; }
 
-/* 反応の枠。本文と同じくページ送りするので、高さも同じ理由で固定する */
+/* 反応の枠の内側。本文と同じくページ送りするので、高さも同じ理由で固定する */
 .event-reaction {
   display: block;
   position: relative;
   padding: 18px;
-  border-radius: 14px;
-  background: rgba(138, 92, 246, 0.28);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  border: 1px solid rgba(138, 92, 246, 0.5);
   line-height: 1.85;
   font-size: 0.95rem;
-  width: 100%;
-  max-width: 600px;
   height: calc(1.85em * 3 + 36px);
-  flex-shrink: 0;
   overflow-y: auto;
   scrollbar-width: none;
   word-break: auto-phrase;
@@ -517,7 +535,7 @@ body { background: transparent; }
 .free-list.is-locked { pointer-events: none; }
 .free-card {
   animation: choiceIn 0.32s ease-out both;
-  padding: 18px;
+  padding: 16px 18px;
   border-radius: 14px;
   border: 1px solid rgba(255,255,255,0.2);
   background: rgba(18, 12, 26, 0.7);
@@ -525,6 +543,16 @@ body { background: transparent; }
   font-size: 1rem;
   cursor: pointer;
   text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.free-card-title { font-weight: bold; }
+/* 一行の状況説明。何が起きる日かは分かるが、選択肢の中身までは明かさない */
+.free-blurb {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  line-height: 1.5;
 }
 .free-card:hover {
   border-color: var(--accent);
@@ -777,13 +805,11 @@ body { background: transparent; }
    基本ルールより後ろに置くこと。同じ詳細度なので、前に置くと負けて効かない
    ========================================================================== */
 
-@media (max-width: 1059px) {
+@media (max-width: 999px) {
   /* パネルは4行ぶんで固定。1ブロックは最長52字で、390px 幅なら4行に収まる。
      画面が低い機種では 22dvh で頭打ちにする(高さは固定のまま) */
-  .event-text {
-    height: min(calc(1.95em * 4 + 40px), 22dvh);
-    margin-bottom: 14px;
-  }
+  .event-text { height: min(calc(1.95em * 4 + 40px), 22dvh); }
+  .textbox { margin-bottom: 14px; }
   .event-reaction {
     height: min(calc(1.85em * 4 + 36px), 22dvh);
     padding: 14px 16px;
@@ -801,7 +827,7 @@ body { background: transparent; }
 }
 
 /* 画面が低い機種はさらに詰める。選択肢4つ＋パネルが収まる境目がこのあたり */
-@media (max-width: 1059px) and (max-height: 800px) {
+@media (max-width: 999px) and (max-height: 800px) {
   .event-text { font-size: 0.9rem; line-height: 1.75; padding: 14px 16px; }
   /* 反応は本文より短い。低い機種では3行ぶんに詰めて、本文と2枚並んでも収める */
   .event-reaction {
@@ -837,8 +863,8 @@ body { background: transparent; }
 /* 横向きの携帯は高さが足りず、本文と反応の2枚＋ボタンが 60dvh に収まらない。
    反応を出している間は本文を畳む(読み終えた最後のブロックが残っているだけなので、
    隠しても情報は落ちない)。ボタンが画面外に出るのを防ぐのが目的 */
-@media (max-width: 1059px) and (max-height: 560px) {
-  #screen-event.is-reacting .event-text { display: none; }
+@media (max-width: 999px) and (max-height: 560px) {
+  #screen-event.is-reacting .textbox:not(.reaction-wrap) { display: none; }
   .next-btn { padding: 6px 14px; font-size: 0.78rem; }
   .reaction-actions { right: 8px; bottom: 7px; }
 }
@@ -852,4 +878,162 @@ body { background: transparent; }
   width: 0;
   height: 0;
   display: none;
+}
+
+/* ---------------- 読み上げ専用 ---------------- */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------------- 音の設定 ---------------- */
+
+.sound-panel {
+  position: fixed;
+  top: 52px;
+  right: 16px;
+  z-index: 1001;
+  width: min(260px, calc(100vw - 32px));
+  padding: 12px 16px 14px;
+  border-radius: 14px;
+  background: var(--panel);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+.sound-panel[hidden] { display: none; }
+.sound-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.sound-heading {
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: var(--accent);
+  letter-spacing: 0.06em;
+}
+.sound-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.sound-label { width: 3.2em; flex-shrink: 0; }
+.sound-row input[type="range"] {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--accent-strong);
+  cursor: pointer;
+}
+.sound-row output {
+  width: 2.4em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.sound-mute {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(10, 6, 16, 0.55);
+  color: var(--text);
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+.sound-mute:hover { border-color: var(--accent); color: var(--accent); }
+.sound-mute:focus-visible,
+.sound-row input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* ==========================================================================
+   広い画面(1000px 以上): 本文窓を画面下に敷く ADV の定石配置
+   立ち絵は右、選択肢は窓の上の左側、HUD は画面上端。
+   同じ詳細度の指定に勝たせるため、必ずファイルの末尾に置く
+   ========================================================================== */
+
+@media (min-width: 1000px) {
+  #app { max-width: none; margin: 0; padding: 0; }
+
+  /* タイトルと自由行動だけ従来の 640px カラム。タイトルは立ち絵がある時だけ左に寄せる */
+  #screen-title,
+  #screen-free {
+    width: 100%;
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 24px 20px 48px;
+  }
+  /* 自由行動は HUD(固定)の下から */
+  #screen-free { padding-top: 72px; }
+  #app.col-left #screen-title { margin-left: max(24px, calc(50vw - 660px)); margin-right: 0; }
+
+  /* 本編・プロローグ・告白・エンディング: 画面下端に寄せた1カラム */
+  #screen-prologue,
+  #screen-event,
+  #screen-confession,
+  #screen-ending {
+    justify-content: flex-end;
+    width: min(940px, 92vw);
+    margin: 0 auto;
+    padding: 72px 0 32px;
+  }
+  .textbox { max-width: none; border-radius: 16px; margin-bottom: 0; }
+  .prologue-box { margin: auto 0 0; }
+  .event-text,
+  .event-reaction {
+    padding: 22px 30px 24px;
+    font-size: 1.04rem;
+    line-height: 2;
+    height: calc(2em * 3 + 46px);
+  }
+  .prologue-text { font-size: 1.08rem; line-height: 2.1; }
+  .textbox[data-speaker]::before { left: 18px; font-size: 0.82rem; padding: 4px 16px; top: -15px; }
+
+  /* 選択肢は窓の上・左側に積む。右は立ち絵のために空ける */
+  #screen-event .textbox:not(.reaction-wrap) { order: 2; }
+  /* 右 400px は立ち絵のために空ける(1024px 幅でも肘に掛からない) */
+  .event-choices { order: 1; width: min(560px, calc(100% - 400px)); margin-bottom: 16px; }
+  .reaction-wrap { order: 3; margin-top: 0; }
+  /* 反応中は本文の窓を反応の窓に置き換える(同じ場所・同じ大きさ) */
+  #screen-event.is-reacting .textbox:not(.reaction-wrap) { display: none; }
+  .reaction-actions { right: 16px; bottom: 12px; }
+  .next-btn { padding: 9px 22px; font-size: 0.9rem; }
+  .choice-btn { padding: 14px 18px; font-size: 0.98rem; }
+  /* 見出しの下に名札(枠の上 15px)が来るので、重ならないぶん空ける */
+  .event-title { margin: 0 0 24px; }
+
+  /* HUD は画面上端に固定 */
+  .hud {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 3;
+    margin: 0;
+    padding: 12px 28px 0;
+  }
+  .hud-progress { font-size: 0.84rem; }
+  .hud-bar { max-width: 420px; }
+
+  /* 告白・エンディング */
+  #btn-confess,
+  #btn-restart { margin: 18px auto 0; }
+  .ending-new { align-self: flex-start; margin: 0 0 10px; }
+  .ending-title { text-align: left; margin: 0 0 24px; font-size: 1.3rem; }
+  #ending-foot { margin-top: 10px; }
 }
