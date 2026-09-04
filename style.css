@@ -963,6 +963,15 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
   display: none;
 }
 
+/* 場面の区切り(本文の「＿＿＿」)。中央に短い罫線 */
+.text-rule {
+  display: block;
+  width: 120px;
+  height: 1px;
+  margin: 1.2em auto 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+}
+
 /* ---------------- 読み上げ専用 ---------------- */
 
 .sr-only {

@@ -994,7 +994,9 @@ function typeText(elm, block, onDone, readKey) {
   clearTimeout(typeTimer);
   const raw = block.body !== undefined ? block.body : block.text;
   const voice = block.voice;
-  const html = toHtml(raw);
+  // 「＿＿＿＿」だけの段落は場面の区切り。文字として送らず、中央の罫線にして一拍置く
+  const isRule = /^[＿_\s]+$/.test(raw);
+  const html = isRule ? '<span class="text-rule" aria-hidden="true"></span>' : toHtml(raw);
   setSpeakerTab(elm, block);
   const done = () => {
     clearTimeout(typeTimer);
@@ -1003,11 +1005,18 @@ function typeText(elm, block, onDone, readKey) {
     elm.innerHTML = html;
     elm.classList.remove("is-typing");
     markRead(readKey);
-    announce(block.text);
+    announce(isRule ? "" : block.text);
     if (onDone) onDone();
   };
   if (raw.length === 0) {
     done();
+    return;
+  }
+  if (isRule) {
+    elm.innerHTML = html;
+    elm.classList.remove("is-typing");
+    finishTyping = null;
+    typeTimer = setTimeout(done, 350);
     return;
   }
   // パネルの高さは CSS で固定してある(ブロックごとに測ると、文章の長短で
