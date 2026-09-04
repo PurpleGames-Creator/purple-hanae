@@ -6,8 +6,13 @@ const SAVE_KEY = "sentimentalHanaeSave";
 const ASSET_DIR = "assets/";
 // 画像にもキャッシュバスターを付ける。付けないと、後から表情を差し替えたり
 // 追加したりした時に、古い画像や過去の404がブラウザに残り続ける。
-// index.html の ?v= と同じ数字に揃えること
-const ASSET_V = "?v=43";
+// 数字は index.html の <script src="game.js?v=NN"> から読む。手で揃える箇所を
+// 3つ持っていた頃に 43 と 45 でずれた実績があるので、正は index.html の1箇所だけにする
+const ASSET_V = (() => {
+  const src = document.currentScript && document.currentScript.getAttribute("src");
+  const m = src && src.match(/\?v=[^&#]+/);
+  return m ? m[0] : "";
+})();
 
 // 選択肢を描画してから受け付けるまでの猶予(誤タップ防止)と、1つずつ現れる間隔
 const CHOICE_LOCK_MS = 320;
@@ -234,17 +239,28 @@ function renderHud(screenId) {
   if (!playing) return;
 
   const left = stepsLeft();
-  let label;
-  // 先手を打つと E19 を捨てて前日の夜に告白する。本文と食い違わせない
-  if (screenId === "screen-confession") {
-    label = state.senshu ? "文化祭 前日の夜" : "文化祭 最終日 ―― 後夜祭のあと";
-  }
-  else if (left <= 1) label = "文化祭 前日";
-  else label = `文化祭まで あと${left}日`;
-  el("hud-progress").textContent = label;
+  el("hud-progress").textContent = dateLabel(screenId);
 
   const done = Math.max(0, totalSteps() - left);
   el("hud-bar-fill").style.width = Math.min(100, (done / totalSteps()) * 100) + "%";
+}
+
+// HUD に出す日付。「あとN日」の逆算だと、8/7 の誕生日(E15)の後に夏休みが明けて
+// 9月へ飛ぶところで破綻するので、場面ごとの日付を game-data.js の dates から引く
+function dateLabel(screenId) {
+  const D = GAME_DATA.dates || {};
+  const L = GAME_DATA.dateLabels || {};
+  // 先手を打つと E19 を捨てて前日の夜に告白する。本文と食い違わせない
+  if (screenId === "screen-confession") return state.senshu ? (L.senshu || "") : (L.confession || "");
+  const key = QUEUE[state.queueIndex];
+  if (key === "FREE") {
+    const done = 3 - state.freePicksLeft;
+    // 選択画面ではこれから選ぶ日、イベント中は選んだ日
+    const idx = screenId === "screen-free" ? done : done - 1;
+    return (GAME_DATA.freeDates || [])[idx] || "";
+  }
+  if (key === "E19") return L.eve || D.E19 || "";
+  return D[key] || "";
 }
 
 /* ---------------- 背景・立ち絵 ---------------- */
@@ -699,7 +715,7 @@ const SPEAKER_BY_LINE = new Map([
   ["「あ……うん、おおきに」", "hanae"],
   ["「え、今から?」", "hero"],
   ["「よろしく」", "hero"],
-  ["「好きです。付き合ってください」", "hero"],
+  ["「ハナエ、付き合ってほしい」", "hero"],
 ]);
 
 // リストに無い新しいセリフ用の保険。地の文にハナエの名前が無く、他の登場人物の
@@ -1084,13 +1100,17 @@ function closeLog() {
 
 /* ---------------- イベント表示 ---------------- */
 
-function buildEventText(rawText) {
+function buildEventText(rawText, key) {
   let text = rawText;
   // 伏線は一度だけ差し込む。毎回付けると同じ一文が終盤まで延々繰り返され、
   // 伏線ではなく表示バグに見える
   if (!state.foreshadowShown && state.rival >= GAME_DATA.foreshadowThreshold) {
     state.foreshadowShown = true;
     text += GAME_DATA.foreshadowLine;
+  }
+  // 噂を聞いて「様子を見る」を選んだ後の E19 だけ、西野の影を一行足す
+  if (key === "E19" && state.rivalInsertShown && !state.senshu && GAME_DATA.events.E19.rumorLine) {
+    text += GAME_DATA.events.E19.rumorLine;
   }
   return text;
 }
@@ -1113,7 +1133,7 @@ function showEvent(key, eventData, scene, onChoice, onCommit) {
   window.scrollTo(0, 0);
 
   // 伏線の差し込みまで済ませた「実際に表示した本文」を履歴に残す
-  const bodyText = buildEventText(eventData.text);
+  const bodyText = buildEventText(eventData.text, key);
   pushLog(eventData.title || "", bodyText);
 
   // 本文と選択肢を同時に出すと、読み終える前に選ぶことになる。

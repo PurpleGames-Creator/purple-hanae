@@ -8,8 +8,12 @@
 
 const AUDIO = (() => {
   const BGM_DIR = "assets/bgm/";
-  // index.html の ?v= と同じ数字に揃えること
-  const BGM_V = "?v=43";
+  // 数字は index.html の <script src="audio.js?v=NN"> から読む(正は index.html の1箇所だけ)
+  const BGM_V = (() => {
+    const src = document.currentScript && document.currentScript.getAttribute("src");
+    const m = src && src.match(/\?v=[^&#]+/);
+    return m ? m[0] : "";
+  })();
   const MUTE_KEY = "sentimentalHanaeMuted";
 
   const FADE_MS = 900;

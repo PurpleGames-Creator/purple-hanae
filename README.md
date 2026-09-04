@@ -28,6 +28,13 @@
 | `assets/` | 背景7点・立ち絵12点(基本2 + 表情差分10)・タイトルロゴ・OGP画像 |
 | `assets/bgm/` | BGM 12曲(m4a)。元ファイルと変換手順は `_source/bgm/README.md` |
 
+キャッシュバスター `?v=NN` の正は **`index.html` の1箇所だけ**。`game.js`(画像)と `audio.js`(BGM)は
+自分の `<script src>` の `?v=` を読んで同じ数字を使うので、JS/CSS/画像/BGM のどれを更新しても
+`index.html` の `?v=` を全部 bump すればよい。
+
+HUD の日付は `game-data.js` の `dates` / `freeDates` / `dateLabels`。準備は夏休み中の登校作業(7/20〜8/7)、
+本番は夏休み明け(9/5-6)。イベントを足したらここにも日付を入れる(無いと HUD が空になる)。
+
 ## 難易度設計
 
 バランスはモンテカルロで検証している(`SUCCESS_THRESHOLD` / `FRIEND_THRESHOLD` はその結果)。
@@ -81,7 +88,8 @@ BGM は **DOVA-SYNDROME** (https://dova-s.jp/)。12曲を場面ごとに張り�
 
 **BGM は「かすかに聞こえる」くらいまで絞ってある。** 主役は文字送りの音とハナエの反応で、
 曲はその下に敷くもの。全体の音量は `audio.js` の `BGM_MASTER` 1箇所で上下できる
-(現在 0.07 = 曲ごとの基準値に対して -23dB。実際の音量は日常曲で 0.035)。
+(現在 0.3。実効レベルは title で -33.5dBFS = 文字送りの音の 19dB 下。0.07 だった時期は
+iOS の音量バグを前提に下げた値が残っていたもので、事実上無音だった)。
 
 > **iOS Safari は `HTMLMediaElement.volume` を無視する**(音量はハードのボタン専用という
 > Apple の仕様)。そのため `<audio>` を Web Audio の GainNode に通して音量を決めている。
