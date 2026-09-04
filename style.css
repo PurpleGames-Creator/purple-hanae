@@ -76,6 +76,47 @@ body { background: transparent; }
   from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+/* タイトルでは入場のあと、ゆっくり呼吸させる(本編は表情の差し替えと干渉するので動かさない) */
+body.is-title #sprite.sprite-in { animation: spriteIn 0.5s ease-out, breathe 4.6s ease-in-out 0.5s infinite; }
+body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
+@keyframes breathe {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+/* 反応の表情に合わせた動き。名前が motion で始まるものは、終わったら JS が class を外す */
+.sprite.motion-pop { animation: motionPop 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2); }
+.sprite.motion-shake { animation: motionShake 0.42s ease-in-out; }
+.sprite.motion-sink { animation: motionSink 0.7s ease-out; }
+.sprite.motion-step { animation: motionStep 0.55s ease-out; }
+.sprite.motion-dim { animation: motionDim 0.7s ease-out; }
+@keyframes motionPop {
+  0% { transform: translateY(0); }
+  35% { transform: translateY(-14px); }
+  70% { transform: translateY(3px); }
+  100% { transform: translateY(0); }
+}
+@keyframes motionShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-5px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(3px); }
+}
+@keyframes motionSink {
+  0% { transform: translateY(0); }
+  40% { transform: translateY(7px); }
+  100% { transform: translateY(0); }
+}
+@keyframes motionStep {
+  0% { transform: translateX(0); }
+  40% { transform: translateX(6px); }
+  100% { transform: translateX(0); }
+}
+@keyframes motionDim {
+  0% { filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.55)) brightness(1); }
+  30% { filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.55)) brightness(0.6); }
+  100% { filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.55)) brightness(1); }
+}
 
 /* 表情の切り替え用。裏のレイヤーに次の表情を載せて重ね、180msで溶かす。
    差分はすべて同じポーズ・同じシルエットなので、顔だけが変化して見える */
@@ -238,7 +279,12 @@ body { background: transparent; }
   margin: 0 auto;
   /* ロゴ自体が縁取りを持っているので、影は接地感を出す程度に留める */
   filter: drop-shadow(0 6px 22px rgba(0, 0, 0, 0.55));
+  /* 復号が済むまで見せない(JS が is-ready を付ける)。読み込みの遅い回線で空白が先に出ないように */
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
 }
+.game-logo.is-ready { opacity: 1; transform: none; }
 /* 音を鳴らすための1タップを待っている間だけ出す */
 .tap-hint {
   display: none;
@@ -423,6 +469,14 @@ body { background: transparent; }
 }
 /* 描画直後の誤タップ防止。1つずつ現れる間はクリックを受け付けない */
 .event-choices.is-locked { pointer-events: none; }
+/* 選んだ直後: 選んだ肢だけ残し、他は沈める */
+.event-choices.is-decided .choice-btn { opacity: 0.28; transition: opacity 0.25s ease; }
+.event-choices.is-decided .choice-btn.is-chosen {
+  opacity: 1;
+  background: rgba(255, 143, 177, 0.3);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px rgba(255, 143, 177, 0.35), 0 6px 18px rgba(255, 92, 138, 0.25);
+}
 @keyframes choiceIn {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -661,6 +715,22 @@ body { background: transparent; }
   font-size: 1.6rem;
   opacity: 0;
 }
+/* 大きな上がり幅の時、顔の周りにひと呼吸の光 */
+.heart-glow {
+  position: absolute;
+  width: 160px;
+  height: 160px;
+  margin: -80px 0 0 -80px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 170, 200, 0.55) 0%, rgba(255, 143, 177, 0.18) 45%, rgba(255, 143, 177, 0) 70%);
+  animation: heartGlow 0.8s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes heartGlow {
+  0% { opacity: 0; transform: scale(0.4); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.6); }
+}
 .heart-small { animation: floatSmall 1.2s ease-out forwards; }
 .heart-big { font-size: 2.1rem; animation: floatBig 1.3s ease-out forwards; }
 .heart-huge { font-size: 2.8rem; animation: floatHuge 1.4s ease-out forwards; }
@@ -699,6 +769,14 @@ body { background: transparent; }
   .sprite.sprite-in { animation: none; }
   #sprite-b { transition: none; }
   .choice-btn { animation: none; }
+  .event-choices.is-decided .choice-btn { transition: none; }
+  .sprite[class*="motion-"], body.is-title #sprite, body.is-title #sprite.sprite-in { animation: none; }
+  .game-logo { transition: none; opacity: 1; transform: none; }
+  .telop { transition: none; }
+  .fade { transition: none; }
+  .petal { display: none; }
+  .rain-layer { animation: none; }
+  .heart-glow { display: none; }
   /* 本作は好感度を非公開にしており、ハートが唯一のフィードバック。
      消すと選択の良し悪しを知る手段が無くなるので、動きだけ止めて静止表示する */
   .heart {
@@ -1036,4 +1114,124 @@ body { background: transparent; }
   .ending-new { align-self: flex-start; margin: 0 0 10px; }
   .ending-title { text-align: left; margin: 0 0 24px; font-size: 1.3rem; }
   #ending-foot { margin-top: 10px; }
+}
+
+/* ---------------- 色調・雨 ---------------- */
+
+/* 場面ごとの薄い色(夕方・雨・嵐)。背景の上、暗幕の下 */
+#bg-tint {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.9s ease;
+}
+#bg-tint.is-on { opacity: 1; }
+
+/* 雨の筋。2枚の縞をずらして落とす。立ち絵の後ろ、背景の前 */
+.rain-layer {
+  position: fixed;
+  inset: -12% 0 0 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.9s ease;
+  background-image:
+    repeating-linear-gradient(104deg, transparent 0 26px, rgba(255, 255, 255, 0.13) 26px 27px, transparent 27px 70px),
+    repeating-linear-gradient(100deg, transparent 0 41px, rgba(255, 255, 255, 0.08) 41px 42px, transparent 42px 110px);
+  background-size: 320px 420px, 560px 760px;
+  animation: rainFall 0.75s linear infinite;
+}
+body.is-rain .rain-layer { opacity: 1; }
+@keyframes rainFall {
+  to { background-position: -70px 420px, -120px 760px; }
+}
+
+/* ---------------- 場面転換のテロップ ---------------- */
+
+.telop {
+  position: fixed;
+  inset: 0;
+  z-index: 800;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(8, 5, 12, 0.92);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.42s ease;
+}
+.telop.is-in { opacity: 1; transition-duration: 0.26s; }
+.telop.is-out { opacity: 0; }
+.telop-date {
+  font-size: 1.6rem;
+  letter-spacing: 0.14em;
+  color: var(--text);
+  font-weight: bold;
+  text-shadow: 0 2px 16px rgba(255, 143, 177, 0.35);
+}
+.telop-place {
+  font-size: 0.9rem;
+  letter-spacing: 0.18em;
+  color: var(--text-dim);
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  min-height: 1.4em;
+}
+.telop-place:empty { display: none; }
+
+/* ---------------- 暗転 ---------------- */
+
+.fade {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  background: #06040a;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+}
+.fade.is-dark { opacity: 1; }
+
+/* ---------------- タイトルの花びら ---------------- */
+
+.petals {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  display: none;
+  overflow: hidden;
+}
+body.is-title .petals { display: block; }
+.petal {
+  position: absolute;
+  top: -4vh;
+  left: var(--x, 50%);
+  width: 11px;
+  height: 11px;
+  border-radius: 70% 0 70% 0;
+  background: rgba(255, 178, 205, 0.8);
+  box-shadow: 0 0 8px rgba(255, 143, 177, 0.35);
+  opacity: 0;
+  animation: petalFall var(--d, 12s) linear var(--delay, 0s) infinite;
+}
+.petal:nth-child(1)  { --x: 8%;  --d: 13s; --delay: 0s;    --sway: 40px; }
+.petal:nth-child(2)  { --x: 18%; --d: 15s; --delay: -4s;   --sway: -30px; }
+.petal:nth-child(3)  { --x: 27%; --d: 11s; --delay: -8s;   --sway: 55px; width: 8px; height: 8px; }
+.petal:nth-child(4)  { --x: 36%; --d: 16s; --delay: -2s;   --sway: -45px; }
+.petal:nth-child(5)  { --x: 45%; --d: 12s; --delay: -10s;  --sway: 35px; width: 9px; height: 9px; }
+.petal:nth-child(6)  { --x: 55%; --d: 14s; --delay: -6s;   --sway: -60px; }
+.petal:nth-child(7)  { --x: 64%; --d: 17s; --delay: -12s;  --sway: 30px; width: 8px; height: 8px; }
+.petal:nth-child(8)  { --x: 73%; --d: 12s; --delay: -3s;   --sway: -35px; }
+.petal:nth-child(9)  { --x: 84%; --d: 15s; --delay: -9s;   --sway: 50px; width: 9px; height: 9px; }
+.petal:nth-child(10) { --x: 93%; --d: 13s; --delay: -14s;  --sway: -25px; }
+@keyframes petalFall {
+  0%   { transform: translate3d(0, 0, 0) rotate(0deg); opacity: 0; }
+  8%   { opacity: 0.9; }
+  92%  { opacity: 0.7; }
+  100% { transform: translate3d(var(--sway, 30px), 108vh, 0) rotate(320deg); opacity: 0; }
 }

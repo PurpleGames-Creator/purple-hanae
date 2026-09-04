@@ -17,6 +17,13 @@ const ASSET_V = (() => {
 // 選択肢を描画してから受け付けるまでの猶予(誤タップ防止)と、1つずつ現れる間隔
 const CHOICE_LOCK_MS = 320;
 const CHOICE_STAGGER_MS = 55;
+// 選んだ肢を光らせてから消すまで。反応はこの後に始まる
+const CHOICE_HOLD_MS = 380;
+
+// アニメーション低減の設定。演出の待ち時間を 0 にする(文字送りは別。本作の読ませ方そのものなので止めない)
+function reducedMotion() {
+  return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+}
 
 function freshState() {
   return {
@@ -213,6 +220,8 @@ function bgmForKey(key) {
 function showScreen(id) {
   document.querySelectorAll(".screen").forEach((s) => s.classList.remove("active"));
   el(id).classList.add("active");
+  // タイトルだけ、立ち絵をゆっくり呼吸させて花びらを降らせる
+  document.body.classList.toggle("is-title", id === "screen-title");
   renderHud(id);
   updateLayout();
 }
@@ -404,7 +413,101 @@ function applyScene(scene) {
   setBackground(scene.bg);
   // 場面の入りの表情。重い場面で満面の笑みのまま始まらないようにする
   setSprite(scene.sprite, scene.expr || null);
+  setTint(scene.tint || null);
+  setWeather(scene.weather || null);
   updateLayout();
+}
+
+// 画面全体に薄く掛ける色(夕方・雨・嵐)。指定の無い場面では消す
+function setTint(color) {
+  const t = el("bg-tint");
+  if (!t) return;
+  if (color) t.style.background = color;
+  t.classList.toggle("is-on", !!color);
+}
+
+function setWeather(kind) {
+  document.body.classList.toggle("is-rain", kind === "rain");
+}
+
+/* ---------------- 場面転換のテロップ ---------------- */
+
+const TELOP_MS = { in: 260, hold: 760, out: 420 };
+let lastTelop = "";
+
+function placeFor(scene) {
+  const bg = scene && scene.bg;
+  return (bg && GAME_DATA.placeLabels && GAME_DATA.placeLabels[bg]) || "";
+}
+
+// 日付と場所を暗転の上に出してから本文へ。同じ日付・同じ場所が続く時(噂 → E19)は出さない。
+// 既読の場面は短くする(周回で毎回待たされないように)
+function showTelop(date, place, read) {
+  const box = el("telop");
+  if (!box || !date) return Promise.resolve();
+  const key = date + "|" + place;
+  if (key === lastTelop) return Promise.resolve();
+  lastTelop = key;
+  el("telop-date").textContent = date;
+  el("telop-place").textContent = place || "";
+  const reduced = reducedMotion();
+  box.classList.remove("is-out");
+  box.classList.add("is-in");
+  const hold = reduced ? 600 : TELOP_MS.in + (read ? 380 : TELOP_MS.hold);
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      box.classList.remove("is-in");
+      box.classList.add("is-out");
+      resolve();
+      setTimeout(() => box.classList.remove("is-out"), TELOP_MS.out + 60);
+    }, hold);
+  });
+}
+
+/* ---------------- 暗転 ---------------- */
+
+// 告白 → 結末、結末 → タイトル のような大きな切り替えで使う
+function fadeTo(dark, ms) {
+  const f = el("fade");
+  if (!f) return Promise.resolve();
+  const dur = reducedMotion() ? 0 : ms;
+  f.style.transitionDuration = dur + "ms";
+  void f.offsetWidth;
+  f.classList.toggle("is-dark", dark);
+  return new Promise((resolve) => setTimeout(resolve, dur));
+}
+
+/* ---------------- 立ち絵の感情モーション ---------------- */
+
+// 反応の表情に合わせて、立ち絵を少しだけ動かす。驚き・喜びは跳ね、怒りは小刻みに揺れ、
+// 落胆は沈み、照れは半歩引く。柔らかい表情(soft / normal / smile)は動かさない
+const SPRITE_MOTION = {
+  surprise: "pop",
+  joy: "pop",
+  angry: "shake",
+  lonely: "sink",
+  trouble: "sink",
+  cry: "sink",
+  shy: "step",
+};
+const MOTION_CLASSES = ["motion-pop", "motion-shake", "motion-sink", "motion-step", "motion-dim"];
+
+function playSpriteMotion(kind) {
+  if (!kind || reducedMotion()) return;
+  ["sprite", "sprite-b"].forEach((id) => {
+    const im = el(id);
+    im.classList.remove(...MOTION_CLASSES);
+    void im.offsetWidth;
+    im.classList.add("motion-" + kind);
+  });
+}
+
+function initSpriteMotion() {
+  ["sprite", "sprite-b"].forEach((id) => {
+    el(id).addEventListener("animationend", (ev) => {
+      if (ev.animationName.indexOf("motion") === 0) ev.target.classList.remove(...MOTION_CLASSES);
+    });
+  });
 }
 
 // 広い画面では、立ち絵が出ている間だけ本文を左カラムに寄せる。
@@ -474,6 +577,9 @@ function preloadExpressions() {
 
 function initTitleScreen() {
   showScreen("screen-title");
+  lastTelop = "";
+  setTint(null);
+  setWeather(null);
   // 広い画面だけ、タイトルにもハナエを立たせる。狭い画面の立ち絵は右上の
   // 円形アイコンになる作りなので、出すとロゴに重なってしまう
   const wide = window.matchMedia && window.matchMedia("(min-width: 1000px)").matches;
@@ -529,7 +635,10 @@ function initTitleScreen() {
     state = freshState();
     state.name = name;
     saveGame();
-    showPrologue();
+    fadeTo(true, 450).then(() => {
+      showPrologue();
+      return fadeTo(false, 600);
+    });
   };
 }
 
@@ -620,6 +729,16 @@ function playHeartEffect(points) {
   const sprite = el("sprite");
   const rect = sprite.style.display === "none" ? null : sprite.getBoundingClientRect();
   const anchored = rect && rect.width > 0;
+
+  // 大きな上がり幅は顔の周りにひと呼吸の光を足す。下がる時は立ち絵を一瞬暗く沈める
+  if (anchored && tier.count >= 2 && !reducedMotion()) {
+    const glow = document.createElement("div");
+    glow.className = "heart-glow";
+    glow.style.left = rect.left + rect.width * 0.5 + "px";
+    glow.style.top = rect.top + rect.height * 0.16 + "px";
+    layer.appendChild(glow);
+  }
+  if (tier.cls === "heart-break") playSpriteMotion("dim");
 
   for (let i = 0; i < tier.count; i++) {
     const h = document.createElement("div");
@@ -1223,15 +1342,23 @@ function showEvent(key, eventData, scene, onChoice, onCommit) {
   // 本文と選択肢を同時に出すと、読み終える前に選ぶことになる。
   // 最後のブロックを読んだあと、もう一度タップさせてから選択肢を出す
   const textEl = el("event-text");
-  playBlocks(textEl, bodyText, "t:" + key, () => {
-    textEl.classList.add("has-next");
-    pagerNext = () => {
-      pagerNext = null;
-      textEl.classList.remove("has-next");
-      renderChoices(key, eventData, scene, choicesEl, onChoice, onCommit);
-    };
+  textEl.innerHTML = "";
+  clearSpeakerTab(textEl.closest(".textbox"));
+  const token = ++showEvent._token;
+  showTelop(dateLabel("screen-event"), placeFor(scene), readSet.has("t:" + key + "#0")).then(() => {
+    // テロップの間にタイトルへ戻られたら、その本文は出さない
+    if (token !== showEvent._token) return;
+    playBlocks(textEl, bodyText, "t:" + key, () => {
+      textEl.classList.add("has-next");
+      pagerNext = () => {
+        pagerNext = null;
+        textEl.classList.remove("has-next");
+        renderChoices(key, eventData, scene, choicesEl, onChoice, onCommit);
+      };
+    });
   });
 }
+showEvent._token = 0;
 
 function renderChoices(key, eventData, scene, choicesEl, onChoice, onCommit) {
   choicesEl.innerHTML = "";
@@ -1252,7 +1379,9 @@ function renderChoices(key, eventData, scene, choicesEl, onChoice, onCommit) {
     btn.onclick = () => {
       if (choicesEl.classList.contains("is-locked")) return;
       AUDIO.se("choice");
-      choicesEl.style.display = "none";
+      // 選んだ肢だけ残して他を沈め、一拍置いてから消す。押した実感を出すため
+      choicesEl.classList.add("is-locked", "is-decided");
+      btn.classList.add("is-chosen");
       const points = choice.points || 0;
       state.score += points;
       state.rival = Math.max(0, state.rival + (choice.rival || 0));
@@ -1264,12 +1393,32 @@ function renderChoices(key, eventData, scene, choicesEl, onChoice, onCommit) {
       // 点数だけ入った状態で同じイベントがもう一度出て、二重に加算される
       if (onCommit) onCommit(choice);
       saveGame();
+      const hold = reducedMotion() ? 0 : CHOICE_HOLD_MS;
+      setTimeout(() => {
+        // 一拍の間にタイトルへ戻られていたら、反応は出さない(進行は保存済み)
+        const active = document.querySelector(".screen.active");
+        if (!active || active.id !== "screen-event") return;
+        choicesEl.style.display = "none";
+        choicesEl.classList.remove("is-decided");
+        btn.classList.remove("is-chosen");
+        showReaction(key, choice, scene, points, onChoice);
+      }, hold);
+    };
+    choicesEl.appendChild(btn);
+  });
+}
+
+function showReaction(key, choice, scene, points, onChoice) {
       // 表情は選択肢ごとの指定を最優先する。点数からの自動判定は指定漏れの保険。
       // 本文中は不在の場面(E6)でも、反応では reactionSprite で顔を出す。
       // ハートより先に出すこと —— ハートは立ち絵の顔めがけて飛ばすので、
       // 立ち絵が出ていないと画面中央の飾りになってしまう
       const outfit = scene && (scene.sprite || scene.reactionSprite);
-      if (outfit) setSprite(outfit, choice.expr || exprFor(points, choice.tag));
+      const expr = choice.expr || exprFor(points, choice.tag);
+      if (outfit) {
+        setSprite(outfit, expr);
+        playSpriteMotion(SPRITE_MOTION[expr]);
+      }
       playHeartEffect(points);
 
       // 反応も本文と同じページ送りにする。1枠に地の文とセリフを混ぜないため、
@@ -1295,9 +1444,6 @@ function renderChoices(key, eventData, scene, choicesEl, onChoice, onCommit) {
         actions.appendChild(nextBtn);
         actions.classList.add("is-shown");
       });
-    };
-    choicesEl.appendChild(btn);
-  });
 }
 
 /* ---------------- 自由行動フェーズ ---------------- */
@@ -1436,18 +1582,28 @@ function startConfession() {
   const btn = el("btn-confess");
   btn.style.display = "none";
   btn.disabled = false;
-  // 曲を切って無音の一拍を置く。ここは音楽で押すより、止めた方が効く
+  // 曲を切って無音の一拍を置き、暗転してから結末へ。ここは音楽で押すより、止めた方が効く
   btn.onclick = () => {
     btn.disabled = true;
     AUDIO.se("next");
     AUDIO.stopBgm(450);
-    setTimeout(resolveEnding, 950);
+    fadeTo(true, 800).then(() => new Promise((r) => setTimeout(r, reducedMotion() ? 0 : 500)))
+      .then(() => {
+        resolveEnding();
+        return fadeTo(false, 1100);
+      });
   };
   window.scrollTo(0, 0);
   const introText = withName(intro);
   pushLog("告白", introText);
-  playBlocks(el("confession-text"), introText, state.senshu ? "confession:senshu" : "confession", () => {
-    btn.style.display = "block";
+  const readKey = state.senshu ? "confession:senshu" : "confession";
+  const confEl = el("confession-text");
+  confEl.innerHTML = "";
+  showTelop(dateLabel("screen-confession"), placeFor(sceneFor("CONFESSION")), readSet.has(readKey + "#0")).then(() => {
+    if (document.querySelector(".screen.active").id !== "screen-confession") return;
+    playBlocks(confEl, introText, readKey, () => {
+      btn.style.display = "block";
+    });
   });
 }
 
@@ -1495,8 +1651,11 @@ function resolveEnding() {
   window.scrollTo(0, 0);
   el("btn-restart").onclick = () => {
     AUDIO.se("next");
-    state = freshState();
-    initTitleScreen();
+    fadeTo(true, 500).then(() => {
+      state = freshState();
+      initTitleScreen();
+      return fadeTo(false, 600);
+    });
   };
 }
 
@@ -1505,6 +1664,14 @@ function resolveEnding() {
 document.addEventListener("DOMContentLoaded", () => {
   preloadAssets();
   preloadExpressions();
+  initSpriteMotion();
+  // ロゴは復号が済んでから浮かび上がらせる。読み込み中に空白の場所へ
+  // 「画面をタップ」だけが先に出るのを防ぐ
+  const logo = document.querySelector(".game-logo");
+  if (logo) {
+    const ready = () => logo.classList.add("is-ready");
+    (logo.decode ? logo.decode() : Promise.resolve()).then(ready, ready);
+  }
   // 進行はセーブ済みなので、タイトルに戻っても「つづきから」で復帰できる
   initSoundPanel();
   renderSoundLabel();
@@ -1537,6 +1704,7 @@ document.addEventListener("DOMContentLoaded", () => {
     clearTimeout(typeTimer);
     finishTyping = null;
     pagerNext = null;
+    showEvent._token++;
     saveGame();
     initTitleScreen();
   };

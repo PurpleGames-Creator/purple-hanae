@@ -15,8 +15,8 @@
 <meta property="og:image" content="https://purplegames-creator.github.io/purple-hanae/assets/ogp.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💗</text></svg>">
-<link rel="preload" as="image" href="assets/logo_title.webp?v=47">
-<link rel="stylesheet" href="style.css?v=47">
+<link rel="preload" as="image" href="assets/logo_title.webp?v=48">
+<link rel="stylesheet" href="style.css?v=48">
 </head>
 <body>
 
@@ -25,7 +25,15 @@
 <div id="bg-scrim"></div>
 <img id="sprite" class="sprite" alt="">
 <img id="sprite-b" class="sprite" alt="" aria-hidden="true">
+<div id="bg-tint"></div>
+<div id="rain-layer" class="rain-layer" aria-hidden="true"></div>
 <div id="heart-layer"></div>
+<!-- タイトルの花びら。ロゴの桜に合わせた飾り。タイトル画面でだけ出す -->
+<div id="petals" class="petals" aria-hidden="true">
+  <span class="petal"></span><span class="petal"></span><span class="petal"></span><span class="petal"></span>
+  <span class="petal"></span><span class="petal"></span><span class="petal"></span><span class="petal"></span>
+  <span class="petal"></span><span class="petal"></span>
+</div>
 
 <main id="app">
 
@@ -43,7 +51,7 @@
 
   <section id="screen-title" class="screen active">
     <h1 class="game-title">
-      <img class="game-logo" src="assets/logo_title.webp?v=47" width="960" height="463"
+      <img class="game-logo" src="assets/logo_title.webp?v=48" width="960" height="463"
            alt="センチメンタル・ハナエ" fetchpriority="high" decoding="async">
     </h1>
     <p id="tap-hint" class="tap-hint">画面をタップ</p>
@@ -110,6 +118,14 @@
 
 </main>
 
+<!-- 場面転換のテロップ(日付と場所)。本文が出る前に一拍置く -->
+<div id="telop" class="telop" aria-hidden="true">
+  <div id="telop-date" class="telop-date"></div>
+  <div id="telop-place" class="telop-place"></div>
+</div>
+<!-- 暗転。告白→結末、結末→タイトル で使う -->
+<div id="fade" class="fade" aria-hidden="true"></div>
+
 <!-- 読み上げ用。1文字ずつ出す本文をそのまま読ませると煩いので、1ブロック出し終えるたびに全文を入れる -->
 <div id="sr-live" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
@@ -143,8 +159,8 @@
   </div>
 </div>
 
-<script src="game-data.js?v=47"></script>
-<script src="audio.js?v=47"></script>
-<script src="game.js?v=47"></script>
+<script src="game-data.js?v=48"></script>
+<script src="audio.js?v=48"></script>
+<script src="game.js?v=48"></script>
 </body>
 </html>

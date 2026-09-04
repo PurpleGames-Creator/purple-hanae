@@ -364,7 +364,19 @@ const GAME_DATA = {
   // 「先手を打つ」を選んだ場合の告白(前日の夜。E19を経ずに告白へ飛ぶ)
   confessionIntroSenshu: `その夜。まだ校庭の照明が半分だけ点いている時間に、ハナエを呼び出した。\n\n「なんなん、こんな時間に。明日本番やで」\n\n明日を待っていたら、たぶん間に合わない。理屈ではなく、そう思った。\n\n俺は、息を整えてからハナエを見た。\n\n「ハナエ、付き合ってほしい」`,
 
+  // 背景ごとの場所名。場面転換のテロップに日付と並べて出す
+  placeLabels: {
+    bg_classroom: "教室",
+    bg_gym: "体育館",
+    bg_gym_night: "夜の体育館",
+    bg_ground_night: "夜の校庭",
+    bg_tennis: "テニスコート",
+    bg_cafe: "喫茶店",
+    bg_rain: "渡り廊下",
+  },
+
   // 各シーンの背景と立ち絵(演出データ。テキスト側とは分離して管理する)
+  // tint: 画面全体に薄く掛ける色(夕方・雨・嵐)。weather: "rain" で雨の筋を降らせる
   // sprite: "summer" | "winter" | null(ハナエが画面にいない場面)
   // reactionSprite: 本文の時点では不在だが、選択後の反応では出す場面。
   //   本作は「返ってくる言葉と、その顔だけが手がかり」なので、
@@ -380,16 +392,16 @@ const GAME_DATA = {
     E7:  { bg: "bg_gym",          sprite: "summer" },
     E8:  { bg: "bg_gym",          sprite: "summer", expr: "normal" },
     E9:  { bg: "bg_tennis",       sprite: "summer", expr: "normal" },
-    E10: { bg: "bg_classroom",    sprite: "summer" },
+    E10: { bg: "bg_classroom",    sprite: "summer", tint: "rgba(255, 138, 64, 0.16)" },
     E11: { bg: "bg_gym",          sprite: "summer" },
     E12: { bg: "bg_cafe",         sprite: "summer", expr: "lonely" },
-    E13: { bg: "bg_rain",         sprite: "summer", expr: "normal" },
+    E13: { bg: "bg_rain",         sprite: "summer", expr: "normal", tint: "rgba(80, 110, 160, 0.2)", weather: "rain" },
     E14: { bg: "bg_gym",          sprite: "summer", expr: "normal" },
     E14B:{ bg: "bg_cafe",         sprite: "summer", expr: "lonely" },
     E15: { bg: "bg_classroom",    sprite: "summer" },
     E16: { bg: "bg_gym",          sprite: "summer", expr: "normal" },
     E17: { bg: "bg_classroom",    sprite: "summer" },
-    E18: { bg: "bg_ground_night", sprite: "summer", expr: "normal" },
+    E18: { bg: "bg_ground_night", sprite: "summer", expr: "normal", tint: "rgba(30, 50, 80, 0.3)", weather: "rain" },
     E19: { bg: "bg_gym_night",    sprite: "summer", expr: "normal" },
 
     F1_neji:     { bg: "bg_gym",       sprite: "summer" },
