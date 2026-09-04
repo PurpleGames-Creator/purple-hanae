@@ -418,11 +418,35 @@ async function crossfadeSprite(wanted, base) {
   }, SPRITE_FADE_MS + 10);
 }
 
-function applyScene(scene) {
+// 場面の入りで立ち絵を出すと、まだ彼女が出てきていない地の文の間も
+// 立っていることになる(E1 の「高校三年、最後の文化祭。」など)。
+// ハナエが最初に口を開くブロックまで待たせて、そこでふわっと出す
+let pendingSprite = null;
+
+function holdSprite(scene) {
+  pendingSprite = { outfit: scene.sprite, expr: scene.expr || null };
+  setSprite(null);
+}
+
+// 本文を1ブロック出すたびに呼ぶ。ハナエの声(voice 1。E1 の「？？？」も含む)なら出す
+function revealSpriteFor(block) {
+  if (!pendingSprite || !block || block.voice !== 1) return;
+  const p = pendingSprite;
+  pendingSprite = null;
+  setSprite(p.outfit, p.expr);
+}
+
+// 待たせている途中で場面が変わる時のため、明示的に捨てられるようにしておく
+function dropPendingSprite() {
+  pendingSprite = null;
+}
+
+function applyScene(scene, holdUntilLine) {
   if (!scene) return;
   setBackground(scene.bg);
   // 場面の入りの表情。重い場面で満面の笑みのまま始まらないようにする
-  setSprite(scene.sprite, scene.expr || null);
+  if (holdUntilLine && scene.sprite) holdSprite(scene);
+  else { dropPendingSprite(); setSprite(scene.sprite, scene.expr || null); }
   setTint(scene.tint || null);
   setWeather(scene.weather || null);
   setCg(scene.cg || null);
@@ -607,6 +631,7 @@ function initTitleScreen() {
   showScreen("screen-title");
   lastTelop = "";
   currentEventKey = null;
+  dropPendingSprite();
   setTint(null);
   setWeather(null);
   setCg(null);
@@ -1383,7 +1408,7 @@ function buildEventText(rawText, key) {
 function showEvent(key, eventData, scene, onChoice, onCommit) {
   currentEventKey = key;
   showScreen("screen-event");
-  applyScene(scene);
+  applyScene(scene, true);
   AUDIO.playBgm(bgmForKey(key));
   el("event-reaction").innerHTML = "";
   el("reaction-wrap").classList.remove("is-shown");
@@ -1417,7 +1442,7 @@ function showEvent(key, eventData, scene, onChoice, onCommit) {
         textEl.classList.remove("has-next");
         renderChoices(key, eventData, scene, choicesEl, onChoice, onCommit);
       };
-    });
+    }, (i, block) => revealSpriteFor(block));
   });
 }
 showEvent._token = 0;
@@ -1480,6 +1505,8 @@ function showReaction(key, choice, scene, points, onChoice) {
       // 立ち絵が出ていないと画面中央の飾りになってしまう
       const outfit = scene && (scene.sprite || scene.reactionSprite);
       const expr = choice.expr || exprFor(points, choice.tag);
+      // 本文で一度も喋らない場面(E16 など)は、ここで初めて顔を出す
+      dropPendingSprite();
       if (outfit) {
         setSprite(outfit, expr);
         playSpriteMotion(SPRITE_MOTION[expr]);
@@ -1652,7 +1679,7 @@ function advanceEventThenNext(key) {
 function startConfession() {
   currentEventKey = null;
   showScreen("screen-confession");
-  applyScene(sceneFor("CONFESSION"));
+  applyScene(sceneFor("CONFESSION"), true);
   AUDIO.playBgm(bgmForKey("CONFESSION"));
   const intro = state.senshu ? GAME_DATA.confessionIntroSenshu : GAME_DATA.confessionIntro;
   const btn = el("btn-confess");
@@ -1679,7 +1706,7 @@ function startConfession() {
     if (document.querySelector(".screen.active").id !== "screen-confession") return;
     playBlocks(confEl, introText, readKey, () => {
       btn.style.display = "block";
-    });
+    }, (i, block) => revealSpriteFor(block));
   });
 }
 

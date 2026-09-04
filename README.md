@@ -101,6 +101,11 @@ HUD の日付は `game-data.js` の `dates` / `freeDates` / `dateLabels`。準�
 
 場面の入りの表情は `game-data.js` の `scenes` / `endingScenes` の `expr` で指定する。
 
+**立ち絵は場面の入りでは出さない。** ハナエが最初に口を開いたブロック(話者が彼女 = `voice 1`。
+E1 の「？？？」も含む)で、ふわっと現れる。本文で一度も喋らない場面(E16 など)は、
+選択後の反応で初めて出る。仕組みは `game.js` の `pendingSprite` / `revealSpriteFor()` で、
+`applyScene(scene, true)` を呼んだ画面(本編・告白)だけが対象。エンディングは最初から出す。
+
 ## 音
 
 BGM は **DOVA-SYNDROME** (https://dova-s.jp/)。12曲を場面ごとに張り替える。

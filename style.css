@@ -71,13 +71,15 @@ body { background: transparent; }
   /* 背景となじませる影。box-shadow だと矩形に影が出るので filter を使う */
   filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.55));
 }
-.sprite.sprite-in { animation: spriteIn 0.5s ease-out; }
+/* 彼女が最初に口を開いた時に、ふわっと現れる(場面の入りでは出さない)。
+   0.5s だと「出た」ではなく「切り替わった」に見えるので、少し長く取る */
+.sprite.sprite-in { animation: spriteIn 0.85s ease-out; }
 @keyframes spriteIn {
-  from { opacity: 0; transform: translateY(14px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(20px) scale(0.985); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 /* タイトルでは入場のあと、ゆっくり呼吸させる(本編は表情の差し替えと干渉するので動かさない) */
-body.is-title #sprite.sprite-in { animation: spriteIn 0.5s ease-out, breathe 4.6s ease-in-out 0.5s infinite; }
+body.is-title #sprite.sprite-in { animation: spriteIn 0.85s ease-out, breathe 4.6s ease-in-out 0.85s infinite; }
 body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
 @keyframes breathe {
   0%, 100% { transform: translateY(0); }
@@ -141,7 +143,9 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
      足元は本文パネルの後ろに隠れる = ADV の通常の見せ方。下端の
      フェード(mask-image)で、パネルとの境目が硬くならないようにしている */
   .sprite {
-    top: 52px;
+    /* 頭上の余白。低い機種は 52px(HUD のすぐ下)のままにしないと顔が枠に掛かる。
+       背の高い機種は余裕があるので、画面の高さに比例して下げる */
+    top: var(--sprite-top, 52px);
     bottom: auto;
     left: 0;
     right: 0;
@@ -187,6 +191,17 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
   #screen-ending > :first-child {
     margin-top: auto;
   }
+}
+
+/* 頭上の余白は画面の高さの 14%。立ち絵は 56dvh、あごはその 35%(= 上から 19.6dvh)
+   なので、14dvh 下げてもあごは 34dvh に収まり、本文の枠(上端は 32〜50dvh)に掛からない。
+   ただし 320x568 級だけは本文と選択肢で画面がほぼ埋まり、枠の上端が 33dvh まで
+   上がってくるので下げられない。そこだけ HUD のすぐ下(52px)に戻す */
+@media (max-width: 999px) {
+  .sprite { --sprite-top: 14dvh; }
+}
+@media (max-width: 999px) and (max-height: 620px) {
+  .sprite { --sprite-top: 52px; }
 }
 
 /* 広い画面: 本文窓は画面下、立ち絵は右に等身大で(窓が脚に掛かるのは ADV の定石) */
