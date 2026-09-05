@@ -921,6 +921,8 @@ function initTitleScreen() {
   applyScene(sceneFor(wide ? "TITLE_WIDE" : "TITLE"));
   AUDIO.playBgm("title");
   gateTitleForAudio();
+  // ?ending=キー が付いていたら、最初のタップでその結末へ飛ぶ(実機での確認用)
+  armEndingTest();
   renderEndingGallery();
   window.scrollTo(0, 0);
   const saved = loadGame();
@@ -2018,8 +2020,12 @@ function resolveEnding() {
   }
 
   state.finished = true;
-  saveGame();
-  const isNew = recordEnding(endingKey);
+  // ?ending= で飛んできた時は、セーブも図鑑も触らない。
+  // 触ると進行中の続きが上書きされ、達成していない結末が図鑑に点く。
+  // 見た目は「初めて見た時」と同じにしたいので NEW の帯だけは出す
+  const testing = endingTestRunning;
+  if (!testing) saveGame();
+  const isNew = testing ? true : recordEnding(endingKey);
 
   const ending = GAME_DATA.endings[endingKey];
   showScreen("screen-ending");
@@ -2065,6 +2071,56 @@ function resolveEnding() {
       return fadeTo(false, 600);
     });
   };
+}
+
+/* ---------------- 結末だけを試す(?ending=キー) ---------------- */
+
+// 実機で結末の見え方(41歳の「謝る / いじる」など)だけ確かめたい時に、
+// 最初から遊ばずにそこへ飛ぶ。URL に付けた時だけ働く。
+// 点数を積んでから resolveEnding() を通すので、判定も含めて本物と同じ道になる
+// (専用の表示関数を別に作ると、本編と少しずつズレていく)
+const ENDING_TEST = {
+  successPerfect: (s) => {
+    s.score = GAME_DATA.SUCCESS_THRESHOLD + 45;
+    Object.keys(GAME_DATA.perfectRoute).forEach((k) => { s.perfect[k] = true; });
+  },
+  success:   (s) => { s.score = GAME_DATA.SUCCESS_THRESHOLD + 14; },
+  friend:    (s) => { s.score = GAME_DATA.FRIEND_THRESHOLD + 8; },
+  soretigai: (s) => { s.score = GAME_DATA.FRIEND_THRESHOLD - 20; s.passiveCount = 3; },
+  awkward:   (s) => { s.score = GAME_DATA.FRIEND_THRESHOLD - 20; s.pushyCount = 3; },
+  nishino:   (s) => { s.score = GAME_DATA.FRIEND_THRESHOLD + 8; s.rival = GAME_DATA.RIVAL_FAIL_THRESHOLD; },
+  nigaoe:    (s) => { s.score = GAME_DATA.FRIEND_THRESHOLD - 40; s.nigaoe = true; },
+};
+
+function endingTestKey() {
+  const m = /[?&]ending=([A-Za-z]+)/.exec(location.search);
+  return m && ENDING_TEST[m[1]] ? m[1] : null;
+}
+
+let endingTestRunning = false;
+
+function jumpToEnding(key) {
+  const go = () => {
+    state = freshState();
+    state.name = "テスト";
+    ENDING_TEST[key](state);
+    endingTestRunning = true;
+    resolveEnding();
+  };
+  // 41歳の結末は、描いた似顔絵が無いと絵が出ない。まだ描いていなければ先に描いてもらう
+  if (key === "nigaoe" && !loadDrawing()) openDrawing().then(go);
+  else go();
+}
+
+// タイトルの最初のタップ(音の解錠)が済んでから飛ぶ。先に飛ぶと曲が鳴らない
+function armEndingTest() {
+  const key = endingTestKey();
+  if (!key) return;
+  if (AUDIO.isUnlocked() || AUDIO.isMuted()) {
+    setTimeout(() => jumpToEnding(key), 60);
+    return;
+  }
+  document.addEventListener("click", () => jumpToEnding(key), { once: true });
 }
 
 /* ---------------- 音の切り分け表示(?debug=1) ---------------- */
