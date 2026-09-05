@@ -1392,7 +1392,6 @@ body.is-title .petals {
 .petal:nth-child(8)  { --x: 74%; --w: 12px; --d: 12.5s; --delay: -3s; --amp: 32px; --sd: 1.9s; --rd: 3.4s; --op: .9; }
 .petal:nth-child(9)  { --x: 84%; --w: 9px;  --d: 15.5s; --delay: -8s; --amp: 24px; --sd: 2.7s; --rd: 4.6s; --op: .75; }
 .petal:nth-child(10) { --x: 93%; --w: 10px; --d: 14.5s; --delay: -13s; --amp: 26px; --sd: 2.2s; --rd: 5.8s; --op: .8; }
-}
 
 /* ---------------- 一枚絵(似顔絵など) ---------------- */
 
@@ -1413,8 +1412,32 @@ body.is-title .petals {
 }
 .cg.is-shown { opacity: 1; transform: rotate(-4deg) scale(1); }
 .cg:not([src]) { display: none; }
+/* 狭い画面。ここは横幅が足りないので、絵をそのまま出すと立ち絵に重なって
+   ハナエの顔を隠してしまう(390px 幅で実測 165px の重なり)。
+   一枚絵が出ている間だけ立ち絵を縮めて右端へ寄せ、絵を左に置いて左右に分ける。
+   390px 幅での内訳: 絵 40vw+枠12px=168px(左端 8px) / 立ち絵 44dvh=約184px幅
+   (右端 6px)→ 間に 24px 残る */
 @media (max-width: 999px) {
-  .cg { left: 4%; top: auto; bottom: 62dvh; width: 40vw; }
+  .cg {
+    left: 2vw;
+    top: 14dvh;
+    bottom: auto;
+    width: min(40vw, 240px);
+  }
+  body.has-cg .sprite {
+    left: auto;
+    right: max(6px, 1.5vw);
+    margin: 0;
+  }
+}
+/* 縮めるのは、右へ寄せただけでは足りない端末だけ。640px より広ければ
+   (portrait のタブレット、横向きの端末)寄せるだけで 150px 以上あくので、
+   立ち絵は大きいまま見せる */
+@media (max-width: 640px) {
+  body.has-cg .sprite {
+    height: min(44vh, 520px);
+    height: min(44dvh, 520px);
+  }
 }
 
 /* 画面が低い端末(iPhone SE の Safari 表示 553px、360x640 級の Chrome 570px など)は、
@@ -1440,4 +1463,74 @@ body.is-title .petals {
   #player-name-input { padding: 10px 14px; }
   .main-btn { padding: 12px 36px; margin-bottom: 10px; }
   .ending-gallery { margin-top: 10px; }
+}
+
+/* ---------------- 似顔絵を描く画用紙 ---------------- */
+
+/* #app の外に置いてある。中に入れると本文の早送りタップを拾う(バックログと同じ理由) */
+.draw-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+  background: rgba(10, 6, 16, 0.86);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+.draw-overlay[hidden] { display: none; }
+
+/* 進行表の裏。少し傾けて紙らしく見せる */
+.draw-paper {
+  width: min(86vw, 420px);
+  aspect-ratio: 4 / 3;
+  background: #fdfaf2;
+  border-radius: 3px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5);
+  transform: rotate(-1.2deg);
+  overflow: hidden;
+}
+.draw-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* 指でなぞった時にページごとスクロールさせない */
+  touch-action: none;
+  cursor: crosshair;
+}
+.draw-hint {
+  margin: 0;
+  min-height: 1.3em;
+  font-size: 0.84rem;
+  color: var(--text-dim);
+  text-align: center;
+}
+.draw-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.draw-done {
+  padding: 11px 32px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, var(--accent-strong), var(--purple));
+  color: #fff;
+  font-size: 0.98rem;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(255, 92, 138, 0.35);
+}
+/* 何も描いていない間は沈ませる。押すこと自体は許して、押されたら理由を伝える */
+.draw-done.is-off { opacity: 0.45; }
+.draw-paper.shake { animation: nameShake 0.4s ease; }
+.draw-done:focus-visible,
+#btn-draw-clear:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .draw-paper.shake { animation: none; }
 }

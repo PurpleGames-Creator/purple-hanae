@@ -455,20 +455,161 @@ function applyScene(scene, holdUntilLine) {
 }
 
 // 一枚絵(似顔絵など)。ファイルが無ければ出さない(素材が届くまで文だけで成立させる)
+// 一枚絵が出ている間は body に印を付ける。狭い画面では立ち絵と一枚絵を
+// 左右に分ける必要があり(重ねると顔が隠れる)、CSS 側でその印を見る
+function markCg(cg, on) {
+  cg.classList.toggle("is-shown", on);
+  if (!on) cg.removeAttribute("src");
+  document.body.classList.toggle("has-cg", on);
+}
+
 function setCg(name) {
   const cg = el("cg");
   if (!cg) return;
   if (!name) {
-    cg.classList.remove("is-shown");
-    cg.removeAttribute("src");
+    markCg(cg, false);
     return;
   }
-  cg.onerror = () => {
-    cg.classList.remove("is-shown");
-    cg.removeAttribute("src");
-  };
-  cg.onload = () => cg.classList.add("is-shown");
+  cg.onerror = () => markCg(cg, false);
+  cg.onload = () => markCg(cg, true);
+  // "drawing" はプレイヤーが E8B で描いた似顔絵。保存できていなければ何も出さない
+  if (name === "drawing") {
+    const data = loadDrawing();
+    if (!data) {
+      markCg(cg, false);
+      return;
+    }
+    cg.src = data;
+    return;
+  }
   cg.src = `${ASSET_DIR}${name}.webp${ASSET_V}`;
+}
+
+/* ---------------- 似顔絵を描く ---------------- */
+
+const DRAW_KEY = "sentimentalHanaeDrawing";
+// 保存する絵の大きさ。線画なので PNG で 10〜30KB 程度に収まる
+const DRAW_SAVE_W = 480;
+const DRAW_SAVE_H = 360;
+
+function loadDrawing() {
+  try {
+    return localStorage.getItem(DRAW_KEY) || null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function clearDrawing() {
+  try {
+    localStorage.removeItem(DRAW_KEY);
+  } catch (e) {
+    /* 消せなくても進行には影響しない */
+  }
+}
+
+// 画用紙を開いて、描き終わるまで待つ。描かずには閉じられない
+function openDrawing() {
+  return new Promise((resolve) => {
+    const box = el("draw-overlay");
+    const paper = el("draw-paper");
+    const canvas = el("draw-canvas");
+    const hint = el("draw-hint");
+    if (!box || !canvas) { resolve(); return; }
+
+    box.hidden = false;
+    // 実解像度で描く。CSS の大きさのままだと線がぼやける
+    const rect = paper.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    const ctx = canvas.getContext("2d");
+    ctx.scale(dpr, dpr);
+    ctx.lineWidth = 2.2;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = "#2b2b33";
+
+    let drawing = false;
+    let hasStroke = false;
+
+    const pos = (ev) => {
+      const r = canvas.getBoundingClientRect();
+      return { x: ev.clientX - r.left, y: ev.clientY - r.top };
+    };
+    const down = (ev) => {
+      ev.preventDefault();
+      drawing = true;
+      try { canvas.setPointerCapture(ev.pointerId); } catch (e) { /* 拾えなくても描ける */ }
+      const p = pos(ev);
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+      // 点を打っただけでも線が残るように
+      ctx.lineTo(p.x + 0.01, p.y);
+      ctx.stroke();
+      hasStroke = true;
+      hint.textContent = "";
+      el("btn-draw-done").classList.remove("is-off");
+    };
+    const move = (ev) => {
+      if (!drawing) return;
+      ev.preventDefault();
+      const p = pos(ev);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+    };
+    const up = () => { drawing = false; };
+
+    canvas.addEventListener("pointerdown", down);
+    canvas.addEventListener("pointermove", move);
+    canvas.addEventListener("pointerup", up);
+    canvas.addEventListener("pointercancel", up);
+
+    const clearBtn = el("btn-draw-clear");
+    const doneBtn = el("btn-draw-done");
+    doneBtn.classList.add("is-off");
+
+    clearBtn.onclick = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      hasStroke = false;
+      doneBtn.classList.add("is-off");
+      AUDIO.se("choice");
+    };
+
+    doneBtn.onclick = () => {
+      if (!hasStroke) {
+        // 名前入力と同じ作法。押せるようにしておいて、理由を伝える
+        AUDIO.se("heartShrink");
+        hint.textContent = "なにか描いてください";
+        paper.classList.remove("shake");
+        void paper.offsetWidth;
+        paper.classList.add("shake");
+        return;
+      }
+      AUDIO.se("next");
+      // 保存は決まった大きさに縮めてから(端末ごとに解像度が違うため)
+      try {
+        const out = document.createElement("canvas");
+        out.width = DRAW_SAVE_W;
+        out.height = DRAW_SAVE_H;
+        const octx = out.getContext("2d");
+        octx.fillStyle = "#fdfaf2";
+        octx.fillRect(0, 0, DRAW_SAVE_W, DRAW_SAVE_H);
+        octx.drawImage(canvas, 0, 0, DRAW_SAVE_W, DRAW_SAVE_H);
+        localStorage.setItem(DRAW_KEY, out.toDataURL("image/png"));
+      } catch (e) {
+        /* 保存できない環境では、結末で絵が出ないだけ */
+      }
+      canvas.removeEventListener("pointerdown", down);
+      canvas.removeEventListener("pointermove", move);
+      canvas.removeEventListener("pointerup", up);
+      canvas.removeEventListener("pointercancel", up);
+      box.hidden = true;
+      // 閉じた指がそのまま本文の送りに落ちないように
+      tapGuardUntil = Date.now() + TAP_GUARD_MS;
+      resolve();
+    };
+  });
 }
 
 // 画面全体に薄く掛ける色(夕方・雨・嵐)。指定の無い場面では消す
@@ -683,6 +824,7 @@ function initTitleScreen() {
       return;
     }
     AUDIO.se("next");
+    clearDrawing();
     state = freshState();
     state.name = name;
     saveGame();
@@ -1270,7 +1412,7 @@ function clearPager(elm) {
 }
 
 // ブロックを1つずつ出し、最後まで出し終えたら onDone を呼ぶ
-function playBlocks(elm, raw, readKey, onDone, onBlock) {
+function playBlocks(elm, raw, readKey, onDone, onBlock, onAfterBlock) {
   const blocks = splitBlocks(raw);
   clearPager(elm);
   if (!blocks.length) {
@@ -1282,6 +1424,7 @@ function playBlocks(elm, raw, readKey, onDone, onBlock) {
     const last = i === blocks.length - 1;
     if (onBlock) onBlock(i, blocks[i]);
     typeText(elm, blocks[i], () => {
+      if (onAfterBlock) onAfterBlock(i, blocks[i]);
       if (last) {
         clearPager(elm);
         if (onDone) onDone();
@@ -1446,7 +1589,10 @@ function showEvent(key, eventData, scene, onChoice, onCommit) {
         textEl.classList.remove("has-next");
         renderChoices(key, eventData, scene, choicesEl, onChoice, onCommit);
       };
-    }, (i, block) => revealSpriteFor(block));
+    }, (i, block) => revealSpriteFor(block), (i, block) => {
+      // 指定の枠を出し終えたら画用紙を開く(E8B の似顔絵)
+      if (eventData.drawAfter && block.text.indexOf(eventData.drawAfter) === 0) openDrawing();
+    });
   });
 }
 showEvent._token = 0;

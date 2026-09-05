@@ -15,8 +15,8 @@
 <meta property="og:image" content="https://purplegames-creator.github.io/purple-hanae/assets/ogp.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💗</text></svg>">
-<link rel="preload" as="image" href="assets/logo_title.webp?v=75">
-<link rel="stylesheet" href="style.css?v=75">
+<link rel="preload" as="image" href="assets/logo_title.webp?v=76">
+<link rel="stylesheet" href="style.css?v=76">
 </head>
 <body>
 
@@ -53,7 +53,7 @@
 
   <section id="screen-title" class="screen active">
     <h1 class="game-title">
-      <img class="game-logo" src="assets/logo_title.webp?v=75" width="960" height="463"
+      <img class="game-logo" src="assets/logo_title.webp?v=76" width="960" height="463"
            alt="センチメンタル・ハナエ" fetchpriority="high" decoding="async">
     </h1>
     <p id="tap-hint" class="tap-hint">画面をタップ</p>
@@ -150,6 +150,19 @@
   <button id="btn-mute" class="sound-mute" type="button">音を消す</button>
 </div>
 
+<!-- 似顔絵を描く画用紙。#app の外に置く(中に入れると本文の送りタップを拾う) -->
+<div id="draw-overlay" class="draw-overlay" role="dialog" aria-modal="true"
+     aria-label="似顔絵を描く" hidden>
+  <div id="draw-paper" class="draw-paper">
+    <canvas id="draw-canvas" class="draw-canvas"></canvas>
+  </div>
+  <p id="draw-hint" class="draw-hint">指でハナエの似顔絵を描く</p>
+  <div class="draw-actions">
+    <button id="btn-draw-clear" class="link-btn" type="button">消す</button>
+    <button id="btn-draw-done" class="draw-done" type="button">描けた</button>
+  </div>
+</div>
+
 <div id="log-overlay" class="log-overlay" role="dialog" aria-modal="true"
      aria-labelledby="log-heading" aria-hidden="true">
   <div class="log-panel">
@@ -161,8 +174,8 @@
   </div>
 </div>
 
-<script src="game-data.js?v=75"></script>
-<script src="audio.js?v=75"></script>
-<script src="game.js?v=75"></script>
+<script src="game-data.js?v=76"></script>
+<script src="audio.js?v=76"></script>
+<script src="game.js?v=76"></script>
 </body>
 </html>
