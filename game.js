@@ -418,6 +418,13 @@ function setSprite(outfit, expr) {
   // 夏服と冬服はシルエットが違うので、溶かすと二重写しに見える
   if (!current || outfit !== currentOutfit) {
     spriteFadeToken++;
+    // 溶かしている途中で服ごと変わった時に、薄いまま固まらないようにする。
+    // 戻したあとは transition を空に返す —— "none" を残すと、CSS 側の
+    // transition(悪魔化した時の拡大)まで殺してしまう
+    img.style.transition = "none";
+    img.style.opacity = "";
+    void img.offsetWidth;
+    img.style.transition = "";
     alt.style.display = "none";
     alt.classList.remove("is-shown");
     img.onerror = () => {
@@ -467,11 +474,21 @@ async function crossfadeSprite(wanted, base) {
 
   void alt.offsetWidth;
   alt.classList.add("is-shown");
+  // 古い方も同時に薄くする。上に重ねるだけだと、新しい絵のシルエットから
+  // はみ出した部分が最後まで残り、入れ替わった瞬間にパッと消える
+  // (悪魔の角や三叉槍で特に目立つ)。ease-in で「最初はあまり減らない」ので、
+  // 立ち上がりの速い ease-out と重なって、途中で背景が透けることもない
+  img.style.transition = `opacity ${SPRITE_FADE_MS}ms ease-in`;
+  img.style.opacity = "0";
 
   setTimeout(() => {
     if (token !== spriteFadeToken) return;
     // 表側を新しい表情に差し替えてから裏を落とす(復号済みなので瞬時)
+    img.style.transition = "none";
+    img.style.opacity = "";
     img.src = alt.getAttribute("src");
+    void img.offsetWidth;
+    img.style.transition = "";
     alt.classList.remove("is-shown");
     setTimeout(() => {
       if (token === spriteFadeToken) alt.style.display = "none";
@@ -549,6 +566,103 @@ function setCg(name) {
   cg.src = path;
 }
 
+/* ---------------- 画用紙にあらかじめ入れておく落書き ---------------- */
+
+// 本文には「口から『はよ動け』と吹き出しが出ている」と書いてあるが、
+// これを自分で書く人はまずいないので、紙に最初から入れておく(2026-09-05 本人指示)。
+// 手書きに見せるために押さえた点:
+//   1. 囲みが真円ではない。手で回すと半径が場所ごとに膨らんだり痩せたりする
+//   2. 閉じ際が正確に合わず、少し行き過ぎて重なる
+//   3. 線の太さが一定でない(筆圧)。1本の線の中で太さが変わるので、
+//      短い線分に分けて線分ごとに太さを変える
+//   4. しっぽは根元が太く先が細い。口元(顔を描く辺り)へ向ける
+//   5. 文字が整列しない。1字ずつ大きさ・傾き・高さがずれ、全体がわずかに右上がり
+//   6. 落書きなので速い。同じところを2度なぞった跡が出る
+const DRAW_PRESET_TEXT = "はよ動け";
+
+// 揺れは毎回変えず、決まった式から作る。開くたびに形が変わると
+// 「前に描いたやつ」に見えなくなるため
+function drawDrawingPreset(ctx, w, h) {
+  ctx.save();
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.strokeStyle = "#2b2b33";
+  ctx.fillStyle = "#2b2b33";
+
+  const cx = w * 0.70;
+  const cy = h * 0.25;
+  const rx = w * 0.215;
+  const ry = h * 0.145;
+
+  // 囲み(1)(2)(3)。手で回した線の膨らみは「1周に2〜3個」くらいの
+  // ゆっくりしたうねりで、点ごとのギザギザではない。角度で揺らすのが要点
+  const N = 72;
+  const over = 6;              // 閉じ際を少し行き過ぎさせる(2)
+  const pts = [];
+  for (let i = 0; i <= N + over; i++) {
+    const t = (i / N) * Math.PI * 2 - Math.PI * 0.5;
+    const k = 1 + 0.045 * Math.sin(t * 2 + 0.7) + 0.028 * Math.sin(t * 3 - 1.1);
+    pts.push([cx + rx * k * Math.cos(t), cy + ry * k * Math.sin(t)]);
+  }
+  for (let i = 1; i < pts.length; i++) {
+    // 書き始めと書き終わりが細く、中間が濃い(3)
+    const u = i / pts.length;
+    ctx.lineWidth = 1.0 + 1.05 * Math.sin(Math.PI * u) + 0.12 * Math.sin(u * 11);
+    ctx.beginPath();
+    ctx.moveTo(pts[i - 1][0], pts[i - 1][1]);
+    ctx.lineTo(pts[i][0], pts[i][1]);
+    ctx.stroke();
+  }
+
+  // しっぽ(4)。根元が広く先が細い三角で、顔を描くあたりへ短く伸ばす。
+  // 長く尖らせると吹き出しではなく突起に見える
+  const tip = [w * 0.505, h * 0.455];
+  [[cx - rx * 0.50, cy + ry * 0.84], [cx - rx * 0.10, cy + ry * 1.0]].forEach((p0, n) => {
+    const steps = 7;
+    const lw = n === 0 ? 2.0 : 1.5;
+    for (let i = 1; i <= steps; i++) {
+      const u0 = (i - 1) / steps;
+      const u1 = i / steps;
+      ctx.lineWidth = lw * (1 - u1 * 0.68);
+      ctx.beginPath();
+      ctx.moveTo(p0[0] + (tip[0] - p0[0]) * u0, p0[1] + (tip[1] - p0[1]) * u0);
+      ctx.lineTo(p0[0] + (tip[0] - p0[0]) * u1, p0[1] + (tip[1] - p0[1]) * u1);
+      ctx.stroke();
+    }
+  });
+
+  // 文字(5)(6)。全体をわずかに右上がりに傾け、1字ずつ大きさ・傾き・高さを
+  // ずらす。さらに少しずらして2度なぞり、走り書きの重なりを作る
+  const size = Math.round(h * 0.115);
+  const chars = "はよ動け".split("");
+  const step = size * 0.96;
+  ctx.font = size + 'px "Hiragino Maru Gothic ProN", "Yu Gothic", "Meiryo", sans-serif';
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.save();
+  ctx.translate(cx, cy + size * 0.06);
+  ctx.rotate(-0.045);                       // 全体の右上がり
+  chars.forEach((ch, i) => {
+    const x = -(step * (chars.length - 1)) / 2 + step * i;
+    const tilt = -0.02 + 0.11 * Math.sin(i * 2.3 + 0.5);
+    const dy = Math.sin(i * 1.7 + 0.9) * size * 0.10;
+    const sx = 1 + Math.sin(i * 2.9) * 0.08;
+    const sy = 1 + Math.cos(i * 1.6) * 0.07;
+    ctx.save();
+    ctx.translate(x, dy);
+    ctx.rotate(tilt);
+    ctx.transform(sx, 0, Math.sin(i * 1.3) * 0.06, sy, 0, 0);   // ゆがみも少し
+    ctx.globalAlpha = 0.92;
+    ctx.fillText(ch, 0, 0);
+    ctx.globalAlpha = 0.38;                                      // 2度なぞった跡(6)
+    ctx.fillText(ch, size * 0.045, -size * 0.035);
+    ctx.restore();
+  });
+  ctx.restore();
+
+  ctx.restore();
+}
+
 /* ---------------- 似顔絵を描く ---------------- */
 
 const DRAW_KEY = "sentimentalHanaeDrawing";
@@ -596,6 +710,8 @@ function openDrawing() {
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     ctx.strokeStyle = "#2b2b33";
+    // 吹き出しは紙の一部。取り消しても消えないように、描き直しのたびに入れ直す
+    drawDrawingPreset(ctx, paper.offsetWidth, paper.offsetHeight);
 
     let drawing = false;
     // 線を「点の並び」で持っておく。取り消しは画像を保存し合うより、
@@ -653,6 +769,9 @@ function openDrawing() {
 
     const redraw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawDrawingPreset(ctx, paper.offsetWidth, paper.offsetHeight);
+      ctx.lineWidth = 2.2;
+      ctx.strokeStyle = "#2b2b33";
       strokesNow().forEach(drawStroke);
     };
 
