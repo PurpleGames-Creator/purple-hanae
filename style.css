@@ -624,14 +624,6 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
   line-height: 1.6;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
 }
-.ending-note {
-  text-align: center;
-  color: var(--text-dim);
-  font-size: 0.82rem;
-  margin-top: 4px;
-  /* 文の切れ目で入れた改行をそのまま出す(textContent で入れるため) */
-  white-space: pre-line;
-}
 .ending-new {
   display: none;
   align-self: center;
@@ -1001,7 +993,6 @@ body.is-drawing .log-overlay { z-index: 1300; }
      既定の余白のままだと 60dvh に収まらず、はみ出したぶんが顔まで伸びる */
   .ending-new { margin-top: 0; }
   .ending-title { margin: 14px 0 14px; font-size: 1.05rem; }
-  .ending-note { font-size: 0.78rem; }
   .credits { margin-top: 12px; }
 }
 
@@ -1023,7 +1014,6 @@ body.is-drawing .log-overlay { z-index: 1300; }
   .ending-new { font-size: 0.74rem; padding: 5px 12px; }
   .ending-title { margin: 10px 0; font-size: 0.98rem; }
   #btn-restart { padding: 11px 32px; font-size: 0.95rem; margin-bottom: 10px; }
-  .ending-note { font-size: 0.72rem; }
   .credits { margin-top: 8px; }
 }
 

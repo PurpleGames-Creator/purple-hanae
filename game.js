@@ -2192,11 +2192,6 @@ function resolveEnding() {
       if (block.text.indexOf(c.marker) === 0) applyScene(c.scene);
     });
   });
-  const seen = loadSeenEndings();
-  // 1行に詰めると狭い画面で3行に折れて読みにくい。文の切れ目で必ず改行する
-  // (.ending-note は white-space: pre-line)
-  el("ending-note").textContent =
-    `エンディングは全${GAME_DATA.endingOrder.length}種類(到達済み ${seen.length})。\n選択を変えると結末が変わります。`;
   window.scrollTo(0, 0);
   el("btn-restart").onclick = () => {
     AUDIO.se("next");
