@@ -337,6 +337,15 @@ const ADULT_LINES = [
 ];
 let adultAnger = 0;
 
+// 最終形態の印。立ち絵を大きくするのと、火の粉を出すのに使う
+function markDemon() {
+  const on = adultAnger === ADULT_STAGES.length - 1;
+  document.body.classList.toggle("is-demon", on);
+  // 明るい喫茶店のままだと、加算で乗せている火の粉が背景に埋もれて見えない。
+  // 場面ごと暗い赤に寄せる(この結末の場面は tint を持たないので、戻す時は null)
+  setTint(on ? "rgba(72, 13, 9, 0.55)" : null);
+}
+
 function renderAdultPoke() {
   const box = el("adult-poke");
   if (!box) return;
@@ -349,6 +358,7 @@ function setAdultAnger(next) {
   const n = Math.max(0, Math.min(ADULT_STAGES.length - 1, next));
   if (n === adultAnger) return;
   adultAnger = n;
+  markDemon();
   // 本編の表情差し替えと同じ道を通す(180ms のクロスフェード)
   setSprite("adult", ADULT_STAGES[adultAnger]);
   renderAdultPoke();
@@ -360,6 +370,7 @@ function maybeShowAdultPoke() {
   const box = el("adult-poke");
   if (!box) return;
   adultAnger = 0;
+  markDemon();
   box.hidden = true;
   const probe = new Image();
   probe.onload = () => {
@@ -528,10 +539,14 @@ function setCg(name) {
       markCg(cg, false);
       return;
     }
+    // 同じ絵を入れ直すと onload をもう一度踏んで一瞬消える
+    if (cg.getAttribute("src") === data) return;
     cg.src = data;
     return;
   }
-  cg.src = `${ASSET_DIR}${name}.webp${ASSET_V}`;
+  const path = `${ASSET_DIR}${name}.webp${ASSET_V}`;
+  if (cg.getAttribute("src") === path) return;
+  cg.src = path;
 }
 
 /* ---------------- 似顔絵を描く ---------------- */
@@ -909,6 +924,7 @@ function preloadExpressions() {
 
 function initTitleScreen() {
   showScreen("screen-title");
+  document.body.classList.remove("is-demon");
   lastTelop = "";
   currentEventKey = null;
   dropPendingSprite();
@@ -2050,7 +2066,7 @@ function resolveEnding() {
     restartBtn.style.display = "block";
     renderResultHearts();
     if (endingKey === "nigaoe") maybeShowAdultPoke();
-    else el("adult-poke").hidden = true;
+    else { el("adult-poke").hidden = true; document.body.classList.remove("is-demon"); }
     el("ending-foot").style.display = "block";
   }, (i, block) => {
     changes.forEach((c) => {

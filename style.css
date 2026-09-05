@@ -856,6 +856,9 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
   .petals { animation: none; }
   .petal { display: none; }
   .rain-wind, .rain-haze, .rain-near i, .rain-mid i, .rain-far i { animation: none; }
+  .ember, .ember > i, .ember > i > b { animation: none; }
+  body.is-demon .ember-layer { animation: none; }
+  .sprite { transition: none; }
   .heart-glow { display: none; }
   /* 本作は好感度を非公開にしており、ハートが唯一のフィードバック。
      消すと選択の良し悪しを知る手段が無くなるので、動きだけ止めて静止表示する */
@@ -1411,6 +1414,161 @@ body.is-rain .rain-layer { opacity: 1; }
   70% { opacity: 0.78; }
 }
 
+/* ---------------- 火の粉(悪魔化した41歳の結末だけ) ---------------- */
+
+/* 実際に舞い上がる燃え差しの見え方に寄せてある。観察したのは7点:
+   1. 熱の対流に乗って上がるので、重力で減速せず、ほぼ一定の速さで上がり続ける
+   2. まっすぐ上がらず乱流で蛇行する。しかも上に行くほど振れ幅が大きくなるので、
+      全体として下が細く上が広い円錐になる → 揺れの keyframe で振幅を育てている
+   3. 上がりながら冷える。下は黄白、上へ行くほど 橙 → 赤 → 暗くなって消える
+   4. 大きさがばらばら。小さい粒ほど速く高く上がり、早く消える
+   5. 回転しながら燃えるので、燃えている面の向きが変わってチカチカする
+   6. 数が一定ではない(火が爆ぜると増える)→ 容器ごと濃さを脈打たせる
+   7. 周囲より明るいので加算的に光る → mix-blend-mode: screen
+
+   上昇・蛇行・燃え方は周期が別なので、1要素では合成できず3層に分けている */
+.ember-layer {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  mix-blend-mode: screen;
+}
+/* 悪魔化した時だけ動かす。隠したまま16個×3層を回し続けるのは無駄なので display で切る */
+body.is-demon .ember-layer {
+  display: block;
+  animation: emberIn 0.7s ease-out both, emberBurst 6.3s ease-in-out 0.7s infinite;
+}
+@keyframes emberIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+/* 火が爆ぜて数が増える瞬間(6) */
+@keyframes emberBurst {
+  0%, 100% { opacity: 0.82; }
+  22% { opacity: 1; }
+  61% { opacity: 0.7; }
+}
+
+/* 1層目: 上昇(1)。等速で、画面の下から上へ抜ける */
+.ember {
+  position: absolute;
+  left: var(--x);
+  bottom: -8%;
+  width: var(--w);
+  height: var(--w);
+  animation: emberRise var(--d) linear var(--delay) infinite;
+}
+@keyframes emberRise {
+  0%   { transform: translateY(0); opacity: 0; }
+  7%   { opacity: 1; }
+  72%  { opacity: 0.9; }
+  100% { transform: translateY(-118dvh); opacity: 0; }
+}
+
+/* 2層目: 乱流の蛇行(2)。上昇と同じ周期で振幅を育て、円錐に広がって見せる */
+.ember > i {
+  display: block;
+  width: 100%;
+  height: 100%;
+  animation: emberSway var(--d) ease-in-out var(--delay) infinite;
+}
+@keyframes emberSway {
+  0%   { transform: translateX(0); }
+  25%  { transform: translateX(calc(var(--amp) * 0.3)); }
+  50%  { transform: translateX(calc(var(--amp) * -0.55)); }
+  75%  { transform: translateX(calc(var(--amp) * 0.85)); }
+  100% { transform: translateX(calc(var(--amp) * -1)); }
+}
+
+/* 3層目: 粒そのもの。冷えて色が落ちる(3)のと、チカチカ(5)。
+   色の変化と明滅は別々の要素に分けないと、opacity の指定が食い合う */
+.ember > i > b {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  /* 色は emberBurn で動かすが、基底も持たせておく。keyframe だけに置くと
+     アニメーションが動かない環境(動きを減らす設定など)で粒が消える */
+  background: #ffc35a;
+  box-shadow: 0 0 11px 2px rgba(255, 170, 70, 0.8);
+  animation: emberBurn var(--d) linear var(--delay) infinite,
+             emberFlicker var(--fd) ease-in-out var(--delay) infinite alternate;
+}
+@keyframes emberBurn {
+  0%   { background: #fffbe8; box-shadow: 0 0 14px 4px rgba(255, 222, 150, 0.95); }
+  30%  { background: #ffcf72; box-shadow: 0 0 12px 3px rgba(255, 170, 70, 0.8); }
+  65%  { background: #ff8438; box-shadow: 0 0 9px 1px rgba(255, 104, 44, 0.6); }
+  100% { background: #a8281a; box-shadow: 0 0 4px 0 rgba(200, 56, 30, 0.25); }
+}
+@keyframes emberFlicker {
+  from { opacity: 0.45; }
+  to   { opacity: 1; }
+}
+
+.ember:nth-child(1) { --x: 1.2%; --w: 3px; --d: 5.2s; --delay: -6.8s; --amp: 36px; --fd: 0.43s; }
+.ember:nth-child(2) { --x: 6.8%; --w: 5px; --d: 5.1s; --delay: -6.4s; --amp: 42px; --fd: 0.18s; }
+.ember:nth-child(3) { --x: 7.2%; --w: 6px; --d: 5.3s; --delay: -7.1s; --amp: 24px; --fd: 0.61s; }
+.ember:nth-child(4) { --x: 11.2%; --w: 4px; --d: 5.2s; --delay: -4.7s; --amp: 18px; --fd: 0.23s; }
+.ember:nth-child(5) { --x: 16.5%; --w: 4px; --d: 5.5s; --delay: -6.3s; --amp: 24px; --fd: 0.21s; }
+.ember:nth-child(6) { --x: 18.4%; --w: 4px; --d: 4.4s; --delay: -5.0s; --amp: 18px; --fd: 0.22s; }
+.ember:nth-child(7) { --x: 20.4%; --w: 3px; --d: 3.7s; --delay: -2.4s; --amp: 42px; --fd: 0.19s; }
+.ember:nth-child(8) { --x: 26.9%; --w: 4px; --d: 5.6s; --delay: -6.3s; --amp: 30px; --fd: 0.36s; }
+.ember:nth-child(9) { --x: 27.1%; --w: 3px; --d: 4.3s; --delay: -5.0s; --amp: 36px; --fd: 0.56s; }
+.ember:nth-child(10) { --x: 31.4%; --w: 3px; --d: 3.8s; --delay: -3.4s; --amp: 48px; --fd: 0.36s; }
+.ember:nth-child(11) { --x: 37.0%; --w: 4px; --d: 5.0s; --delay: -6.6s; --amp: 48px; --fd: 0.38s; }
+.ember:nth-child(12) { --x: 38.0%; --w: 6px; --d: 5.4s; --delay: -0.3s; --amp: 48px; --fd: 0.56s; }
+.ember:nth-child(13) { --x: 45.5%; --w: 3px; --d: 5.2s; --delay: -5.3s; --amp: 36px; --fd: 0.47s; }
+.ember:nth-child(14) { --x: 49.0%; --w: 5px; --d: 5.5s; --delay: -4.5s; --amp: 18px; --fd: 0.6s; }
+.ember:nth-child(15) { --x: 48.9%; --w: 4px; --d: 4.7s; --delay: -3.4s; --amp: 48px; --fd: 0.36s; }
+.ember:nth-child(16) { --x: 53.9%; --w: 5px; --d: 5.1s; --delay: -1.6s; --amp: 48px; --fd: 0.29s; }
+.ember:nth-child(17) { --x: 56.8%; --w: 5px; --d: 5.2s; --delay: -6.9s; --amp: 36px; --fd: 0.53s; }
+.ember:nth-child(18) { --x: 59.7%; --w: 4px; --d: 5.3s; --delay: -1.6s; --amp: 24px; --fd: 0.27s; }
+.ember:nth-child(19) { --x: 62.7%; --w: 4px; --d: 5.2s; --delay: -0.5s; --amp: 24px; --fd: 0.42s; }
+.ember:nth-child(20) { --x: 69.0%; --w: 4px; --d: 4.7s; --delay: -1.7s; --amp: 48px; --fd: 0.5s; }
+.ember:nth-child(21) { --x: 73.9%; --w: 4px; --d: 5.1s; --delay: -5.3s; --amp: 42px; --fd: 0.52s; }
+.ember:nth-child(22) { --x: 74.4%; --w: 4px; --d: 5.6s; --delay: -6.2s; --amp: 18px; --fd: 0.26s; }
+.ember:nth-child(23) { --x: 80.1%; --w: 3px; --d: 4.6s; --delay: -3.8s; --amp: 48px; --fd: 0.58s; }
+.ember:nth-child(24) { --x: 81.5%; --w: 6px; --d: 6.8s; --delay: -0.3s; --amp: 48px; --fd: 0.44s; }
+.ember:nth-child(25) { --x: 84.5%; --w: 5px; --d: 5.3s; --delay: -7.0s; --amp: 30px; --fd: 0.3s; }
+.ember:nth-child(26) { --x: 87.3%; --w: 4px; --d: 5.1s; --delay: -6.2s; --amp: 48px; --fd: 0.3s; }
+.ember:nth-child(27) { --x: 93.1%; --w: 4px; --d: 4.8s; --delay: -3.7s; --amp: 24px; --fd: 0.22s; }
+.ember:nth-child(28) { --x: 95.8%; --w: 4px; --d: 4.5s; --delay: -1.4s; --amp: 36px; --fd: 0.31s; }
+.ember:nth-child(3) { --x: 21%; --w: 5px; --d: 4.6s; --delay: -4.1s; --amp: 20px; --fd: 0.22s; }
+.ember:nth-child(4) { --x: 29%; --w: 2px; --d: 8.2s; --delay: -1.2s; --amp: 44px; --fd: 0.53s; }
+.ember:nth-child(5) { --x: 36%; --w: 4px; --d: 5.9s; --delay: -5.6s; --amp: 30px; --fd: 0.37s; }
+.ember:nth-child(6) { --x: 44%; --w: 3px; --d: 7.1s; --delay: -3.4s; --amp: 38px; --fd: 0.41s; }
+.ember:nth-child(7) { --x: 51%; --w: 2px; --d: 8.7s; --delay: -6.8s; --amp: 48px; --fd: 0.58s; }
+.ember:nth-child(8) { --x: 58%; --w: 5px; --d: 4.4s; --delay: -0.7s; --amp: 18px; --fd: 0.19s; }
+.ember:nth-child(9) { --x: 65%; --w: 3px; --d: 6.3s; --delay: -4.9s; --amp: 36px; --fd: 0.44s; }
+.ember:nth-child(10) { --x: 72%; --w: 4px; --d: 5.1s; --delay: -2.8s; --amp: 24px; --fd: 0.28s; }
+.ember:nth-child(11) { --x: 78%; --w: 2px; --d: 8.9s; --delay: -7.3s; --amp: 52px; --fd: 0.61s; }
+.ember:nth-child(12) { --x: 84%; --w: 3px; --d: 6.6s; --delay: -1.9s; --amp: 32px; --fd: 0.35s; }
+.ember:nth-child(13) { --x: 89%; --w: 5px; --d: 4.9s; --delay: -5.2s; --amp: 22px; --fd: 0.24s; }
+.ember:nth-child(14) { --x: 93%; --w: 2px; --d: 7.8s; --delay: -3.9s; --amp: 42px; --fd: 0.51s; }
+.ember:nth-child(15) { --x: 34%; --w: 3px; --d: 7.4s; --delay: -6.1s; --amp: 40px; --fd: 0.39s; }
+.ember:nth-child(16) { --x: 62%; --w: 4px; --d: 5.7s; --delay: -0.4s; --amp: 28px; --fd: 0.33s; }
+
+/* 悪魔は最終形態。小さいままだと見せ場にならないので、切り替わりと一緒に大きくする。
+   起点を右上にすると、角を画面の外に出さずに下へ伸びる(中央や下起点だと角が切れる) */
+.sprite { transition: transform 0.42s ease-out; }
+@media (max-width: 999px) {
+  body.is-demon .sprite {
+    transform: scale(1.9);
+    transform-origin: top right;
+  }
+}
+@media (min-width: 1000px) {
+  /* 広い画面ではもともと画面の高さいっぱいに立っているので、上げ幅は控えめに。
+     起点を下にすると上へ伸びて角が切れるので、ここも上を固定して下へ伸ばす */
+  body.is-demon .sprite {
+    transform: scale(1.08);
+    transform-origin: top right;
+  }
+}
+
 /* ---------------- 場面転換のテロップ ---------------- */
 
 .telop {
@@ -1572,6 +1730,11 @@ body.is-title .petals {
   transition: opacity 0.7s ease, transform 0.7s ease;
 }
 .cg.is-shown { opacity: 1; transform: rotate(-4deg) scale(1); }
+/* 広い画面の結末では、既定の位置(上から14%)だと「NEW」の帯と見出しに紙が
+   重なる。結末は左に文章・右に立ち絵の組みなので、紙は上へ逃がして小さくする */
+@media (min-width: 1000px) {
+  body.is-ending .cg { top: 4%; width: min(22vw, 250px); }
+}
 .cg:not([src]) { display: none; }
 /* 狭い画面。ここは横幅が足りないので、絵をそのまま出すと立ち絵に重なって
    ハナエの顔を隠してしまう(390px 幅で実測 165px の重なり)。
