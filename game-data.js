@@ -496,9 +496,11 @@ const GAME_DATA = {
   // 吉沢エンドだけは点数と無関係(ライバル度が閾値を超えると点数に関係なく落ちる)なので、
   // 点数で並ぶ結末の下、最下位の手前に置いている
   endingOrder: ["successPerfect", "success", "friend", "soretigai", "awkward", "nishino", "nigaoe"],
+  // 図鑑に出す短い名前。結末画面の見出し(endings.*.title)とは別物 ——
+  // あちらは体験の締めなので文学的なまま、こちらは索引なので「◯◯エンド」で揃える
   endingLabels: {
-    success: "好き合ってた、あの頃",
-    successPerfect: "その先の、冬",
+    success: "両想いエンド",
+    successPerfect: "Perfectエンド",
     friend: "友達エンド",
     soretigai: "すれ違いエンド",
     awkward: "気まずいエンド",
