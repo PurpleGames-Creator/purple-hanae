@@ -815,6 +815,8 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
   .game-logo { transition: none; opacity: 1; transform: none; }
   .telop { transition: none; }
   .fade { transition: none; }
+  /* 花びらは動きが本体なので、動きを止めるくらいなら出さない。風も止める */
+  .petals { animation: none; }
   .petal { display: none; }
   .rain-layer { animation: none; }
   .heart-glow { display: none; }
@@ -1299,6 +1301,14 @@ body.is-rain .rain-layer { opacity: 1; }
 
 /* ---------------- タイトルの花びら ---------------- */
 
+/* 実際の桜の落ち方に寄せてある。要点は6つ:
+   1. 落下は概ね等速(終端速度)。ただし滑空と失速で速い区間と遅い区間が交互に来る
+   2. 平板なので左右交互に渦が剥がれ、ジグザグに揺れる(フラッター)
+   3. 面が回るので正面 ↔ 真横 が交互に見え、真横では線になって消える
+   4. 回転軸は画面の法線ではなく主に水平軸(rotateX)。rotateZ だけだと硬貨が回って見える
+   5. 風は場全体にかかる → 容器ごと横に揺らして、全体が同じ方向へ流れる時間帯を作る
+   6. 遠いものは小さく・遅く・淡い
+   落下・横揺れ・回転は周期が別なので、1要素では合成できず3層に分けている */
 .petals {
   position: fixed;
   inset: 0;
@@ -1307,34 +1317,81 @@ body.is-rain .rain-layer { opacity: 1; }
   display: none;
   overflow: hidden;
 }
-body.is-title .petals { display: block; }
+body.is-title .petals {
+  display: block;
+  /* 風。全部の花びらに同じ横流れをかける(5) */
+  animation: petalWind 19s ease-in-out infinite;
+}
+@keyframes petalWind {
+  0%, 100% { transform: translateX(0); }
+  30% { transform: translateX(16px); }
+  55% { transform: translateX(-11px); }
+  80% { transform: translateX(7px); }
+}
+
+/* 1層目: 落下。滑空と失速で速さが変わる(1) */
 .petal {
   position: absolute;
-  top: -4vh;
+  top: -9vh;
   left: var(--x, 50%);
-  width: 11px;
-  height: 11px;
-  border-radius: 70% 0 70% 0;
-  background: rgba(255, 178, 205, 0.8);
-  box-shadow: 0 0 8px rgba(255, 143, 177, 0.35);
+  width: var(--w, 11px);
+  height: calc(var(--w, 11px) * 0.86);
   opacity: 0;
-  animation: petalFall var(--d, 12s) linear var(--delay, 0s) infinite;
+  animation: petalFall var(--d, 13s) linear var(--delay, 0s) infinite;
 }
-.petal:nth-child(1)  { --x: 8%;  --d: 13s; --delay: 0s;    --sway: 40px; }
-.petal:nth-child(2)  { --x: 18%; --d: 15s; --delay: -4s;   --sway: -30px; }
-.petal:nth-child(3)  { --x: 27%; --d: 11s; --delay: -8s;   --sway: 55px; width: 8px; height: 8px; }
-.petal:nth-child(4)  { --x: 36%; --d: 16s; --delay: -2s;   --sway: -45px; }
-.petal:nth-child(5)  { --x: 45%; --d: 12s; --delay: -10s;  --sway: 35px; width: 9px; height: 9px; }
-.petal:nth-child(6)  { --x: 55%; --d: 14s; --delay: -6s;   --sway: -60px; }
-.petal:nth-child(7)  { --x: 64%; --d: 17s; --delay: -12s;  --sway: 30px; width: 8px; height: 8px; }
-.petal:nth-child(8)  { --x: 73%; --d: 12s; --delay: -3s;   --sway: -35px; }
-.petal:nth-child(9)  { --x: 84%; --d: 15s; --delay: -9s;   --sway: 50px; width: 9px; height: 9px; }
-.petal:nth-child(10) { --x: 93%; --d: 13s; --delay: -14s;  --sway: -25px; }
 @keyframes petalFall {
-  0%   { transform: translate3d(0, 0, 0) rotate(0deg); opacity: 0; }
-  8%   { opacity: 0.9; }
-  92%  { opacity: 0.7; }
-  100% { transform: translate3d(var(--sway, 30px), 108vh, 0) rotate(320deg); opacity: 0; }
+  0%   { transform: translateY(0); opacity: 0; animation-timing-function: cubic-bezier(.35, 0, .75, .35); }
+  7%   { opacity: var(--op, 0.85); }
+  32%  { transform: translateY(34vh); animation-timing-function: cubic-bezier(.15, .55, .35, 1); }
+  58%  { transform: translateY(56vh); animation-timing-function: cubic-bezier(.35, 0, .75, .35); }
+  86%  { transform: translateY(92vh); opacity: var(--op, 0.85); animation-timing-function: linear; }
+  100% { transform: translateY(116vh); opacity: 0; }
+}
+
+/* 2層目: 左右のジグザグ(2)。alternate で行って戻ってを繰り返す */
+.petal > i {
+  display: block;
+  width: 100%;
+  height: 100%;
+  animation: petalSway var(--sd, 1.9s) ease-in-out var(--delay, 0s) infinite alternate;
+}
+@keyframes petalSway {
+  from { transform: translateX(calc(var(--amp, 26px) * -1)); }
+  to   { transform: translateX(var(--amp, 26px)); }
+}
+
+/* 3層目: 花びらそのものと、面の回転(3)(4)。
+   rotateX(90deg) で高さが 0 になり、真横から見た線になる = 一瞬消える */
+.petal > i > b {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 62% 62% 52% 52% / 78% 78% 34% 34%;
+  background: linear-gradient(150deg, rgba(255, 236, 244, 0.95), rgba(255, 173, 203, 0.85));
+  box-shadow: 0 0 5px rgba(255, 143, 177, 0.25);
+  animation: petalSpin var(--rd, 3.4s) linear var(--delay, 0s) infinite;
+}
+@keyframes petalSpin {
+  0%   { transform: rotateX(0deg)   rotateZ(0deg);   opacity: 1; }
+  25%  { transform: rotateX(90deg)  rotateZ(34deg);  opacity: 0.4; }
+  50%  { transform: rotateX(180deg) rotateZ(68deg);  opacity: 1; }
+  75%  { transform: rotateX(270deg) rotateZ(102deg); opacity: 0.4; }
+  100% { transform: rotateX(360deg) rotateZ(136deg); opacity: 1; }
+}
+
+/* 1枚ずつ、位置・大きさ・速さ・揺れ幅・回転の周期を変える。
+   小さいもの(遠く)は遅く・淡く(6)。周期どうしが割り切れないようにして、
+   同じ動きが繰り返して見えないようにしている */
+.petal:nth-child(1)  { --x: 7%;  --w: 12px; --d: 13s; --delay: 0s;   --amp: 30px; --sd: 2.1s; --rd: 3.7s; --op: .9; }
+.petal:nth-child(2)  { --x: 17%; --w: 9px;  --d: 16s; --delay: -4s;  --amp: 22px; --sd: 2.6s; --rd: 4.9s; --op: .7; }
+.petal:nth-child(3)  { --x: 26%; --w: 7px;  --d: 19s; --delay: -9s;  --amp: 17px; --sd: 3.1s; --rd: 6.2s; --op: .55; }
+.petal:nth-child(4)  { --x: 35%; --w: 13px; --d: 12s; --delay: -2s;  --amp: 34px; --sd: 1.7s; --rd: 3.1s; --op: .95; }
+.petal:nth-child(5)  { --x: 45%; --w: 8px;  --d: 17s; --delay: -11s; --amp: 20px; --sd: 2.9s; --rd: 5.3s; --op: .65; }
+.petal:nth-child(6)  { --x: 55%; --w: 11px; --d: 14s; --delay: -6s;  --amp: 28px; --sd: 2.3s; --rd: 4.1s; --op: .85; }
+.petal:nth-child(7)  { --x: 65%; --w: 7px;  --d: 20s; --delay: -14s; --amp: 16px; --sd: 3.3s; --rd: 6.7s; --op: .5; }
+.petal:nth-child(8)  { --x: 74%; --w: 12px; --d: 12.5s; --delay: -3s; --amp: 32px; --sd: 1.9s; --rd: 3.4s; --op: .9; }
+.petal:nth-child(9)  { --x: 84%; --w: 9px;  --d: 15.5s; --delay: -8s; --amp: 24px; --sd: 2.7s; --rd: 4.6s; --op: .75; }
+.petal:nth-child(10) { --x: 93%; --w: 10px; --d: 14.5s; --delay: -13s; --amp: 26px; --sd: 2.2s; --rd: 5.8s; --op: .8; }
 }
 
 /* ---------------- 一枚絵(似顔絵など) ---------------- */
