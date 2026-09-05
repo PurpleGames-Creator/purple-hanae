@@ -331,7 +331,7 @@ const ADULT_STAGES = [null, "angry1", "angry2", "angry3"];
 // 紐づけてあるので、上がっても下がっても噛み合う
 const ADULT_LINES = [
   "「……ま、ええわ。座り」",
-  "「なんやその顔。反省してへんやろ」",
+  "「なんや、反省してへんやろ。」",
   "「24年、根に持っとったんやぞ!」",
   "「もうええ、串刺しにしたる」",
 ];
@@ -2179,8 +2179,11 @@ function jumpToEnding(key) {
     endingTestRunning = true;
     resolveEnding();
   };
-  // 41歳の結末は、描いた似顔絵が無いと絵が出ない。まだ描いていなければ先に描いてもらう
-  if (key === "nigaoe" && !loadDrawing()) openDrawing().then(go);
+  // 41歳の結末は、描いた似顔絵が無いと絵が出ない。まだ描いていなければ先に描いてもらう。
+  // &draw=1 を付けると、すでに描いた絵があっても描き直す —— 保存されている
+  // 絵は「描いた時点」の画像なので、紙の作りを変えた後は描き直さないと反映されない
+  const redrawWanted = /[?&]draw=1/.test(location.search);
+  if (key === "nigaoe" && (redrawWanted || !loadDrawing())) openDrawing().then(go);
   else go();
 }
 
