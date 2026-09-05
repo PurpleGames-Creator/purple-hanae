@@ -261,9 +261,10 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
 
 /* ---------------- タイトル ---------------- */
 
-/* タイトルは画像のロゴ。h1 のテキストは残さず alt に持たせている */
+/* タイトルは画像のロゴ。h1 のテキストは残さず alt に持たせている。
+   図鑑を1列(7段)にしたぶん、余白を詰めて画面に収める */
 .game-title {
-  margin: 32px 0 36px;
+  margin: 22px 0 24px;
   text-align: center;
 }
 .game-logo {
@@ -641,7 +642,7 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
 /* ---------------- エンディング図鑑(タイトル画面) ---------------- */
 
 .ending-gallery {
-  margin: 28px auto 0;
+  margin: 20px auto 0;
   width: 100%;
   max-width: 420px;
 }
@@ -653,18 +654,20 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
   margin: 0 0 10px;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
 }
+/* 上から下へ「良い結末 → 悪い結末」の梯子。2列だと順位に見えないので1列にする。
+   縦に伸びるぶん、1マスの余白と字を詰めて高さを抑える */
 .gallery-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
+  grid-template-columns: 1fr;
+  gap: 4px;
 }
 .gallery-cell {
-  padding: 9px 10px;
-  border-radius: 14px;
+  padding: 5px 10px;
+  border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(18, 12, 26, 0.6);
   color: var(--text-dim);
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   text-align: center;
   letter-spacing: 0.02em;
 }
