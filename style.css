@@ -652,12 +652,13 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
   margin: 0 0 10px;
 }
 .adult-poke[hidden] { display: none; }
+/* 段ごとの一言。状態の説明ではなく彼女のセリフなので、本文と同じ明るさで出す */
 .poke-hint {
   margin: 0 0 6px;
-  font-size: 0.8rem;
-  letter-spacing: 0.06em;
+  font-size: 0.9rem;
+  line-height: 1.4;
   text-align: center;
-  color: var(--text-dim);
+  color: var(--text);
 }
 .poke-row {
   display: flex;

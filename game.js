@@ -327,18 +327,20 @@ const SPRITE_EXPRESSIONS = {
 
 // 段は0(素)から3(最終形態)まで。null は差分ではなくベース画像
 const ADULT_STAGES = [null, "angry1", "angry2", "angry3"];
-const ADULT_HINTS = [
-  "まだ穏やか",
-  "笑っていない",
-  "だいぶ怒っている",
-  "悪魔",
+// 段ごとの彼女の一言。押した向き(いじる/謝る)ではなく「いまの段」に
+// 紐づけてあるので、上がっても下がっても噛み合う
+const ADULT_LINES = [
+  "「……ま、ええわ。座り」",
+  "「なんやその顔。反省してへんやろ」",
+  "「24年、根に持っとったんやぞ!」",
+  "「もうええ、串刺しにしたる」",
 ];
 let adultAnger = 0;
 
 function renderAdultPoke() {
   const box = el("adult-poke");
   if (!box) return;
-  el("poke-hint-text").textContent = ADULT_HINTS[adultAnger];
+  el("poke-hint-text").textContent = ADULT_LINES[adultAnger];
   el("btn-apologize").disabled = adultAnger === 0;
   el("btn-tease").disabled = adultAnger === ADULT_STAGES.length - 1;
 }
