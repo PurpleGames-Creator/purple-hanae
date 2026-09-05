@@ -1403,8 +1403,9 @@ body.is-title .petals {
   top: 14%;
   width: min(32vw, 360px);
   height: auto;
-  border: 6px solid #fff;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
+  /* 縁は紙の余白。純白にすると写真のマットに見えて、紙そのものに見えない */
+  border: 6px solid #f2ece0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 30px rgba(0, 0, 0, 0.5);
   transform: rotate(-4deg) scale(0.96);
   opacity: 0;
   pointer-events: none;
@@ -1484,14 +1485,45 @@ body.is-title .petals {
 }
 .draw-overlay[hidden] { display: none; }
 
-/* 進行表の裏。少し傾けて紙らしく見せる */
+/* 進行表(A4)の裏。本物の紙の見え方に寄せてある。観察したのは7点:
+   1. 純白ではない。パルプ由来のわずかな黄みがあり、明るいところで #f8f4ec 前後。
+      #fff に近づけるほど「紙」ではなく「光っている板」に見える
+   2. 色が均一ではない。雲状の濃淡ムラ(フロック)の上に、細かい繊維の粒が乗る
+   3. マット。ハイライトが立たず、光源側から反対側へ緩やかに暗くなるだけ
+   4. 完全な平面ではない(一度でも手に取られた紙は必ず反る)= 影が均一にならない。
+      接地している側は細く濃い影、浮いている側は広く薄い影になる。
+      均一なドロップシャドウは「浮いているカード」であって紙ではない
+   5. 厚みで裁ち口が光を拾い、縁に細い明るい線が出る。接地側の縁は逆に暗い
+   6. 裁断と手擦れで、4つの角の丸まり方がそれぞれ違う
+   7. A4 は 1:1.414。4:3 は画面の比率であって、紙にはその寸法がない */
 .draw-paper {
-  width: min(86vw, 420px);
-  aspect-ratio: 4 / 3;
-  background: #fdfaf2;
-  border-radius: 3px;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5);
-  transform: rotate(-1.2deg);
+  width: min(88vw, 430px);
+  aspect-ratio: 1.4142 / 1;
+  background-color: #f1ece0;
+  background-image:
+    /* 光(3)。左上から入って右下へ抜ける。山なりの反射は作らない */
+    linear-gradient(158deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.2) 44%, rgba(92, 78, 58, 0.042) 100%),
+    /* 雲状の濃淡ムラ(2)。位置も大きさも割り切れない値にして、繰り返しに見せない */
+    radial-gradient(58% 44% at 23% 27%, rgba(255, 253, 246, 0.5), transparent 70%),
+    radial-gradient(46% 38% at 74% 63%, rgba(122, 104, 78, 0.055), transparent 72%),
+    radial-gradient(37% 52% at 57% 11%, rgba(122, 104, 78, 0.04), transparent 68%),
+    radial-gradient(63% 31% at 13% 87%, rgba(122, 104, 78, 0.045), transparent 74%),
+    /* 繊維の粒(2)。コピー用紙なので目は細かい */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='p' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.05' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23p)' opacity='0.28'/%3E%3C/svg%3E");
+  background-size: auto, auto, auto, auto, auto, 140px 140px;
+  /* 角の丸まり方を4つとも変える(6) */
+  border-radius: 2px 5px 3px 6px / 5px 2px 6px 3px;
+  box-shadow:
+    /* 裁ち口の明線と、接地側の暗い線(5) */
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset 1px 0 0 rgba(255, 255, 255, 0.45),
+    inset 0 -1px 0 rgba(92, 78, 58, 0.16),
+    inset -1px 0 0 rgba(92, 78, 58, 0.09),
+    /* 影(4)。接地している右下は細く濃く、浮いている左下は広く薄い */
+    1px 2px 2px rgba(0, 0, 0, 0.34),
+    3px 12px 18px rgba(0, 0, 0, 0.32),
+    -5px 22px 34px rgba(0, 0, 0, 0.26);
+  transform: rotate(-1.4deg);
   overflow: hidden;
 }
 .draw-canvas {
@@ -1527,7 +1559,14 @@ body.is-title .petals {
 }
 /* 何も描いていない間は沈ませる。押すこと自体は許して、押されたら理由を伝える */
 .draw-done.is-off { opacity: 0.45; }
-.draw-paper.shake { animation: nameShake 0.4s ease; }
+/* 傾けたまま揺らす。nameShake は translateX だけなので、そのまま使うと
+   揺れている間だけ紙がまっすぐになってしまう */
+.draw-paper.shake { animation: paperShake 0.4s ease; }
+@keyframes paperShake {
+  0%, 100% { transform: rotate(-1.4deg) translateX(0); }
+  25% { transform: rotate(-1.4deg) translateX(-7px); }
+  75% { transform: rotate(-1.4deg) translateX(7px); }
+}
 .draw-done:focus-visible,
 #btn-draw-clear:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 

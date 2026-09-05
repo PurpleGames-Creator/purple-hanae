@@ -490,7 +490,7 @@ function setCg(name) {
 const DRAW_KEY = "sentimentalHanaeDrawing";
 // 保存する絵の大きさ。線画なので PNG で 10〜30KB 程度に収まる
 const DRAW_SAVE_W = 480;
-const DRAW_SAVE_H = 360;
+const DRAW_SAVE_H = 339;   // A4 と同じ 1:1.414
 
 function loadDrawing() {
   try {
@@ -518,11 +518,12 @@ function openDrawing() {
     if (!box || !canvas) { resolve(); return; }
 
     box.hidden = false;
-    // 実解像度で描く。CSS の大きさのままだと線がぼやける
-    const rect = paper.getBoundingClientRect();
+    // 実解像度で描く。CSS の大きさのままだと線がぼやける。
+    // 紙は傾けてあるので大きさは offsetWidth/Height で取る
+    // (getBoundingClientRect() は回転後の外接矩形なので 1.5% ほど大きい)
     const dpr = Math.min(window.devicePixelRatio || 1, 3);
-    canvas.width = Math.round(rect.width * dpr);
-    canvas.height = Math.round(rect.height * dpr);
+    canvas.width = Math.round(paper.offsetWidth * dpr);
+    canvas.height = Math.round(paper.offsetHeight * dpr);
     const ctx = canvas.getContext("2d");
     ctx.scale(dpr, dpr);
     ctx.lineWidth = 2.2;
@@ -533,9 +534,28 @@ function openDrawing() {
     let drawing = false;
     let hasStroke = false;
 
+    // 紙を傾けてあるので、外接矩形の左上を基準にすると指と線が数px ずれる。
+    // 中心は回転しても動かないので、中心から測って傾きぶんを逆に回す
     const pos = (ev) => {
       const r = canvas.getBoundingClientRect();
-      return { x: ev.clientX - r.left, y: ev.clientY - r.top };
+      const t = getComputedStyle(paper).transform;
+      const m = t && t !== "none" ? t.match(/matrix\(([^)]+)\)/) : null;
+      let a = 1;
+      let b = 0;
+      if (m) {
+        const v = m[1].split(",");
+        a = parseFloat(v[0]);
+        b = parseFloat(v[1]);
+      }
+      const s = Math.hypot(a, b) || 1;
+      const cos = a / s;
+      const sin = b / s;
+      const dx = ev.clientX - (r.left + r.width / 2);
+      const dy = ev.clientY - (r.top + r.height / 2);
+      return {
+        x: (dx * cos + dy * sin) / s + paper.offsetWidth / 2,
+        y: (-dx * sin + dy * cos) / s + paper.offsetHeight / 2,
+      };
     };
     const down = (ev) => {
       ev.preventDefault();
@@ -593,7 +613,7 @@ function openDrawing() {
         out.width = DRAW_SAVE_W;
         out.height = DRAW_SAVE_H;
         const octx = out.getContext("2d");
-        octx.fillStyle = "#fdfaf2";
+        octx.fillStyle = "#f2ecdf";
         octx.fillRect(0, 0, DRAW_SAVE_W, DRAW_SAVE_H);
         octx.drawImage(canvas, 0, 0, DRAW_SAVE_W, DRAW_SAVE_H);
         localStorage.setItem(DRAW_KEY, out.toDataURL("image/png"));
