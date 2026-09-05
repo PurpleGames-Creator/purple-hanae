@@ -1732,12 +1732,13 @@ body.is-title .petals {
   /* 縁は紙の余白。純白にすると写真のマットに見えて、紙そのものに見えない */
   border: 6px solid #f2ece0;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 30px rgba(0, 0, 0, 0.5);
-  transform: rotate(-4deg) scale(0.96);
+  /* 出る時は、少し小さく・少し下から浮かび上がる(2026-09-05 本人指示) */
+  transform: rotate(-4deg) scale(0.94) translateY(10px);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.7s ease, transform 0.7s ease;
+  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.16, 0.8, 0.3, 1);
 }
-.cg.is-shown { opacity: 1; transform: rotate(-4deg) scale(1); }
+.cg.is-shown { opacity: 1; transform: rotate(-4deg) scale(1) translateY(0); }
 /* 広い画面の結末では、既定の位置(上から14%)だと「NEW」の帯と見出しに紙が
    重なる。結末は左に文章・右に立ち絵の組みなので、紙は上へ逃がして小さくする */
 @media (min-width: 1000px) {
