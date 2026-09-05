@@ -259,6 +259,11 @@ const AUDIO = (() => {
     // resume() は非同期なので、running になった時点で鳴らし直す
     ctx.onstatechange = () => {
       if (ctx.state === "running") {
+        if (pendingSe) {
+          const name = pendingSe;
+          pendingSe = null;
+          se(name);
+        }
         ensurePlaying();
         // 停止中に作った GainNode は値が乗っていないことがあるので入れ直す
         if (currentEl && currentKey && !fadeTimer && !muted) setVolume(currentEl, targetVolume(currentKey));
@@ -354,6 +359,14 @@ const AUDIO = (() => {
       tone(430, 185, "triangle", 0.26, 250);
       setTimeout(() => tone(300, 265, "triangle", 0.22, 170), 130);
     },
+    // 「画面をタップ」でゲームが始まる時の音。ド→ソ→ド(C5→G5→C6)を
+    // ゆっくり重ねる。sine なので倍音が無く、耳に刺さらない。
+    // 音量は他の効果音の半分以下で、立ち上がりも鈍らせて「そっと開く」感じにする
+    start: () => {
+      tone(523.25, 900, "sine", 0.11, 0, 55);
+      setTimeout(() => tone(783.99, 850, "sine", 0.10, 0, 45), 110);
+      setTimeout(() => tone(1046.5, 1100, "sine", 0.09, 0, 45), 230);
+    },
     ending: () => {
       tone(660, 145, "sine", 0.24);
       setTimeout(() => tone(880, 145, "sine", 0.24), 130);
@@ -364,6 +377,24 @@ const AUDIO = (() => {
   function se(name) {
     const cue = CUES[name];
     if (cue) cue();
+  }
+
+  // 解錠の瞬間は AudioContext がまだ running でないことがあり、その時に鳴らすと
+  // 消えてしまう。起きるのを待ってから鳴らす(待っても起きなければ諦める)
+  let pendingSe = null;
+
+  function seWhenReady(name) {
+    const c = ensureCtx();
+    if (c && c.state === "running") {
+      se(name);
+      return;
+    }
+    pendingSe = name;
+    setTimeout(() => {
+      if (pendingSe !== name) return;
+      pendingSe = null;
+      se(name);
+    }, 400);
   }
 
   /* ---------------- 解錠・ミュート ---------------- */
@@ -487,6 +518,7 @@ const AUDIO = (() => {
     stopBgm,
     blip,
     se,
+    seWhenReady,
     isMuted: () => muted,
     isUnlocked: () => unlocked,
     toggleMuted: () => setMuted(!muted),

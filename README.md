@@ -135,7 +135,10 @@ iOS の音量バグを前提に下げた値が残っていたもので、事実�
 | `tension` | トラブル・吉沢・噂 |
 | `end_true` / `end_false` / `end_rival` | エンディング |
 
-効果音は**ファイルを持たない**。`audio.js` が Web Audio で合成する。文字送りの音は
+効果音は**ファイルを持たない**。`audio.js` が Web Audio で合成する。
+「画面をタップ」でゲームが始まる時は `start`(C5→G5→C6 を 110ms ずつずらして重ねる sine の分散和音)。
+**解錠の瞬間はまだ AudioContext が起きていないことがある**ので、`AUDIO.seWhenReady()` で
+running になってから鳴らす(`ctx.onstatechange` か 400ms の保険タイマー)。文字送りの音は
 話者で音程を変えていて、ハナエが一番高い(`VOICES` の 0=地の文 / 1=ハナエ /
 2=他の登場人物 / 3=主人公)。
 

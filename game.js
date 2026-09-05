@@ -737,6 +737,9 @@ function gateTitleForAudio() {
   // pointerdown は入れない —— 押した指がそのまま出てきたボタンに落ちてしまう
   const openTitle = () => {
     AUDIO.unlock();
+    // ゲームが始まる合図。解錠した直後は AudioContext がまだ起きていないことが
+    // あるので、起きてから鳴らす
+    AUDIO.seWhenReady("start");
     screen.classList.remove("is-gated");
     document.removeEventListener("click", openTitle);
     document.removeEventListener("keydown", openTitle);
