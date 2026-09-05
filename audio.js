@@ -18,9 +18,14 @@ const AUDIO = (() => {
 
   const FADE_MS = 900;
   const FADE_STEP_MS = 40;
-  // 「画面をタップ」で音が解禁される瞬間だけ、ゆっくり立ち上げる。
-  // 場面の切り替え(900ms)と同じ速さだと、無音からいきなり鳴り出したように聞こえる
-  const UNLOCK_FADE_MS = 2200;
+  // 「画面をタップ」で音が解禁される瞬間の立ち上がり。
+  // 2200ms + t² だと 1秒経っても目標の 21%(-13dB)で、実機では無音にしか聞こえず
+  // 「もう一度タップしないと鳴らない」と受け取られた(2026-09-05 本人指摘)。
+  // 押した指を離す前に鳴り出すよう 800ms に縮め、カーブも t^1.3 に緩めた。
+  // 実測(目標比): 200ms 16% / 400ms 41% / 600ms 69% / 800ms 100%
+  const UNLOCK_FADE_MS = 800;
+  // 無音から立ち上げる時のカーブ。1 = 直線、大きいほど出だしが小さい
+  const UNLOCK_RISE_POW = 1.3;
 
   // BGM 全体の音量。**ここ1箇所で全曲まとめて上下できる。**
   // 本作は文字送りの音とハナエの反応が主役なので、曲は「かすかに聞こえる」
@@ -180,10 +185,10 @@ const AUDIO = (() => {
     fadeTimer = setInterval(() => {
       n++;
       const t = Math.min(1, n / steps);
-      // 無音から立ち上げる時だけ、ゆっくり始まる曲線(t²)にする。
-      // 音量を時間に比例させると、人の耳には最初から鳴っているように聞こえるため。
+      // 無音から立ち上げる時だけ、少しだけ出だしを抑えた曲線にする。
+      // 完全な直線だと最初から鳴っている感じになり、逆に t² だと聞こえるまでが遅い。
       // 曲の切り替えでこれをやると、前の曲が消えた後に谷ができるので直線のまま
-      const rise = prevEl ? t : t * t;
+      const rise = prevEl ? t : Math.pow(t, UNLOCK_RISE_POW);
       if (nextEl) setVolume(nextEl, Math.min(1, to * rise));
       if (prevEl && prevEl !== nextEl) setVolume(prevEl, Math.max(0, prevFrom * (1 - t)));
       if (t >= 1) {
