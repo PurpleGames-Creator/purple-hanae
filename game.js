@@ -727,6 +727,7 @@ function openDrawing() {
 
     const down = (ev) => {
       ev.preventDefault();
+      dropSelection();
       drawing = true;
       try { canvas.setPointerCapture(ev.pointerId); } catch (e) { /* 拾えなくても描ける */ }
       const p = pos(ev);
@@ -750,8 +751,15 @@ function openDrawing() {
       if (current && current.length) commit(strokesNow().concat([current]));
       current = null;
     };
-    // 長押しの「コピー」の吹き出しが出ると、そのあと線が引けなくなる
+    // 長押しの「コピー」の吹き出しが出ると、そのあと線が引けなくなる。
+    // CSS の user-select だけだと、指が画用紙の外に触れた時に iOS が
+    // 選択を始めることがあるので、選択の開始そのものも止める
     const noMenu = (ev) => ev.preventDefault();
+    const noSelect = (ev) => ev.preventDefault();
+    const dropSelection = () => {
+      const sel = window.getSelection && window.getSelection();
+      if (sel && sel.rangeCount) sel.removeAllRanges();
+    };
 
     canvas.addEventListener("pointerdown", down);
     canvas.addEventListener("pointermove", move);
@@ -759,6 +767,8 @@ function openDrawing() {
     canvas.addEventListener("pointercancel", up);
     canvas.addEventListener("contextmenu", noMenu);
     box.addEventListener("contextmenu", noMenu);
+    document.addEventListener("contextmenu", noMenu);
+    document.addEventListener("selectstart", noSelect);
 
     const clearBtn = el("btn-draw-clear");
     const doneBtn = el("btn-draw-done");
@@ -822,6 +832,8 @@ function openDrawing() {
       canvas.removeEventListener("pointercancel", up);
       canvas.removeEventListener("contextmenu", noMenu);
       box.removeEventListener("contextmenu", noMenu);
+      document.removeEventListener("contextmenu", noMenu);
+      document.removeEventListener("selectstart", noSelect);
       document.body.classList.remove("is-drawing");
       box.hidden = true;
       // 閉じた指がそのまま本文の送りに落ちないように

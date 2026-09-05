@@ -1828,12 +1828,15 @@ body.is-title .petals {
 }
 .draw-overlay[hidden] { display: none; }
 /* 長押しで文字が選択されたり、iOS の「コピー」の吹き出しが出たりすると
-   線が引けなくなる。画用紙の画面では選択そのものを切る(2026-09-05 本人指摘) */
-.draw-overlay,
-.draw-overlay * {
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
+   線が引けなくなる(2026-09-05 本人指摘)。
+   はじめは画用紙の中だけに掛けていたが、それでは足りなかった(2026-09-06 再発)。
+   画用紙は画面全体を覆っているものの、**指が画用紙の外の文字に触れた時**に
+   iOS 側が選択を始めてしまう。開いている間は画面のどこでも選択させない */
+body.is-drawing,
+body.is-drawing * {
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
   -webkit-tap-highlight-color: transparent;
 }
 .draw-canvas { -webkit-user-drag: none; }
