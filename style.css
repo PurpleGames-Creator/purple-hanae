@@ -639,6 +639,38 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
   letter-spacing: 0.03em;
 }
 
+/* 結末の後に出す「今回の距離」。本編中は好感度を伏せたまま、
+   終わってから7段階だけ見せる。数値は出さない */
+.ending-hearts {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin: 0 0 10px;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+.rh-label {
+  margin-right: 8px;
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+.rh {
+  opacity: 0.18;
+  filter: grayscale(1);
+}
+.rh.is-on {
+  opacity: 1;
+  filter: none;
+  animation: rhPop 0.45s ease-out both;
+}
+@keyframes rhPop {
+  from { opacity: 0; transform: scale(0.6); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
 /* ---------------- エンディング図鑑(タイトル画面) ---------------- */
 
 .ending-gallery {
@@ -781,6 +813,7 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
   .heart-glow { display: none; }
   /* 本作は好感度を非公開にしており、ハートが唯一のフィードバック。
      消すと選択の良し悪しを知る手段が無くなるので、動きだけ止めて静止表示する */
+  .rh.is-on { animation: none; }
   .heart {
     animation: none;
     opacity: 1;

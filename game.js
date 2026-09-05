@@ -1750,6 +1750,7 @@ function resolveEnding() {
   const changes = ending.sceneChanges || [];
   playBlocks(el("ending-text"), ending.text, "end:" + endingKey, () => {
     restartBtn.style.display = "block";
+    renderResultHearts();
     el("ending-foot").style.display = "block";
   }, (i, block) => {
     changes.forEach((c) => {
@@ -1797,6 +1798,36 @@ function initAudioDebug() {
       `vol:${s.volume} gainNode:${s.gainNode} muted:${s.muted}\n` +
       `play():${s.playCalls} ok:${s.playOk} abort:${s.aborts} err:${s.lastError}`;
   }, 250);
+}
+
+/* ---------------- 結末の「今回の距離」 ---------------- */
+
+// 点数を7段階に丸める。数値そのものは出さない(出すと点数の逆算ゲームになる)
+function heartLevel(score) {
+  const cuts = GAME_DATA.resultHearts || [];
+  let lv = 1;
+  cuts.forEach((c) => { if (score >= c) lv += 1; });
+  return Math.min(lv, cuts.length + 1);
+}
+
+function renderResultHearts() {
+  const box = el("ending-hearts");
+  if (!box) return;
+  const total = (GAME_DATA.resultHearts || []).length + 1;
+  const lv = heartLevel(state.score);
+  box.innerHTML = "";
+  const label = document.createElement("span");
+  label.className = "rh-label";
+  label.textContent = "今回の距離";
+  box.appendChild(label);
+  for (let i = 0; i < total; i++) {
+    const h = document.createElement("span");
+    h.className = "rh" + (i < lv ? " is-on" : "");
+    h.style.animationDelay = i * 0.07 + "s";
+    h.textContent = "\u{1F497}";
+    box.appendChild(h);
+  }
+  box.setAttribute("aria-label", `今回の距離 ${total}段階中 ${lv}`);
 }
 
 /* ---------------- 起動 ---------------- */
