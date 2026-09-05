@@ -1982,7 +1982,9 @@ function resolveEnding() {
   badge.textContent = endingKey === "successPerfect"
     ? "NEW — 最も到達が難しいエンディングです"
     : "NEW — 初めて見るエンディングです";
-  el("ending-title").textContent = ending.title;
+  // 見出しは図鑑のラベルと同じ文字列にする(2026-09-05 本人指示)。
+  // 別々に持つと片方だけ直した時に食い違うので、endingLabels を唯一の正とする
+  el("ending-title").textContent = GAME_DATA.endingLabels[endingKey] || ending.title;
   // エンディングは本編で一番長い(パーフェクトは21ブロック)。ここもページ送りにする
   const restartBtn = el("btn-restart");
   restartBtn.style.display = "none";
