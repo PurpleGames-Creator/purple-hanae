@@ -106,7 +106,7 @@ const GAME_DATA = {
       title: "看板の下絵",
       text: `翌日の体育館。隅のほうで、ハナエが段ボールを裏返して何か描いていた。\n\n看板の下絵らしい。鉛筆の動きに迷いがない。\n\n覗き込んで、言葉が出なくなった。\n\n上手い。委員会の落書きの範囲を、完全に超えている。\n\nハナエ「なに」\n\n手も止めず、こちらも見ずに言った。`,
       choices: [
-        { id:"A", label:"「絵、上手いんだね」", points:1, rival:0, expr:"normal", reaction:"「まあ、昔から描いてはおったけど」" },
+        { id:"A", label:"「これプロ並みじゃん!」", points:1, rival:0, expr:"smile", reaction:"「プロ見たことあんの?」" },
         { id:"B", label:"黙って手元を覗き込む", points:-1, rival:0, tag:"passive", expr:"trouble", reaction:"「見んといて。まだ途中や」" },
         { id:"C", label:"「こういうの、美術部に頼めばいいのに」", points:-2, rival:0, tag:"pushy", expr:"angry", reaction:"「うちがやりたいからやってんの」" },
         { id:"D", label:"「え、めっちゃ上手い!これ欲しい」", points:2, rival:0, expr:"shy", reaction:"「は? ……欲しいて、こんな下絵を」\n\nそう言いながら、ハナエは段ボールを隠さなかった。" },
