@@ -39,7 +39,7 @@ const GAME_DATA = {
   SKIP_F5_RIVAL_PENALTY: 3,
   ACT3_RIVAL_DRIFT: 1,
   // 序盤(E1〜E8)で無神経な選択(tag: pushy)をこの回数以上重ねると、自由行動の前に
-  // 似顔絵の場面(E8B)が挟まり、最下位の結末が「41歳の似顔絵」に変わる
+  // 似顔絵の場面(E8B)が挟まり、最下位の結末が「あの日の似顔絵」に変わる
   earlyEvents: ["E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8"],
   NIGAOE_RUDE_THRESHOLD: 3,
 
@@ -172,7 +172,7 @@ const GAME_DATA = {
     },
 
     // 序盤に無神経な選択を重ねた時だけ、自由行動の前に挟まる(order には無い。advanceQueue が差し込む)。
-    // どの選択肢でも似顔絵はハナエの手に渡り、最下位の結末「41歳の似顔絵」で戻ってくる
+    // どの選択肢でも似顔絵はハナエの手に渡り、最下位の結末「あの日の似顔絵」で戻ってくる
     E8B: {
       title: "似顔絵",
       // この枠を出し終えた時点で画用紙を開き、プレイヤーに描かせる(game.js の openDrawing)
@@ -509,7 +509,7 @@ const GAME_DATA = {
     soretigai: "すれ違いエンド",
     awkward: "気まずいエンド",
     nishino: "吉沢エンド",
-    nigaoe: "41歳の似顔絵",
+    nigaoe: "あの日の似顔絵",
   },
 
   endings: {

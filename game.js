@@ -570,97 +570,32 @@ function setCg(name) {
 
 // 本文には「口から『はよ動け』と吹き出しが出ている」と書いてあるが、
 // これを自分で書く人はまずいないので、紙に最初から入れておく(2026-09-05 本人指示)。
-// 手書きに見せるために押さえた点:
-//   1. 囲みが真円ではない。手で回すと半径が場所ごとに膨らんだり痩せたりする
-//   2. 閉じ際が正確に合わず、少し行き過ぎて重なる
-//   3. 線の太さが一定でない(筆圧)。1本の線の中で太さが変わるので、
-//      短い線分に分けて線分ごとに太さを変える
-//   4. しっぽは根元が太く先が細い。口元(顔を描く辺り)へ向ける
-//   5. 文字が整列しない。1字ずつ大きさ・傾き・高さがずれ、全体がわずかに右上がり
-//   6. 落書きなので速い。同じところを2度なぞった跡が出る
-const DRAW_PRESET_TEXT = "はよ動け";
+// 中身は本人の手書きをそのまま使う(2026-09-05 差し替え)。白線・黒地で描かれた
+// ものを、明るさをそのまま alpha に移して線だけ抜き、鉛筆と同じ色に置き換えてある
+// (作り方は _source/build_bubble.py)
+const DRAW_BUBBLE = ASSET_DIR + "draw_bubble.webp" + ASSET_V;
+let drawBubbleImg = null;
 
-// 揺れは毎回変えず、決まった式から作る。開くたびに形が変わると
-// 「前に描いたやつ」に見えなくなるため
+// 読めたら知らせる。開いた時にまだ読めていなければ、届いてから引き直す
+function loadDrawBubble(onReady) {
+  if (drawBubbleImg && drawBubbleImg.naturalWidth) {
+    if (onReady) onReady();
+    return;
+  }
+  if (!drawBubbleImg) {
+    drawBubbleImg = new Image();
+    drawBubbleImg.src = DRAW_BUBBLE;
+  }
+  if (onReady) drawBubbleImg.addEventListener("load", onReady, { once: true });
+}
+
+// 紙の右端に縦に置く。左の7割は似顔絵のために空けておく
 function drawDrawingPreset(ctx, w, h) {
-  ctx.save();
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-  ctx.strokeStyle = "#2b2b33";
-  ctx.fillStyle = "#2b2b33";
-
-  // 縦書きで右端に寄せる。横書きだと紙の半分近くを占めて、顔を描く場所が
-  // 残らなかった(2026-09-05 本人指摘)。細長い囲みにして左を空ける
-  const cx = w * 0.865;
-  const cy = h * 0.31;
-  const rx = w * 0.063;
-  const ry = h * 0.195;
-
-  // 囲み(1)(2)(3)。手で回した線の膨らみは「1周に2〜3個」くらいの
-  // ゆっくりしたうねりで、点ごとのギザギザではない。角度で揺らすのが要点
-  const N = 72;
-  const over = 6;              // 閉じ際を少し行き過ぎさせる(2)
-  const pts = [];
-  for (let i = 0; i <= N + over; i++) {
-    const t = (i / N) * Math.PI * 2 - Math.PI * 0.5;
-    const k = 1 + 0.05 * Math.sin(t * 2 + 0.7) + 0.03 * Math.sin(t * 3 - 1.1);
-    pts.push([cx + rx * k * Math.cos(t), cy + ry * k * Math.sin(t)]);
-  }
-  for (let i = 1; i < pts.length; i++) {
-    // 書き始めと書き終わりが細く、中間が濃い(3)
-    const u = i / pts.length;
-    ctx.lineWidth = 0.9 + 0.85 * Math.sin(Math.PI * u) + 0.1 * Math.sin(u * 11);
-    ctx.beginPath();
-    ctx.moveTo(pts[i - 1][0], pts[i - 1][1]);
-    ctx.lineTo(pts[i][0], pts[i][1]);
-    ctx.stroke();
-  }
-
-  // しっぽ(4)。根元が広く先が細い三角で、顔を描くあたりへ短く伸ばす
-  const tip = [w * 0.66, h * 0.52];
-  [[cx - rx * 0.86, cy + ry * 0.44], [cx - rx * 0.30, cy + ry * 0.92]].forEach((p0, n) => {
-    const steps = 7;
-    const lw = n === 0 ? 1.7 : 1.3;
-    for (let i = 1; i <= steps; i++) {
-      const u0 = (i - 1) / steps;
-      const u1 = i / steps;
-      ctx.lineWidth = lw * (1 - u1 * 0.68);
-      ctx.beginPath();
-      ctx.moveTo(p0[0] + (tip[0] - p0[0]) * u0, p0[1] + (tip[1] - p0[1]) * u0);
-      ctx.lineTo(p0[0] + (tip[0] - p0[0]) * u1, p0[1] + (tip[1] - p0[1]) * u1);
-      ctx.stroke();
-    }
-  });
-
-  // 文字(5)(6)。縦に積む。1字ずつ大きさ・傾き・左右のずれを変え、
-  // 少しずらして2度なぞる
-  const size = Math.round(h * 0.085);
-  const chars = "はよ動け".split("");
-  const step = size * 1.06;
-  ctx.font = size + 'px "Hiragino Maru Gothic ProN", "Yu Gothic", "Meiryo", sans-serif';
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.save();
-  ctx.translate(cx, cy);
-  ctx.rotate(0.02);                          // column ごとのわずかな傾き
-  chars.forEach((ch, i) => {
-    const y = -(step * (chars.length - 1)) / 2 + step * i;
-    const dx = Math.sin(i * 1.7 + 0.9) * size * 0.10;   // 縦書きは左右がぶれる
-    const tilt = -0.02 + 0.10 * Math.sin(i * 2.3 + 0.5);
-    const sc = 1 + Math.sin(i * 2.9) * 0.07;
-    ctx.save();
-    ctx.translate(dx, y);
-    ctx.rotate(tilt);
-    ctx.scale(sc, 1 + Math.cos(i * 1.6) * 0.06);
-    ctx.globalAlpha = 0.92;
-    ctx.fillText(ch, 0, 0);
-    ctx.globalAlpha = 0.38;                            // 2度なぞった跡(6)
-    ctx.fillText(ch, size * 0.045, -size * 0.035);
-    ctx.restore();
-  });
-  ctx.restore();
-
-  ctx.restore();
+  const im = drawBubbleImg;
+  if (!im || !im.naturalWidth) return;
+  const dh = h * 0.62;
+  const dw = dh * (im.naturalWidth / im.naturalHeight);
+  ctx.drawImage(im, w - dw - w * 0.04, h * 0.09, dw, dh);
 }
 
 /* ---------------- 似顔絵を描く ---------------- */
@@ -774,6 +709,10 @@ function openDrawing() {
       ctx.strokeStyle = "#2b2b33";
       strokesNow().forEach(drawStroke);
     };
+
+    // 吹き出しがまだ読めていなければ、届いた時点で引き直す。
+    // redraw を使うので、定義より後ろで呼ぶこと(既に読めていると同期で呼ばれる)
+    loadDrawBubble(() => redraw());
 
     // 一段進めるたびに、そこから先の「進む」は捨てる(描き足したら分岐しない)
     const commit = (strokes) => {
@@ -1010,6 +949,8 @@ function preloadAssets() {
   Object.values(GAME_DATA.endingScenes).forEach((s) => { if (s.bg) names.add(s.bg); });
   names.forEach((n) => { new Image().src = `${ASSET_DIR}${n}.webp${ASSET_V}`; });
   Object.keys(SPRITE_EXPRESSIONS).forEach((o) => { new Image().src = `${ASSET_DIR}hanae_${o}.webp${ASSET_V}`; });
+  // 画用紙の吹き出し。開いた瞬間に出ていてほしいので、ここで読んでおく
+  loadDrawBubble();
 }
 
 // 表情差分は枚数が多く、まとめて起動時に読むとタイトルの表示が遅れる。
