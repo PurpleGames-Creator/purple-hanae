@@ -95,6 +95,10 @@ const AUDIO = (() => {
   let unlocked = false;
   let lastError = null;
   let aborts = 0;
+  // 実機で「鳴らない」時に、どこまで進んでいるかを残す(?debug=1 の表示に使う)
+  let playCalls = 0;
+  let playOk = 0;
+  let ctxKicks = 0;
 
   // 1曲 1.5〜1.9MB ある。タップしてから取りに行くと、曲が届く前に
   // プレイヤーが次の場面へ進んでしまうので、鳴らすと決まった時点で読み始める
@@ -217,11 +221,12 @@ const AUDIO = (() => {
     }
     preloadTrack(el);
     setVolume(el, 0);
+    playCalls += 1;
     const p = el.play();
     // AbortError は曲の切り替えで前の play() が打ち切られただけのことが多いが、
     // 握り潰すと「鳴らないのに何も記録が残らない」状態になる。数だけ数えておく
-    if (p && p.catch) {
-      p.catch((err) => {
+    if (p && p.then) {
+      p.then(() => { playOk += 1; }, (err) => {
         if (!err) return;
         if (err.name === "AbortError") aborts += 1;
         else lastError = err.name;
@@ -250,6 +255,15 @@ const AUDIO = (() => {
     seBus = ctx.createGain();
     seBus.gain.value = levels.se;
     seBus.connect(ctx.destination);
+    // iOS は AudioContext が running になるまで、GainNode を通した音を一切出さない。
+    // resume() は非同期なので、running になった時点で鳴らし直す
+    ctx.onstatechange = () => {
+      if (ctx.state === "running") {
+        ensurePlaying();
+        // 停止中に作った GainNode は値が乗っていないことがあるので入れ直す
+        if (currentEl && currentKey && !fadeTimer && !muted) setVolume(currentEl, targetVolume(currentKey));
+      }
+    };
     return ctx;
   }
 
@@ -367,7 +381,11 @@ const AUDIO = (() => {
       /* 未対応のブラウザでは何もしない */
     }
     const c = ensureCtx();
-    if (c && c.state === "suspended") c.resume().catch(() => {});
+    // iOS を running に押し上げる定石。ユーザー操作の中で1サンプルだけ鳴らす
+    kickCtx(c);
+    if (c && c.state === "suspended") {
+      c.resume().then(() => { ctxKicks += 1; ensurePlaying(); }, () => {});
+    }
     if (currentKey) {
       const key = currentKey;
       // playBgm の「同じ曲なら何もしない」判定を外すために先に空にする。
@@ -389,11 +407,28 @@ const AUDIO = (() => {
   function ensurePlaying() {
     if (!unlocked || muted) return;
     if (!currentEl || !currentEl.paused) return;
+    playCalls += 1;
     const p = currentEl.play();
-    if (p && p.catch) {
-      p.catch((err) => {
+    if (p && p.then) {
+      p.then(() => { playOk += 1; }, (err) => {
         if (err) lastError = err.name;
       });
+    }
+  }
+
+  // iOS の AudioContext は、ユーザー操作の中で一度何か鳴らさないと running にならない
+  // ことがある。1サンプルの無音を鳴らして押し上げる(音は出ない)
+  function kickCtx(c) {
+    if (!c || c.state === "running") return;
+    try {
+      const buf = c.createBuffer(1, 1, 22050);
+      const src = c.createBufferSource();
+      src.buffer = buf;
+      src.connect(c.destination);
+      src.start(0);
+      ctxKicks += 1;
+    } catch (e) {
+      /* 作れない環境では諦める(el.volume 側にフォールバックする) */
     }
   }
 
@@ -402,7 +437,10 @@ const AUDIO = (() => {
   function resume() {
     if (!unlocked) return;
     const c = ensureCtx();
-    if (c && c.state === "suspended") c.resume().catch(() => {});
+    if (c && c.state !== "running") {
+      kickCtx(c);
+      c.resume().then(() => { ensurePlaying(); }, () => {});
+    }
     ensurePlaying();
   }
 
@@ -460,6 +498,8 @@ const AUDIO = (() => {
       muted,
       track: currentKey,
       playing: !!(currentEl && !currentEl.paused),
+      // 再生位置。進んでいれば「音は流れている(が聞こえない)」、0 のままなら止まっている
+      time: currentEl ? Math.round(currentEl.currentTime * 100) / 100 : null,
       volume: currentEl ? Math.round(volumeOf(currentEl) * 1000) / 1000 : null,
       gainNode: currentEl ? !!gains.get(currentEl) : null,
       ctx: ctx ? ctx.state : null,
@@ -467,6 +507,9 @@ const AUDIO = (() => {
       ready: currentEl ? currentEl.readyState : null,
       lastError,
       aborts,
+      playCalls,
+      playOk,
+      ctxKicks,
     }),
   };
 })();

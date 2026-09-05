@@ -1795,6 +1795,33 @@ function resolveEnding() {
   };
 }
 
+/* ---------------- 音の切り分け表示(?debug=1) ---------------- */
+
+// 実機で「音が鳴らない」時に、Safari のコンソールを繋がなくても状態が見える。
+// URL に ?debug=1 を付けた時だけ出る
+function initAudioDebug() {
+  if (!/[?&]debug=1/.test(location.search)) return;
+  const box = document.createElement("pre");
+  box.id = "audio-debug";
+  box.style.cssText =
+    "position:fixed;left:6px;right:6px;bottom:6px;z-index:2000;margin:0;padding:8px 10px;" +
+    "background:rgba(0,0,0,.82);color:#8f8;font:11px/1.5 monospace;white-space:pre-wrap;" +
+    "border-radius:8px;pointer-events:none";
+  document.body.appendChild(box);
+  let taps = 0;
+  ["pointerdown", "touchend", "click"].forEach((n) => {
+    document.addEventListener(n, () => { taps += 1; }, { passive: true, capture: true });
+  });
+  setInterval(() => {
+    const s = AUDIO.state();
+    box.textContent =
+      `taps:${taps} unlocked:${s.unlocked} ctx:${s.ctx} kicks:${s.ctxKicks}\n` +
+      `track:${s.track} playing:${s.playing} time:${s.time} ready:${s.ready}\n` +
+      `vol:${s.volume} gainNode:${s.gainNode} muted:${s.muted}\n` +
+      `play():${s.playCalls} ok:${s.playOk} abort:${s.aborts} err:${s.lastError}`;
+  }, 250);
+}
+
 /* ---------------- 起動 ---------------- */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -1822,7 +1849,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // 解錠しても最初の1曲が鳴り出さないことがある(読み込み待ち・play() の空振り)。
   // 操作のたびに鳴っているか確かめて、止まっていれば鳴らし直す。
   // 鳴っていれば何もしないので、押すたびに曲が頭出しされることはない
-  document.addEventListener("pointerdown", () => AUDIO.resume(), { passive: true });
+  // iOS は端末・バージョンによって、どの操作で再生の許可が下りるかが違う。
+  // pointerdown だけだと1回目のタップで鳴り出さないことがあるので、
+  // touchend / click / pointerup でも鳴らし直しに行く(鳴っていれば何もしない)
+  ["pointerdown", "pointerup", "touchend", "click"].forEach((n) => {
+    document.addEventListener(n, () => AUDIO.resume(), { passive: true });
+  });
+  initAudioDebug();
   // 画面をロックして戻ってくると音が止まったままになることがある
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") AUDIO.resume();
