@@ -331,7 +331,7 @@ let spriteFadeToken = 0;
 function setSprite(outfit, expr) {
   const img = el("sprite");
   const alt = el("sprite-b");
-  // 素材がまだ無い服(四十一歳の立ち絵など)は、届いて SPRITE_EXPRESSIONS に登録するまで出さない
+  // 素材がまだ無い服(41歳の立ち絵など)は、届いて SPRITE_EXPRESSIONS に登録するまで出さない
   if (outfit && !SPRITE_EXPRESSIONS[outfit]) outfit = null;
   if (!outfit) {
     spriteFadeToken++;
@@ -1987,7 +1987,7 @@ function resolveEnding() {
   const restartBtn = el("btn-restart");
   restartBtn.style.display = "none";
   el("ending-foot").style.display = "none";
-  // 途中で場面が変わる結末(パーフェクトの冬、似顔絵の二十四年後)は、その枠に来た時に切り替える
+  // 途中で場面が変わる結末(パーフェクトの冬、似顔絵の24年後)は、その枠に来た時に切り替える
   const changes = ending.sceneChanges || [];
   playBlocks(el("ending-text"), ending.text, "end:" + endingKey, () => {
     restartBtn.style.display = "block";
