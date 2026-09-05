@@ -727,18 +727,25 @@ function withName(text) {
   return String(text).replace(/\{name\}/g, () => state.name || "俺");
 }
 
-// 新規プレイの時だけ出す回想フレーム。「つづきから」では出さない
+// 新規プレイの時だけ出す回想フレーム。「つづきから」では出さない。
+// 読み終えたら「はじめる」ボタンではなく、もう一度のタップで本編へ。
+// タイトルの「はじめる」と同じ文言のボタンが2回出るのは分かりにくく、
+// 本作は元々「読み終えて、もう一度タップして次へ」で通しているため
+// (2026-09-05 本人指示でボタンを撤去)
 function showPrologue() {
   showScreen("screen-prologue");
   applyScene(sceneFor("PROLOGUE"));
-  const btn = el("btn-prologue-next");
-  btn.style.display = "none";
-  btn.onclick = () => { advanceQueue(); };
   window.scrollTo(0, 0);
   const prologueText = withName(GAME_DATA.prologue);
   pushLog("プロローグ", prologueText);
-  playBlocks(el("prologue-text"), prologueText, "prologue", () => {
-    btn.style.display = "block";
+  const textEl = el("prologue-text");
+  playBlocks(textEl, prologueText, "prologue", () => {
+    textEl.classList.add("has-next");
+    pagerNext = () => {
+      pagerNext = null;
+      textEl.classList.remove("has-next");
+      advanceQueue();
+    };
   });
 }
 

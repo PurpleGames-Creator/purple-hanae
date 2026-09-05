@@ -93,7 +93,7 @@ const GAME_DATA = {
       choices: [
         { id:"A", label:"「ハナエの言う通りだと思う」", points:1, rival:0, expr:"normal", reaction:"「せやろ」" },
         { id:"B", label:"「どっちの言い分も分かる気がする……」", points:-1, rival:0, tag:"passive", expr:"normal", reaction:"特に何も言われず、話は先に進む。" },
-        { id:"C", label:"「そこまで言わなくても」", points:-2, rival:0, tag:"pushy", expr:"angry", reaction:"「思うたことハッキリ言うて何が悪いん」" },
+        { id:"C", label:"「そこまで言わなくても」", points:-2, rival:0, tag:"pushy", expr:"angry", reaction:"「思うたことハッキリ言うて何が悪いん。それがうちの掟や」" },
         { id:"D", label:"「シンプルな方がいいと思う。去年の案内板、見づらかったし」", points:2, rival:0, expr:"joy", reaction:"「そうそう、それやねん!」" },
       ],
     },
@@ -157,7 +157,7 @@ const GAME_DATA = {
 
     E9: {
       title: "朝練を覗きに行く",
-      text: `早朝のテニスコート。フェンス越しに覗くと、ハナエが誰よりも大きな声を出していた。\n\n「山崎、もう一本!足止まってんで!」\n\n怒鳴られた一年生が、慌ててラケットを構え直す。委員会で見せる仕切りとは、まただいぶ違う。キャプテンの顔だ。\n\n汗だくで、髪も乱れていて、こちらにはまるで気づいていない。`,
+      text: `早朝のテニスコート。フェンス越しに覗くと、ハナエが誰よりも大きな声を出していた。\n\n「山崎、もう一本!足止まってんで!」\n\nハナエ「新入りが一番声出さんでどうすんの」\n\n怒鳴られた一年生が、慌ててラケットを構え直す。委員会で見せる仕切りとは、まただいぶ違う。キャプテンの顔だ。\n\n汗だくで、髪も乱れていて、こちらにはまるで気づいていない。`,
       choices: [
         { id:"A", label:"練習が終わってから声をかける", points:2, rival:0, expr:"shy", reaction:"「え、いつからおったん?……見んといてや、こんなグチャグチャの時に」" },
         { id:"B", label:"邪魔しないよう、黙って引き返す", points:0, rival:0, tag:"passive", expr:"normal", reaction:"誰にも気づかれないまま、朝の校舎に戻る。" },
@@ -250,7 +250,7 @@ const GAME_DATA = {
 
     E16: {
       title: "展示物のトラブル",
-      text: `夏休みが明けて、文化祭まで一週間を切った。\n\n久しぶりの体育館は、夏の熱がまだ残っていた。ハナエは少し日に焼けて、前より声が大きくなった気がする。\n\nそこへ突然のトラブル。展示物の一部が壊れているのが見つかった。\n\n委員「誰やねん、これ置いたん……」\n\n委員「うちらの班ちゃうし」\n\n作業は押しており、責任の押し付け合いが始まる。ハナエは黙って破片を拾い集め、修復作業に取り掛かろうとしている。`,
+      text: `夏休みが明けて、文化祭まで一週間を切った。\n\n久しぶりの体育館は、夏の熱がまだ残っていた。ハナエは少し日に焼けて、前より声が大きくなった気がする。\n\nそこへ突然のトラブル。展示物の一部が壊れているのが見つかった。\n\n委員「誰やねん、これ置いたん……」\n\n委員「うちらの班ちゃうし」\n\n委員「犯人の手配書でも作る?」\n\n作業は押しており、責任の押し付け合いが始まる。ハナエは黙って破片を拾い集め、修復作業に取り掛かろうとしている。`,
       choices: [
         { id:"A", label:"「誰のせいとかいいから、直そう」", points:3, rival:0, expr:"surprise", reaction:"「……ええこと言うやん」" },
         { id:"B", label:"ハナエに任せて自分は他の作業を続ける", points:-2, rival:0, tag:"passive", expr:"lonely", reaction:"ハナエは一人で破片を拾い集めていた。こちらは見なかった。" },
@@ -274,7 +274,7 @@ const GAME_DATA = {
       title: "台風接近、土壇場の緊迫イベント",
       text: `文化祭まであと二日。朝から風が湿っていた。\n\n昼のニュースで、台風の進路が変わったと知る。上陸は明日の夜。屋外展示が吹き飛ばされる恐れがあり、吊るしたばかりの提灯も含めて急遽の対応が必要になった。\n\n校庭に出ると、提灯が風に煽られて、ぶつかり合う音がしていた。\n\n「これ全部、今日中に固定せなあかん……」\n\nハナエの声にも焦りが滲む。手元のリストを見て、もう一度空を見た。`,
       choices: [
-        { id:"A", label:"「手分けしてやろう、指示出して」", points:3, rival:0, expr:"normal", reaction:"「せやな、頼むわ」" },
+        { id:"A", label:"「手分けしてやろう、指示出して」", points:3, rival:0, expr:"normal", reaction:"「せやな、頼むわ。宴の前に吹き飛ばされてたまるか」" },
         { id:"B", label:"「大丈夫、なんとかなるよ」", points:-2, rival:0, tag:"pushy", expr:"angry", reaction:"「そんな軽く言わんといて、マジでヤバいねん」" },
         { id:"C", label:"黙って自分の判断で作業を始める", points:1, rival:0, tag:"passive", expr:"normal", reaction:"ハナエは一瞬こちらを見て、すぐ自分の作業に戻った。" },
         { id:"D", label:"「どうしよう、間に合わない！」", points:-3, rival:0, tag:"pushy", expr:"trouble", reaction:"「あんたが慌ててどうすんの」" },
@@ -304,7 +304,7 @@ const GAME_DATA = {
       choices: [
         { id:"A", label:"「近くの金物屋、俺知ってるから走ってくる」", points:2, rival:0, expr:"smile", reaction:"「頼りになるやん」" },
         { id:"B", label:"「ハナエはどう思う?」", points:0, rival:0, tag:"passive", expr:"trouble", reaction:"「また私が決めるんか」" },
-        { id:"C", label:"結束バンドなど代用品での応急処置を提案する", points:3, rival:0, expr:"surprise", reaction:"「発想の転換やな、ええやん」" },
+        { id:"C", label:"結束バンドなど代用品での応急処置を提案する", points:3, rival:0, expr:"surprise", reaction:"「発想の転換やな。そういうの、ロマンあるわ」" },
         { id:"D", label:"「まあ、なんとかなるでしょ」", points:-2, rival:0, tag:"passive", expr:"angry", reaction:"「そのままにしとったら終わらへんやろ」" },
       ],
     },
