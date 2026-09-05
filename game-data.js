@@ -505,7 +505,7 @@ const GAME_DATA = {
     soretigai: "すれ違いエンド",
     awkward: "気まずいエンド",
     nishino: "吉沢エンド",
-    nigaoe: "四十一歳の似顔絵",
+    nigaoe: "41歳の似顔絵",
   },
 
   endings: {
