@@ -1450,20 +1450,22 @@ body.is-rain .rain-layer { opacity: 1; }
   overflow: hidden;
   mix-blend-mode: screen;
 }
-/* 悪魔化した時だけ動かす。隠したまま16個×3層を回し続けるのは無駄なので display で切る */
+/* 悪魔化した時だけ動かす。隠したまま28個×3層を回し続けるのは無駄なので display で切る。
+   **層の見え方をアニメーションに預けない** —— 以前は出現のフェードイン(0→1)を
+   層の opacity に掛けていたが、display: none から表示へ切り替えた瞬間に
+   そのアニメーションが始まらないことがあり、層が opacity 0 のまま固まって
+   火の粉が出ないことがあった(2026-09-05 本人報告)。
+   いまは脈動だけを掛けてあり、いちばん薄い瞬間でも 0.72 で必ず見えている。
+   粒ごとの出入りは emberRise 側で付けているので、演出としても足りている */
 body.is-demon .ember-layer {
   display: block;
-  animation: emberIn 0.7s ease-out both, emberBurst 6.3s ease-in-out 0.7s infinite;
-}
-@keyframes emberIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  animation: emberBurst 6.3s ease-in-out infinite;
 }
 /* 火が爆ぜて数が増える瞬間(6) */
 @keyframes emberBurst {
-  0%, 100% { opacity: 0.82; }
+  0%, 100% { opacity: 0.85; }
   22% { opacity: 1; }
-  61% { opacity: 0.7; }
+  61% { opacity: 0.72; }
 }
 
 /* 1層目: 上昇(1)。等速で、画面の下から上へ抜ける */

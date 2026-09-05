@@ -341,6 +341,9 @@ let adultAnger = 0;
 function markDemon() {
   const on = adultAnger === ADULT_STAGES.length - 1;
   document.body.classList.toggle("is-demon", on);
+  // display が none から変わった直後は、そのままだとアニメーションが
+  // 始まらないことがある。一度レイアウトを読んで確実に走らせる
+  if (on) void el("ember-layer").offsetHeight;
   // 明るい喫茶店のままだと、加算で乗せている火の粉が背景に埋もれて見えない。
   // 場面ごと暗い赤に寄せる(この結末の場面は tint を持たないので、戻す時は null)
   setTint(on ? "rgba(72, 13, 9, 0.55)" : null);
