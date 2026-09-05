@@ -72,11 +72,12 @@ body { background: transparent; }
   filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.55));
 }
 /* 彼女が最初に口を開いた時に、ふわっと現れる(場面の入りでは出さない)。
-   0.5s だと「出た」ではなく「切り替わった」に見えるので、少し長く取る */
+   0.5s だと「出た」ではなく「切り替わった」に見えるので、少し長く取る。
+   下から迫り上がる動きは付けない(2026-09-05 本人指示)。透明度だけで出す */
 .sprite.sprite-in { animation: spriteIn 0.85s ease-out; }
 @keyframes spriteIn {
-  from { opacity: 0; transform: translateY(20px) scale(0.985); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 /* タイトルでは入場のあと、ゆっくり呼吸させる(本編は表情の差し替えと干渉するので動かさない) */
 body.is-title #sprite.sprite-in { animation: spriteIn 0.85s ease-out, breathe 4.6s ease-in-out 0.85s infinite; }
@@ -84,40 +85,6 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
 @keyframes breathe {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-3px); }
-}
-/* 反応の表情に合わせた動き。名前が motion で始まるものは、終わったら JS が class を外す */
-.sprite.motion-pop { animation: motionPop 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2); }
-.sprite.motion-shake { animation: motionShake 0.42s ease-in-out; }
-.sprite.motion-sink { animation: motionSink 0.7s ease-out; }
-.sprite.motion-step { animation: motionStep 0.55s ease-out; }
-.sprite.motion-dim { animation: motionDim 0.7s ease-out; }
-@keyframes motionPop {
-  0% { transform: translateY(0); }
-  35% { transform: translateY(-14px); }
-  70% { transform: translateY(3px); }
-  100% { transform: translateY(0); }
-}
-@keyframes motionShake {
-  0%, 100% { transform: translateX(0); }
-  20% { transform: translateX(-5px); }
-  40% { transform: translateX(5px); }
-  60% { transform: translateX(-4px); }
-  80% { transform: translateX(3px); }
-}
-@keyframes motionSink {
-  0% { transform: translateY(0); }
-  40% { transform: translateY(7px); }
-  100% { transform: translateY(0); }
-}
-@keyframes motionStep {
-  0% { transform: translateX(0); }
-  40% { transform: translateX(6px); }
-  100% { transform: translateX(0); }
-}
-@keyframes motionDim {
-  0% { filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.55)) brightness(1); }
-  30% { filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.55)) brightness(0.6); }
-  100% { filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.55)) brightness(1); }
 }
 
 /* 表情の切り替え用。裏のレイヤーに次の表情を載せて重ね、180msで溶かす。
@@ -802,7 +769,7 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
   #sprite-b { transition: none; }
   .choice-btn { animation: none; }
   .event-choices.is-decided .choice-btn { transition: none; }
-  .sprite[class*="motion-"], body.is-title #sprite, body.is-title #sprite.sprite-in { animation: none; }
+  body.is-title #sprite, body.is-title #sprite.sprite-in { animation: none; }
   .game-logo { transition: none; opacity: 1; transform: none; }
   .telop { transition: none; }
   .fade { transition: none; }

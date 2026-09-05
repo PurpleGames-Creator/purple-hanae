@@ -553,38 +553,9 @@ function fadeTo(dark, ms) {
   return new Promise((resolve) => setTimeout(resolve, dur));
 }
 
-/* ---------------- 立ち絵の感情モーション ---------------- */
-
-// 反応の表情に合わせて、立ち絵を少しだけ動かす。驚き・喜びは跳ね、怒りは小刻みに揺れ、
-// 落胆は沈み、照れは半歩引く。柔らかい表情(soft / normal / smile)は動かさない
-const SPRITE_MOTION = {
-  surprise: "pop",
-  joy: "pop",
-  angry: "shake",
-  lonely: "sink",
-  trouble: "sink",
-  cry: "sink",
-  shy: "step",
-};
-const MOTION_CLASSES = ["motion-pop", "motion-shake", "motion-sink", "motion-step", "motion-dim"];
-
-function playSpriteMotion(kind) {
-  if (!kind || reducedMotion()) return;
-  ["sprite", "sprite-b"].forEach((id) => {
-    const im = el(id);
-    im.classList.remove(...MOTION_CLASSES);
-    void im.offsetWidth;
-    im.classList.add("motion-" + kind);
-  });
-}
-
-function initSpriteMotion() {
-  ["sprite", "sprite-b"].forEach((id) => {
-    el(id).addEventListener("animationend", (ev) => {
-      if (ev.animationName.indexOf("motion") === 0) ev.target.classList.remove(...MOTION_CLASSES);
-    });
-  });
-}
+// 反応で立ち絵を跳ねさせる/震わせる演出は入れない(2026-09-05 本人指示で撤去)。
+// 表情の変化そのもの(crossfadeSprite の 180ms クロスフェード)が本作の見せ場で、
+// 立ち絵が動くとそちらに目が行って表情が読み取りにくくなる
 
 // 広い画面では、立ち絵が出ている間だけ本文を左カラムに寄せる。
 // 常に寄せるとタイトル画面まで左に偏り、立ち絵の有無で切り替えるだけだと
@@ -820,8 +791,6 @@ function playHeartEffect(points) {
     glow.style.top = rect.top + rect.height * 0.16 + "px";
     layer.appendChild(glow);
   }
-  if (tier.cls === "heart-break") playSpriteMotion("dim");
-
   for (let i = 0; i < tier.count; i++) {
     const h = document.createElement("div");
     h.className = "heart " + tier.cls;
@@ -1534,10 +1503,7 @@ function showReaction(key, choice, scene, points, onChoice) {
       const expr = choice.expr || exprFor(points, choice.tag);
       // 本文で一度も喋らない場面(E16 など)は、ここで初めて顔を出す
       dropPendingSprite();
-      if (outfit) {
-        setSprite(outfit, expr);
-        playSpriteMotion(SPRITE_MOTION[expr]);
-      }
+      if (outfit) setSprite(outfit, expr);
       playHeartEffect(points);
 
       // 反応も本文と同じページ送りにする。1枠に地の文とセリフを混ぜないため、
@@ -1830,7 +1796,6 @@ function initAudioDebug() {
 document.addEventListener("DOMContentLoaded", () => {
   preloadAssets();
   preloadExpressions();
-  initSpriteMotion();
   // ロゴは復号が済んでから浮かび上がらせる。読み込み中に空白の場所へ
   // 「画面をタップ」だけが先に出るのを防ぐ
   const logo = document.querySelector(".game-logo");
