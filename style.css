@@ -1571,7 +1571,10 @@ body.is-demon .ember-layer {
 .sprite { transition: transform 0.42s ease-out; }
 @media (max-width: 999px) {
   body.is-demon .sprite {
-    transform: scale(1.9);
+    /* 右上へ寄せる(2026-09-05 本人指示)。右肩が画面の外に出るのは構わない
+       —— 顔と角を上に持ってくるほうが迫力が出る。translate を先に書いて
+       画面の単位で動かし、そのあと拡大する */
+    transform: translate(8vw, -8dvh) scale(1.9);
     transform-origin: top right;
   }
 }
