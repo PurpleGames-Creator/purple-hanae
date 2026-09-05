@@ -149,7 +149,7 @@ function renderEndingGallery() {
   if (seen.length >= order.length) {
     const done = document.createElement("p");
     done.className = "gallery-done";
-    done.textContent = "全エンディング到達。おつかれさまでした。";
+    done.textContent = "全エンディング達成！";
     box.appendChild(done);
   }
 }
