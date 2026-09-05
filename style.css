@@ -303,10 +303,17 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
   flex-direction: column;
 }
 
+/* 音のオン/オフはロゴの上の空きに逃がす(2026-09-05)。
+   本文中の HUD と同じ「右上」なので、置き場所が1つに揃う。
+   絶対配置なので縦の行を1つぶん(約36px)減らせる */
 .title-sound {
-  text-align: center;
-  margin: 10px 0 0;
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 0;
+  z-index: 3;
 }
+#screen-title { position: relative; }
 .credits {
   text-align: center;
   color: var(--text-dim);
