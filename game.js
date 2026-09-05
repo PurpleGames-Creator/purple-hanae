@@ -170,6 +170,7 @@ const BGM_BY_KEY = {
 
   // 委員会が動き出す
   E4: "daily2",
+  E4B: "daily2",
   E6: "daily2",
   E7: "daily2",
   E8B: "daily2",
