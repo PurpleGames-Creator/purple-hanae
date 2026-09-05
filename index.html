@@ -15,8 +15,8 @@
 <meta property="og:image" content="https://purplegames-creator.github.io/purple-hanae/assets/ogp.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💗</text></svg>">
-<link rel="preload" as="image" href="assets/logo_title.webp?v=78">
-<link rel="stylesheet" href="style.css?v=78">
+<link rel="preload" as="image" href="assets/logo_title.webp?v=79">
+<link rel="stylesheet" href="style.css?v=79">
 </head>
 <body>
 
@@ -53,7 +53,7 @@
 
   <section id="screen-title" class="screen active">
     <h1 class="game-title">
-      <img class="game-logo" src="assets/logo_title.webp?v=78" width="960" height="463"
+      <img class="game-logo" src="assets/logo_title.webp?v=79" width="960" height="463"
            alt="センチメンタル・ハナエ" fetchpriority="high" decoding="async">
     </h1>
     <p id="tap-hint" class="tap-hint">画面をタップ</p>
@@ -156,9 +156,14 @@
   <div id="draw-paper" class="draw-paper">
     <canvas id="draw-canvas" class="draw-canvas"></canvas>
   </div>
+  <div class="draw-tools">
+    <button id="btn-draw-undo" class="draw-tool" type="button" aria-label="ひとつ戻る" title="ひとつ戻る"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M4 8h8a6 6 0 1 1 0 12h-6"/><path d="M8 4 4 8l4 4"/></svg></button>
+    <button id="btn-draw-redo" class="draw-tool" type="button" aria-label="ひとつ進む" title="ひとつ進む"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M20 8h-8a6 6 0 1 0 0 12h6"/><path d="m16 4 4 4-4 4"/></svg></button>
+    <button id="btn-draw-clear" class="draw-tool draw-tool-text" type="button">消す</button>
+    <button id="btn-draw-log" class="draw-tool draw-tool-text" type="button">会話</button>
+  </div>
   <p id="draw-hint" class="draw-hint">指でハナエの似顔絵を描く</p>
   <div class="draw-actions">
-    <button id="btn-draw-clear" class="link-btn" type="button">消す</button>
     <button id="btn-draw-done" class="draw-done" type="button">描けた</button>
   </div>
 </div>
@@ -174,8 +179,8 @@
   </div>
 </div>
 
-<script src="game-data.js?v=78"></script>
-<script src="audio.js?v=78"></script>
-<script src="game.js?v=78"></script>
+<script src="game-data.js?v=79"></script>
+<script src="audio.js?v=79"></script>
+<script src="game.js?v=79"></script>
 </body>
 </html>

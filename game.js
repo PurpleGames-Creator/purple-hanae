@@ -518,6 +518,8 @@ function openDrawing() {
     if (!box || !canvas) { resolve(); return; }
 
     box.hidden = false;
+    // 会話履歴を画用紙より前に出すための印(CSS が見る)
+    document.body.classList.add("is-drawing");
     // 実解像度で描く。CSS の大きさのままだと線がぼやける。
     // 紙は傾けてあるので大きさは offsetWidth/Height で取る
     // (getBoundingClientRect() は回転後の外接矩形なので 1.5% ほど大きい)
@@ -532,7 +534,22 @@ function openDrawing() {
     ctx.strokeStyle = "#2b2b33";
 
     let drawing = false;
-    let hasStroke = false;
+    // 線を「点の並び」で持っておく。取り消しは画像を保存し合うより、
+    // 残っている線を引き直すほうが速く、端末の記憶も食わない
+    // (実解像度の画像は1枚で数MBになる)
+    let history = [[]];   // 各要素はその時点の線の一覧
+    let histIndex = 0;
+    let current = null;   // いま引いている途中の線
+
+    // 道具の状態と案内文をまとめて更新する
+    const syncTools = () => {
+      const has = strokesNow().length > 0;
+      el("btn-draw-undo").disabled = histIndex === 0;
+      el("btn-draw-redo").disabled = histIndex >= history.length - 1;
+      el("btn-draw-clear").disabled = !has;
+      el("btn-draw-done").classList.toggle("is-off", !has);
+      hint.textContent = has ? "" : "指でハナエの似顔絵を描く";
+    };
 
     // 紙を傾けてあるので、外接矩形の左上を基準にすると指と線が数px ずれる。
     // 中心は回転しても動かないので、中心から測って傾きぶんを逆に回す
@@ -557,47 +574,101 @@ function openDrawing() {
         y: (-dx * sin + dy * cos) / s + paper.offsetHeight / 2,
       };
     };
+    const strokesNow = () => history[histIndex];
+
+    const drawStroke = (pts) => {
+      if (!pts.length) return;
+      ctx.beginPath();
+      ctx.moveTo(pts[0][0], pts[0][1]);
+      // 書き出しの点。引いている最中と同じ手順を踏まないと、取り消して
+      // 引き直した時に線の端が 1px ぶん変わる
+      ctx.lineTo(pts[0][0] + 0.01, pts[0][1]);
+      for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+      ctx.stroke();
+    };
+
+    const redraw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      strokesNow().forEach(drawStroke);
+    };
+
+    // 一段進めるたびに、そこから先の「進む」は捨てる(描き足したら分岐しない)
+    const commit = (strokes) => {
+      history = history.slice(0, histIndex + 1);
+      history.push(strokes);
+      histIndex = history.length - 1;
+      syncTools();
+    };
+
     const down = (ev) => {
       ev.preventDefault();
       drawing = true;
       try { canvas.setPointerCapture(ev.pointerId); } catch (e) { /* 拾えなくても描ける */ }
       const p = pos(ev);
+      current = [[p.x, p.y]];
       ctx.beginPath();
       ctx.moveTo(p.x, p.y);
-      // 点を打っただけでも線が残るように
       ctx.lineTo(p.x + 0.01, p.y);
       ctx.stroke();
-      hasStroke = true;
-      hint.textContent = "";
-      el("btn-draw-done").classList.remove("is-off");
     };
     const move = (ev) => {
-      if (!drawing) return;
+      if (!drawing || !current) return;
       ev.preventDefault();
       const p = pos(ev);
+      current.push([p.x, p.y]);
       ctx.lineTo(p.x, p.y);
       ctx.stroke();
     };
-    const up = () => { drawing = false; };
+    const up = () => {
+      if (!drawing) return;
+      drawing = false;
+      if (current && current.length) commit(strokesNow().concat([current]));
+      current = null;
+    };
+    // 長押しの「コピー」の吹き出しが出ると、そのあと線が引けなくなる
+    const noMenu = (ev) => ev.preventDefault();
 
     canvas.addEventListener("pointerdown", down);
     canvas.addEventListener("pointermove", move);
     canvas.addEventListener("pointerup", up);
     canvas.addEventListener("pointercancel", up);
+    canvas.addEventListener("contextmenu", noMenu);
+    box.addEventListener("contextmenu", noMenu);
 
     const clearBtn = el("btn-draw-clear");
     const doneBtn = el("btn-draw-done");
-    doneBtn.classList.add("is-off");
 
-    clearBtn.onclick = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      hasStroke = false;
-      doneBtn.classList.add("is-off");
+    el("btn-draw-undo").onclick = () => {
+      if (histIndex === 0) return;
+      histIndex -= 1;
+      redraw();
+      syncTools();
       AUDIO.se("choice");
     };
+    el("btn-draw-redo").onclick = () => {
+      if (histIndex >= history.length - 1) return;
+      histIndex += 1;
+      redraw();
+      syncTools();
+      AUDIO.se("choice");
+    };
+    // 消すのも一段として積む。押し間違えても「戻る」で取り返せる
+    clearBtn.onclick = () => {
+      if (!strokesNow().length) return;
+      commit([]);
+      redraw();
+      AUDIO.se("choice");
+    };
+    // 描いている途中で直前の会話を読み返せるように、会話履歴をそのまま出す
+    el("btn-draw-log").onclick = () => {
+      AUDIO.se("choice");
+      openLog();
+    };
+
+    syncTools();
 
     doneBtn.onclick = () => {
-      if (!hasStroke) {
+      if (!strokesNow().length) {
         // 名前入力と同じ作法。押せるようにしておいて、理由を伝える
         AUDIO.se("heartShrink");
         hint.textContent = "なにか描いてください";
@@ -624,6 +695,9 @@ function openDrawing() {
       canvas.removeEventListener("pointermove", move);
       canvas.removeEventListener("pointerup", up);
       canvas.removeEventListener("pointercancel", up);
+      canvas.removeEventListener("contextmenu", noMenu);
+      box.removeEventListener("contextmenu", noMenu);
+      document.body.classList.remove("is-drawing");
       box.hidden = true;
       // 閉じた指がそのまま本文の送りに落ちないように
       tapGuardUntil = Date.now() + TAP_GUARD_MS;
@@ -1549,7 +1623,8 @@ function closeLog() {
   box.classList.remove("is-open");
   box.setAttribute("aria-hidden", "true");
   document.body.style.overflow = "";
-  const btn = el("btn-log");
+  const drawing = document.body.classList.contains("is-drawing");
+  const btn = el(drawing ? "btn-draw-log" : "btn-log");
   if (btn && btn.offsetParent !== null) btn.focus();
 }
 

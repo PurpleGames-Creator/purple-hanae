@@ -853,6 +853,8 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
   padding: 20px 16px;
 }
 .log-overlay.is-open { display: flex; }
+/* 画用紙(z-index 1200)より前に出す。描いている途中で直前の会話を読み返せる */
+body.is-drawing .log-overlay { z-index: 1300; }
 
 .log-panel {
   margin: auto;
@@ -1484,6 +1486,16 @@ body.is-title .petals {
   -webkit-backdrop-filter: blur(3px);
 }
 .draw-overlay[hidden] { display: none; }
+/* 長押しで文字が選択されたり、iOS の「コピー」の吹き出しが出たりすると
+   線が引けなくなる。画用紙の画面では選択そのものを切る(2026-09-05 本人指摘) */
+.draw-overlay,
+.draw-overlay * {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.draw-canvas { -webkit-user-drag: none; }
 
 /* 進行表(A4)の裏。本物の紙の見え方に寄せてある。観察したのは7点:
    1. 純白ではない。パルプ由来のわずかな黄みがあり、明るいところで #f8f4ec 前後。
@@ -1541,6 +1553,37 @@ body.is-title .petals {
   color: var(--text-dim);
   text-align: center;
 }
+/* 画用紙のすぐ下に置く道具。押しやすさを優先して 44px 幅を確保する */
+.draw-tools {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.draw-tool {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  height: 40px;
+  padding: 0 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text);
+  font-size: 0.86rem;
+  cursor: pointer;
+}
+.draw-tool svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.draw-tool:disabled { opacity: 0.28; cursor: default; }
+.draw-tool:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
 .draw-actions {
   display: flex;
   align-items: center;
@@ -1567,8 +1610,7 @@ body.is-title .petals {
   25% { transform: rotate(-1.4deg) translateX(-7px); }
   75% { transform: rotate(-1.4deg) translateX(7px); }
 }
-.draw-done:focus-visible,
-#btn-draw-clear:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.draw-done:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 
 @media (prefers-reduced-motion: reduce) {
   .draw-paper.shake { animation: none; }
