@@ -645,6 +645,43 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
   letter-spacing: 0.03em;
 }
 
+/* 41歳の結末だけのおまけ。押すと表情が上がったり下がったりする。
+   表情の差し替えは本編と同じ 180ms のクロスフェード(setSprite に任せている)。
+   結末の下側は要素が多く、余白を足すと枠がスクロールに入るので詰めてある */
+.adult-poke {
+  margin: 0 0 10px;
+}
+.adult-poke[hidden] { display: none; }
+.poke-hint {
+  margin: 0 0 6px;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-align: center;
+  color: var(--text-dim);
+}
+.poke-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.poke-btn {
+  min-width: 96px;
+  padding: 9px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  font-size: 0.94rem;
+  cursor: pointer;
+}
+.poke-tease {
+  border-color: rgba(255, 122, 158, 0.5);
+  background: rgba(255, 92, 138, 0.16);
+}
+.poke-btn:disabled { opacity: 0.3; cursor: default; }
+.poke-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
 /* 結末の後に出す「今回の距離」。本編中は好感度を伏せたまま、
    終わってから7段階だけ見せる。数値は出さない */
 .ending-hearts {

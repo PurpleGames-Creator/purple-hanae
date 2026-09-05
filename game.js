@@ -319,7 +319,54 @@ const BASE_EXPR = "smile";
 const SPRITE_EXPRESSIONS = {
   summer: ["normal", "soft", "trouble", "lonely", "angry", "surprise", "shy", "joy", "cry"],
   winter: ["soft"],
+  // 41歳。素の1枚と、怒りが上がっていく3枚。結末のおまけで押して切り替える
+  adult: ["angry1", "angry2", "angry3"],
 };
+
+/* ---------------- 41歳の結末のおまけ(謝る / いじる) ---------------- */
+
+// 段は0(素)から3(最終形態)まで。null は差分ではなくベース画像
+const ADULT_STAGES = [null, "angry1", "angry2", "angry3"];
+const ADULT_HINTS = [
+  "まだ穏やか",
+  "笑っていない",
+  "だいぶ怒っている",
+  "悪魔",
+];
+let adultAnger = 0;
+
+function renderAdultPoke() {
+  const box = el("adult-poke");
+  if (!box) return;
+  el("poke-hint-text").textContent = ADULT_HINTS[adultAnger];
+  el("btn-apologize").disabled = adultAnger === 0;
+  el("btn-tease").disabled = adultAnger === ADULT_STAGES.length - 1;
+}
+
+function setAdultAnger(next) {
+  const n = Math.max(0, Math.min(ADULT_STAGES.length - 1, next));
+  if (n === adultAnger) return;
+  adultAnger = n;
+  // 本編の表情差し替えと同じ道を通す(180ms のクロスフェード)
+  setSprite("adult", ADULT_STAGES[adultAnger]);
+  renderAdultPoke();
+}
+
+// 差分が1枚でも読めた時だけ出す。素材が届く前にボタンだけ並ぶと、
+// 押しても何も起きない出来損ないになる
+function maybeShowAdultPoke() {
+  const box = el("adult-poke");
+  if (!box) return;
+  adultAnger = 0;
+  box.hidden = true;
+  const probe = new Image();
+  probe.onload = () => {
+    box.hidden = false;
+    renderAdultPoke();
+  };
+  probe.onerror = () => { box.hidden = true; };
+  probe.src = ASSET_DIR + "hanae_adult_angry1.webp" + ASSET_V;
+}
 
 function hasExpressionFile(outfit, expr) {
   return !!expr && expr !== BASE_EXPR && (SPRITE_EXPRESSIONS[outfit] || []).includes(expr);
@@ -1994,6 +2041,8 @@ function resolveEnding() {
   playBlocks(el("ending-text"), ending.text, "end:" + endingKey, () => {
     restartBtn.style.display = "block";
     renderResultHearts();
+    if (endingKey === "nigaoe") maybeShowAdultPoke();
+    else el("adult-poke").hidden = true;
     el("ending-foot").style.display = "block";
   }, (i, block) => {
     changes.forEach((c) => {
@@ -2110,6 +2159,8 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") AUDIO.resume();
   });
+  el("btn-tease").onclick = () => { AUDIO.se("heartShrink"); setAdultAnger(adultAnger + 1); };
+  el("btn-apologize").onclick = () => { AUDIO.se("choice"); setAdultAnger(adultAnger - 1); };
   el("btn-log").onclick = openLog;
   el("btn-log-close").onclick = closeLog;
   // 余白をタップしても閉じる。パネルの中のタップは拾わない
