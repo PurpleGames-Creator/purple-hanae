@@ -122,10 +122,9 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
     -webkit-mask-image: linear-gradient(to bottom, #000 84%, transparent 100%);
     mask-image: linear-gradient(to bottom, #000 84%, transparent 100%);
   }
-  /* エンディング画面だけは HUD を出さないので、HUD ぶんの 52px を空ける必要がない。
-     立ち絵を上端まで上げて、顔と本文パネルの間を 44px 稼ぐ(低い機種だと
-     エンディングは要素が多く、詰めるだけでは顔まで届いてしまう) */
-  body.is-ending .sprite { top: 8px; }
+  /* エンディングも本編と同じ高さに立たせる。HUD が無いぶん上げていたが、
+     場面が切り替わった時に彼女の背だけが変わって見える(2026-09-05 本人指摘)。
+     顔と本文パネルの間は、下の余白の詰め方で稼ぐ */
   /* 本文と選択肢は画面の下 68% までを使う。上は顔のために空ける。
      立ち絵を 56dvh に縮めた(2026-09-04)ぶん、あごは上から約 22% に来るので、
      68% でも顔には掛からない。60% のままだと 320x568 級で選択肢の最後が
