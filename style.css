@@ -639,9 +639,19 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
 
 /* 41歳の結末だけのおまけ。押すと表情が上がったり下がったりする。
    表情の差し替えは本編と同じ 180ms のクロスフェード(setSprite に任せている)。
-   結末の下側は要素が多く、余白を足すと枠がスクロールに入るので詰めてある */
+   セリフとボタンをまとめて画面の右上(彼女の頭のあたり)に固定する ——
+   セリフ・表情・押すものが一箇所に集まっていないと視線が往復する
+   (2026-09-05 本人指示。スマートフォンでの見え方を基準にしている) */
 .adult-poke {
-  margin: 0 0 10px;
+  position: fixed;
+  top: max(10px, env(safe-area-inset-top, 0px));
+  right: 10px;
+  z-index: 3;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
 }
 .adult-poke[hidden] { display: none; }
 /* 段ごとの一言。状態の説明ではなく彼女のセリフなので、本文と同じ明るさで出す。
@@ -649,11 +659,10 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
    いちばん読みやすい。ボタンの上に置くと、顔とセリフで視線が上下に往復する
    (2026-09-05 本人指示。スマートフォンでの見え方を基準にしている) */
 .poke-hint {
-  position: fixed;
-  top: max(10px, env(safe-area-inset-top, 0px));
-  right: 10px;
-  z-index: 3;
-  max-width: min(68vw, 300px);
+  /* 折り返さない。折り返すと1〜2文字だけ次の行に落ちて読みにくい
+     (2026-09-05 本人指摘)。長さは4種とも決まっているので、幅は中身に任せる */
+  white-space: nowrap;
+  max-width: calc(100vw - 20px);
   margin: 0;
   padding: 8px 13px;
   border: 1px solid rgba(255, 255, 255, 0.16);
@@ -670,7 +679,7 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
 .poke-row {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   gap: 10px;
 }
 .poke-btn {

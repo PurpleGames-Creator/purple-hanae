@@ -2179,6 +2179,7 @@ function resolveEnding() {
   const restartBtn = el("btn-restart");
   restartBtn.style.display = "none";
   el("ending-foot").style.display = "none";
+  fitEndingTextHeight(ending.text);
   // 途中で場面が変わる結末(パーフェクトの冬、似顔絵の24年後)は、その枠に来た時に切り替える
   const changes = ending.sceneChanges || [];
   playBlocks(el("ending-text"), ending.text, "end:" + endingKey, () => {
@@ -2278,6 +2279,27 @@ function initAudioDebug() {
       `vol:${s.volume} gainNode:${s.gainNode} muted:${s.muted}\n` +
       `play():${s.playCalls} ok:${s.playOk} abort:${s.aborts} err:${s.lastError}`;
   }, 250);
+}
+
+/* ---------------- 結末の本文枠の高さ ---------------- */
+
+// 本文枠は「読んでいる途中で伸び縮みしない」ことを優先して高さを固定してある
+// (`.event-text` の height)。ただし一律に3行ぶん取ると、2行しかない結末では
+// 枠だけが大きく余る(2026-09-05 本人指摘)。
+// そこで、その結末のいちばん長い枠に合わせて高さを決める ——
+// 結末の中では動かないので目は疲れず、余りは最小になる
+function fitEndingTextHeight(text) {
+  const box = el("ending-text");
+  if (!box) return;
+  const keep = box.textContent;
+  box.style.height = "auto";
+  let max = 0;
+  splitBlocks(text).forEach((b) => {
+    box.textContent = b.text;
+    if (box.scrollHeight > max) max = box.scrollHeight;
+  });
+  box.textContent = keep;
+  box.style.height = max ? max + "px" : "";
 }
 
 /* ---------------- 結末の「今回の距離」 ---------------- */
