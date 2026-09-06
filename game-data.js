@@ -245,7 +245,7 @@ const GAME_DATA = {
         { id:"A", label:"何も言わず、ただ隣に並んで雨を眺める", points:4, rival:0, expr:"soft", reaction:"「……こういうの、悪ないな」\n\n雨が弱くなるまで、どちらも動かなかった。" },
         { id:"B", label:"いろいろ話題を振る", points:-1, rival:0, tag:"pushy", expr:"trouble", reaction:"「そんな無理に喋らんでもええのに」" },
         { id:"C", label:"「早く止まないかな～」", points:-2, rival:0, tag:"passive", expr:"lonely", reaction:"「……せやな」" },
-        { id:"D", label:"「そうだね」", points:3, rival:0, expr:"soft", reaction:"隣を見て小さく笑う。" },
+        { id:"D", label:"「俺も」", points:3, rival:0, expr:"soft", reaction:"隣を見て小さく笑う。" },
       ],
     },
 
