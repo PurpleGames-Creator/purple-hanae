@@ -2247,6 +2247,8 @@ function armEndingTest() {
 // URL に ?debug=1 を付けた時だけ出る
 function initAudioDebug() {
   if (!/[?&]debug=1/.test(location.search)) return;
+  const bad = markerProblems();
+  if (bad.length) console.warn("目印が外れています:\n" + bad.join("\n"));
   const box = document.createElement("pre");
   box.id = "audio-debug";
   box.style.cssText =
@@ -2266,6 +2268,30 @@ function initAudioDebug() {
       `vol:${s.volume} gainNode:${s.gainNode} muted:${s.muted}\n` +
       `play():${s.playCalls} ok:${s.playOk} abort:${s.aborts} err:${s.lastError}`;
   }, 250);
+}
+
+/* ---------------- 目印の自己点検 ---------------- */
+
+// 場面の切り替え(sceneChanges.marker)と画用紙を開く合図(drawAfter)は、
+// 「その文で始まる枠がある」ことが前提。本文を短くすると枠が前の文と
+// まとまってしまい、目印が静かに外れる —— 実際 2026-09-06 にそれで
+// 紙が出なくなった。文を直すたびに人が気づける保証はないので、機械で見る
+function markerProblems() {
+  const bad = [];
+  const has = (text, marker) =>
+    splitBlocks(text).some((b) => b.text.indexOf(marker) === 0);
+  Object.entries(GAME_DATA.endings).forEach(([key, e]) => {
+    (e.sceneChanges || []).forEach((c) => {
+      if (!has(e.text, c.marker)) bad.push(`結末 ${key} の場面切り替え: ${c.marker}`);
+    });
+  });
+  const all = Object.assign({}, GAME_DATA.events, GAME_DATA.freePool);
+  Object.entries(all).forEach(([key, ev]) => {
+    if (ev.drawAfter && !has(ev.text, ev.drawAfter)) {
+      bad.push(`場面 ${key} の画用紙の合図: ${ev.drawAfter}`);
+    }
+  });
+  return bad;
 }
 
 /* ---------------- 結末の本文枠の高さ ---------------- */
