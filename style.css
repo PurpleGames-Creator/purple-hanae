@@ -1736,7 +1736,9 @@ body.is-demon .ember-layer {
 
 /* 悪魔は最終形態。小さいままだと見せ場にならないので、切り替わりと一緒に大きくする。
    起点を右上にすると、角を画面の外に出さずに下へ伸びる(中央や下起点だと角が切れる) */
-.sprite { transition: transform 0.42s ease-out; }
+/* 既定は 0.42秒(悪魔化の拡大はこの速さが合う)。紙が出る時の寄せだけ、
+   --sprite-move で長くする */
+.sprite { transition: transform var(--sprite-move, 0.42s) ease-out, height var(--sprite-move, 0.42s) ease-out; }
 @media (max-width: 999px) {
   body.is-demon .sprite {
     /* 右上へ寄せる(2026-09-05 本人指示)。右肩が画面の外に出るのは構わない
@@ -1910,11 +1912,13 @@ body.is-title .petals {
   /* 縁は紙の余白。純白にすると写真のマットに見えて、紙そのものに見えない */
   border: 6px solid #f2ece0;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 30px rgba(0, 0, 0, 0.5);
-  /* 出る時は、少し小さく・少し下から浮かび上がる(2026-09-05 本人指示) */
-  transform: rotate(-4deg) scale(0.94) translateY(10px);
+  /* 出る時は、少し小さく・少し下から浮かび上がる(2026-09-05 本人指示)。
+     0.7秒だと「出たか分からない」速さだったので 1.3秒に伸ばし、
+     浮き上がる距離も 10px → 18px にした(2026-09-06 本人指摘) */
+  transform: rotate(-4deg) scale(0.9) translateY(18px);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.16, 0.8, 0.3, 1);
+  transition: opacity 1.3s ease, transform 1.3s cubic-bezier(0.16, 0.8, 0.3, 1);
 }
 .cg.is-shown { opacity: 1; transform: rotate(-4deg) scale(1) translateY(0); }
 /* 広い画面の結末では、既定の位置(上から14%)だと「NEW」の帯と見出しに紙が
@@ -1935,10 +1939,20 @@ body.is-title .petals {
     bottom: auto;
     width: min(40vw, 240px);
   }
-  body.has-cg .sprite {
-    left: auto;
-    right: max(6px, 1.5vw);
-    margin: 0;
+  /* 紙が出る時の寄せはゆっくり。ただし悪魔化の拡大はここを使わない ——
+     あれは一瞬で大きくなる方が効くので、既定の 0.42 秒に任せる */
+  body.has-cg:not(.is-demon) .sprite { --sprite-move: 0.9s; }
+}
+/* left/right を切り替えると、途中の値が作れないので一瞬で飛ぶ。
+   位置は中央のままにして、変形で右へ寄せる —— これなら滑らかに動く。
+   50% は立ち絵自身の幅なので、縮みながら寄っても右端に合い続ける。
+   悪魔化の時は別の変形(拡大)が要るので、そちらには掛けない。
+
+   縦向き(高さ 561px 以上)だけに掛ける。横向きの端末では立ち絵が元から
+   右端に立っているので、同じ変形を足すと画面の外へ出る(実測 320x553 で -76px) */
+@media (max-width: 999px) and (min-height: 561px) {
+  body.has-cg:not(.is-demon) .sprite {
+    transform: translateX(calc(50vw - 50% - max(6px, 1.5vw)));
   }
 }
 /* 縮めるのは、右へ寄せただけでは足りない端末だけ。640px より広ければ
