@@ -299,7 +299,10 @@ const BGM_ENDING = {
   success: "end_true",
   successPerfect: "end_true",
   friend: "end_false",
-  soretigai: "end_false",
+  // すれ違いは「不成立」というより「そもそも始まらなかった」話なので、
+  // 不成立の曲(end_false)ではなく静かな曲を当てる(2026-09-06)。
+  // 友達・すれ違い・似顔絵の3つが同じ曲で、並べた時に似て感じていた
+  soretigai: "quiet1",
   nishino: "end_rival",
   // 書き忘れていると playBgm が何もせず、告白の曲が鳴り続けてしまう
   // (キーが無ければ即 return する作り)。2026-09-06 の点検で発覚
