@@ -131,7 +131,7 @@ const GAME_DATA = {
         { id:"A", label:"「これプロ並みじゃん!」", points:1, rival:0, expr:"smile", reaction:"「プロ見たことあんの?」" },
         { id:"B", label:"黙って手元を覗き込む", points:-1, rival:0, tag:"passive", expr:"trouble", reaction:"「見んといて。まだ途中や」" },
         { id:"C", label:"「こういうの、美術部に頼めばいいのに」", points:-2, rival:0, tag:"pushy", expr:"angry", reaction:"「うちがやりたいからやってんの」" },
-        { id:"D", label:"「え、めっちゃ上手い!これ欲しい」", points:2, rival:0, expr:"shy", reaction:"「は? ……欲しいて、こんな下絵を」\n\nそう言いながら、ハナエは段ボールを隠さなかった。" },
+        { id:"D", label:"「え、めっちゃ上手い!これ欲しい」", points:2, rival:0, expr:"shy", reaction:"「え? ……欲しいて、こんな絵を?」\n\nそう言いながら、ハナエは段ボールを隠さなかった。" },
       ],
     },
 
