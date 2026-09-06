@@ -849,13 +849,6 @@ button.gallery-cell {
 }
 button.gallery-cell:hover { background: rgba(255, 143, 177, 0.24); }
 button.gallery-cell:active { transform: scale(0.97); }
-.gallery-hint {
-  text-align: center;
-  color: var(--text-dim);
-  font-size: 0.66rem;
-  letter-spacing: 0.02em;
-  margin: 0 0 6px;
-}
 /* 図鑑のハート。結末の後に出すものと同じ形にして、同じ物差しだと分かるようにする。
    本文より小さく、点いていないぶんは沈める */
 .gallery-hearts {

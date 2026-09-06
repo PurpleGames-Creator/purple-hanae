@@ -151,13 +151,6 @@ function renderEndingGallery() {
   head.textContent = `エンディング ${seen.length} / ${order.length}`;
   box.appendChild(head);
 
-  if (seen.length) {
-    const hint = document.createElement("p");
-    hint.className = "gallery-hint";
-    hint.textContent = "タップすると、その結末をもう一度読めます";
-    box.appendChild(hint);
-  }
-
   const grid = document.createElement("div");
   grid.className = "gallery-grid";
   order.forEach((k) => {
