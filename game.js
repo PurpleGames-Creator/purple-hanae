@@ -2286,7 +2286,8 @@ function initAudioDebug() {
 // 貼り付いているので、増えたぶん本文の枠が上へ押し上げられて「パッと飛ぶ」。
 // 増やす前と後の位置を測り、いったん元の位置へ戻してから 0 へ動かす。
 // レイアウトの計算は一度きりで、目に見えるのは滑らかな移動だけになる
-const ENDING_SLIDE_MS = 460;
+// 速すぎると「飛んだ」に見える。ゆっくり収まる方が締めに合う(2026-09-06 本人指示で 460 → 800)
+const ENDING_SLIDE_MS = 800;
 
 function slideEndingBox(apply) {
   const box = document.querySelector("#screen-ending .textbox");

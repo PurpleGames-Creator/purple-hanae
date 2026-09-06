@@ -703,7 +703,9 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
    こちらは浮かび上がる。両方を同時に動かすと「増えた」ではなく
    「画面が組み変わった」ように見える(2026-09-06 本人指摘) */
 .ending-appear {
-  animation: endingAppear 0.46s cubic-bezier(0.22, 0.8, 0.28, 1) both;
+  /* 枠の移動(game.js の ENDING_SLIDE_MS)と同じ長さにする。
+     片方だけ速いと、増えた要素が先に決まって枠だけ遅れて見える */
+  animation: endingAppear 0.8s cubic-bezier(0.22, 0.8, 0.28, 1) both;
 }
 @keyframes endingAppear {
   from { opacity: 0; transform: translateY(8px); }
