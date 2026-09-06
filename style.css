@@ -767,6 +767,10 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
   gap: 4px;
 }
 .gallery-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   padding: 5px 10px;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.14);
@@ -791,6 +795,28 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
   background: var(--gold-fill);
   color: var(--gold);
 }
+/* 図鑑のハート。結末の後に出すものと同じ形にして、同じ物差しだと分かるようにする。
+   本文より小さく、点いていないぶんは沈める */
+.gallery-hearts {
+  flex: none;
+  font-size: 0.62rem;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+.gh {
+  opacity: 0.16;
+  filter: grayscale(1);
+}
+.gh.is-on {
+  opacity: 1;
+  filter: none;
+}
+.gallery-name {
+  flex: 1 1 auto;
+  text-align: right;
+}
+.gallery-cell .gallery-hearts { text-align: left; }
+
 .gallery-done {
   text-align: center;
   color: var(--gold);
@@ -1806,6 +1832,15 @@ body.is-title .petals {
    (iPhone SE の Safari 553px / 360x640 級の Chrome 570px)。2026-09-05 本人指摘 */
 @media (max-width: 999px) and (max-height: 620px) {
   .gallery-grid { grid-template-columns: repeat(2, 1fr); }
+  /* 2列だと1マスが半分の幅しかなく、名前とハートを横に並べると折り返して
+     かえって高くなる。ここだけ名前の下にハートを敷く */
+  .gallery-cell {
+    flex-direction: column;
+    gap: 1px;
+    padding: 4px 6px;
+  }
+  .gallery-name { text-align: center; }
+  .gallery-hearts { font-size: 0.56rem; }
   #app { padding-top: 8px; }
   .game-title { margin: 6px 0 10px; }
   .game-logo { width: min(72%, 360px); }

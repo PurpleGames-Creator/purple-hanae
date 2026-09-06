@@ -143,7 +143,20 @@ function renderEndingGallery() {
     if (got) cell.classList.add("is-got");
     if (k === "successPerfect") cell.classList.add("is-special");
     if (k === "nigaoe") cell.classList.add("is-bad");
-    cell.textContent = got ? GAME_DATA.endingLabels[k] : "???";
+    const name = document.createElement("span");
+    name.className = "gallery-name";
+    name.textContent = got ? GAME_DATA.endingLabels[k] : "???";
+    cell.appendChild(name);
+    // まだ見ていない結末もハートは出す。中身は伏せたまま、
+    // 「上から多い順の梯子」であることと、残りがどこかを見せる
+    const hearts = document.createElement("span");
+    hearts.className = "gallery-hearts";
+    buildHearts(hearts, GAME_DATA.endingHearts[k] || 0, "gh", false);
+    cell.appendChild(hearts);
+    cell.setAttribute(
+      "aria-label",
+      `${got ? GAME_DATA.endingLabels[k] : "未到達"} ハート${GAME_DATA.endingHearts[k] || 0}`
+    );
     grid.appendChild(cell);
   });
   box.appendChild(grid);
@@ -2177,7 +2190,7 @@ function resolveEnding() {
       restartBtn.style.display = "block";
       titleEl.textContent = titleText;
       badge.style.display = isNew ? "block" : "none";
-      renderResultHearts();
+      renderResultHearts(endingKey);
       if (endingKey === "nigaoe") maybeShowAdultPoke();
       else { el("adult-poke").hidden = true; document.body.classList.remove("is-demon"); }
       el("ending-foot").style.display = "block";
@@ -2342,6 +2355,19 @@ function markerProblems() {
       bad.push(`場面 ${key} の画用紙の合図: ${ev.drawAfter}`);
     }
   });
+  // ハートは結末1つに1段。結末を足し引きした時にここがズレると、
+  // 図鑑の梯子と結末の後のハートが食い違う
+  const order = GAME_DATA.endingOrder;
+  const want = [];
+  for (let i = 1; i <= order.length; i++) want.push(i);
+  const got = order.map((k) => GAME_DATA.endingHearts[k]);
+  order.forEach((k, i) => {
+    if (!GAME_DATA.endingHearts[k]) bad.push(`結末 ${k} のハートが無い`);
+    if (got[i] !== order.length - i) bad.push(`結末 ${k} のハートが並びと合わない(${got[i]})`);
+  });
+  if (want.join() !== got.slice().sort((a, b) => a - b).join()) {
+    bad.push(`ハートの段が 1〜${order.length} で揃っていない: ${got.join()}`);
+  }
   return bad;
 }
 
@@ -2369,32 +2395,38 @@ function fitEndingTextHeight(text) {
 
 /* ---------------- 結末の「今回の距離」 ---------------- */
 
-// 点数を7段階に丸める。数値そのものは出さない(出すと点数の逆算ゲームになる)
-function heartLevel(score) {
-  const cuts = GAME_DATA.resultHearts || [];
-  let lv = 1;
-  cuts.forEach((c) => { if (score >= c) lv += 1; });
-  return Math.min(lv, cuts.length + 1);
+// 結末ごとの位置。段の数は結末の数と同じで、図鑑の並びと一致する
+function heartLevel(key) {
+  return GAME_DATA.endingHearts[key] || 1;
 }
 
-function renderResultHearts() {
+function heartTotal() {
+  return GAME_DATA.endingOrder.length;
+}
+
+// 図鑑と結末の後、両方で使う。全段ぶん並べて、届いたぶんだけ点ける
+function buildHearts(box, lv, cls, delay) {
+  const total = heartTotal();
+  for (let i = 0; i < total; i++) {
+    const h = document.createElement("span");
+    h.className = cls + (i < lv ? " is-on" : "");
+    if (delay) h.style.animationDelay = i * 0.07 + "s";
+    h.textContent = "\u{1F497}";
+    box.appendChild(h);
+  }
+}
+
+function renderResultHearts(endingKey) {
   const box = el("ending-hearts");
   if (!box) return;
-  const total = (GAME_DATA.resultHearts || []).length + 1;
-  const lv = heartLevel(state.score);
+  const lv = heartLevel(endingKey);
   box.innerHTML = "";
   const label = document.createElement("span");
   label.className = "rh-label";
   label.textContent = "今回の距離";
   box.appendChild(label);
-  for (let i = 0; i < total; i++) {
-    const h = document.createElement("span");
-    h.className = "rh" + (i < lv ? " is-on" : "");
-    h.style.animationDelay = i * 0.07 + "s";
-    h.textContent = "\u{1F497}";
-    box.appendChild(h);
-  }
-  box.setAttribute("aria-label", `今回の距離 ${total}段階中 ${lv}`);
+  buildHearts(box, lv, "rh", true);
+  box.setAttribute("aria-label", `今回の距離 ${heartTotal()}段階中 ${lv}`);
 }
 
 /* ---------------- 起動 ---------------- */
