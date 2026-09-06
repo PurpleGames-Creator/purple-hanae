@@ -2385,18 +2385,28 @@ function jumpToEnding(key) {
 // 選択肢の見え方や光り方を実機で確かめたい時に、そこまで遊ばずに飛ぶ。
 // 結末の試用(?ending=)と同じく、セーブも図鑑も点数も触らない。
 // 選び終えたらタイトルへ戻る —— 続きの場面へは進まない(1場面だけの確認用)
+// 告白の画面もここから試せるようにする。confess = 通常、
+// confess_senshu = 噂を聞いて「先手を打つ」を選んだ時の版
+const CONFESS_KEYS = { confess: false, confess_senshu: true };
+
 function sceneTestKey() {
   const m = /[?&]scene=([A-Za-z0-9_]+)/.exec(location.search);
   const k = m && m[1];
   if (!k) return null;
+  if (k in CONFESS_KEYS) return k;
   return GAME_DATA.events[k] || GAME_DATA.freePool[k] ? k : null;
 }
 
 function jumpToScene(key) {
-  const data = GAME_DATA.events[key] || GAME_DATA.freePool[key];
   state = freshState();
   state.name = "テスト";
   endingTestRunning = true;
+  if (key in CONFESS_KEYS) {
+    state.senshu = CONFESS_KEYS[key];
+    startConfession();
+    return;
+  }
+  const data = GAME_DATA.events[key] || GAME_DATA.freePool[key];
   const back = () => {
     fadeTo(true, 400).then(() => {
       state = freshState();
