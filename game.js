@@ -330,12 +330,16 @@ const ADULT_STAGES = [null, "angry1", "angry2", "angry3"];
 // 段ごとの彼女の一言。押した向き(いじる/謝る)ではなく「いまの段」に
 // 紐づけてあるので、上がっても下がっても噛み合う
 const ADULT_LINES = [
-  "「……ま、ええわ。座り」",
+  "「…ま、ええわ。」",
   "「なんや、反省してへんやろ。」",
   "「24年、根に持っとったんやぞ!」",
   "「もうええ、串刺しにしたる」",
 ];
+// 素の顔でさらに謝った時の一言。段は動かず、セリフだけ変わる
+const ADULT_SORRY_LINE = "「一旦みたらし買うてこい」";
 let adultAnger = 0;
+// 素の段で「謝る」を押したか。段が動いたら戻す
+let adultSorry = false;
 
 // 最終形態の印。立ち絵を大きくするのと、火の粉を出すのに使う
 function markDemon() {
@@ -352,14 +356,25 @@ function markDemon() {
 function renderAdultPoke() {
   const box = el("adult-poke");
   if (!box) return;
-  el("poke-hint-text").textContent = ADULT_LINES[adultAnger];
-  el("btn-apologize").disabled = adultAnger === 0;
+  // 素の段で謝った時だけ、専用の一言に差し替える
+  el("poke-hint-text").textContent =
+    adultSorry && adultAnger === 0 ? ADULT_SORRY_LINE : ADULT_LINES[adultAnger];
+  // 素の顔でも「謝る」は押せる。押しても顔は変わらず、返事だけ返ってくる
+  el("btn-apologize").disabled = false;
   el("btn-tease").disabled = adultAnger === ADULT_STAGES.length - 1;
 }
 
 function setAdultAnger(next) {
   const n = Math.max(0, Math.min(ADULT_STAGES.length - 1, next));
-  if (n === adultAnger) return;
+  if (n === adultAnger) {
+    // 素でこれ以上は下がらない。顔はそのままで、返事だけ変える
+    if (n === 0 && next < 0 && !adultSorry) {
+      adultSorry = true;
+      renderAdultPoke();
+    }
+    return;
+  }
+  adultSorry = false;
   adultAnger = n;
   markDemon();
   // 本編の表情差し替えと同じ道を通す(180ms のクロスフェード)
@@ -373,6 +388,7 @@ function maybeShowAdultPoke() {
   const box = el("adult-poke");
   if (!box) return;
   adultAnger = 0;
+  adultSorry = false;
   markDemon();
   box.hidden = true;
   const probe = new Image();
@@ -2123,14 +2139,19 @@ function resolveEnding() {
   applyScene(GAME_DATA.endingScenes[endingKey]);
   AUDIO.playBgm(BGM_ENDING[endingKey], 700);
   if (isNew) setTimeout(() => AUDIO.se("ending"), 250);
+  // 見出しと NEW の帯は、読み終わってから出す(2026-09-06 本人指示)。
+  // 読んでいる最中に結末の名前が出ていると、これから読む話の答えが先に見える。
+  // 出すのは「もう一度プレイする」と同じ瞬間
   const badge = el("ending-new");
-  badge.style.display = isNew ? "block" : "none";
+  badge.style.display = "none";
   badge.textContent = endingKey === "successPerfect"
     ? "NEW — 最も到達が難しいエンディングです"
     : "NEW — 初めて見るエンディングです";
+  const titleEl = el("ending-title");
+  titleEl.textContent = "";
   // 見出しは図鑑のラベルと同じ文字列にする(2026-09-05 本人指示)。
   // 別々に持つと片方だけ直した時に食い違うので、endingLabels を唯一の正とする
-  el("ending-title").textContent = GAME_DATA.endingLabels[endingKey] || ending.title;
+  const titleText = GAME_DATA.endingLabels[endingKey] || ending.title;
   // エンディングは本編で一番長い(パーフェクトは21ブロック)。ここもページ送りにする
   const restartBtn = el("btn-restart");
   restartBtn.style.display = "none";
@@ -2140,6 +2161,8 @@ function resolveEnding() {
   const changes = ending.sceneChanges || [];
   playBlocks(el("ending-text"), ending.text, "end:" + endingKey, () => {
     restartBtn.style.display = "block";
+    titleEl.textContent = titleText;
+    badge.style.display = isNew ? "block" : "none";
     renderResultHearts();
     if (endingKey === "nigaoe") maybeShowAdultPoke();
     else { el("adult-poke").hidden = true; document.body.classList.remove("is-demon"); }
