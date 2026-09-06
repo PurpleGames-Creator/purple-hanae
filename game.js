@@ -499,6 +499,27 @@ const SPRITE_FADE_MS = 180;
 // 180ms だと「溶けた」ではなく「切り替わった」に見えるので、こちらは長く取る
 const SPRITE_FADE_MS_ADULT = 360;
 let spriteFadeToken = 0;
+// いま溶かしている途中の行き先。表(#sprite)の src はまだ古い絵のままなので、
+// 「次に何を出すつもりか」はこちらで持つ(2026-09-07)
+let pendingFadeSrc = null;
+
+// 溶かしかけを、その行き先で即座に確定させる。
+// 途中のまま次の切り替えを重ねると、表が薄いまま残ったり、
+// 段と絵がずれたままになる(連打すると起きる)
+function settleSprite() {
+  const img = el("sprite");
+  const alt = el("sprite-b");
+  if (pendingFadeSrc) {
+    img.style.transition = "none";
+    img.style.opacity = "";
+    img.src = pendingFadeSrc;
+    void img.offsetWidth;
+    img.style.transition = "";
+    pendingFadeSrc = null;
+  }
+  alt.classList.remove("is-shown");
+  alt.style.display = "none";
+}
 
 function setSprite(outfit, expr) {
   const img = el("sprite");
@@ -507,6 +528,7 @@ function setSprite(outfit, expr) {
   if (outfit && !SPRITE_EXPRESSIONS[outfit]) outfit = null;
   if (!outfit) {
     spriteFadeToken++;
+    pendingFadeSrc = null;
     img.style.display = "none";
     alt.style.display = "none";
     alt.classList.remove("is-shown");
@@ -523,13 +545,16 @@ function setSprite(outfit, expr) {
     ? `${ASSET_DIR}hanae_${outfit}_${expr}.webp${ASSET_V}`
     : base;
   const wanted = missingSprites.has(variant) ? base : variant;
-  const current = img.getAttribute("src");
+  // 溶かしている最中は表の src がまだ古い。行き先の方を「今」として扱わないと、
+  // 連打した時に必要な切り替えが「同じ絵だから」と捨てられてしまう
+  const current = pendingFadeSrc || img.getAttribute("src");
   img.style.display = "block";
 
   // 初回、または服が変わる時はクロスフェードしない。
   // 夏服と冬服はシルエットが違うので、溶かすと二重写しに見える
   if (!current || outfit !== currentOutfit) {
     spriteFadeToken++;
+    pendingFadeSrc = null;
     // 溶かしている途中で服ごと変わった時に、薄いまま固まらないようにする。
     // 戻したあとは transition を空に返す —— "none" を残すと、CSS 側の
     // transition(悪魔化した時の拡大)まで殺してしまう
@@ -564,11 +589,15 @@ async function crossfadeSprite(wanted, base, ms) {
   const token = ++spriteFadeToken;
   const fade = ms || SPRITE_FADE_MS;
 
+  // 前の切り替えが途中なら、その行き先で確定させてから始める
+  settleSprite();
+
   alt.style.display = "block";
   alt.classList.remove("is-shown");
   // 裏の溶け方は CSS 側が既定 0.18秒。長くしたい時はここで上書きする
   alt.style.transition = `opacity ${fade}ms ease-out`;
   alt.src = wanted;
+  pendingFadeSrc = wanted;
 
   try {
     await alt.decode();
@@ -576,6 +605,7 @@ async function crossfadeSprite(wanted, base, ms) {
     // decode() は「読み込み失敗」でも「差し替えが重なって打ち切られた」でも失敗する。
     // 後者をファイル無しと誤判定すると、以降その表情が二度と使われなくなる
     if (token !== spriteFadeToken) return;
+    pendingFadeSrc = null;
     if (alt.naturalWidth === 0) missingSprites.add(wanted);
     if (wanted !== base && img.getAttribute("src") !== base) {
       crossfadeSprite(base, base, fade);
@@ -602,6 +632,7 @@ async function crossfadeSprite(wanted, base, ms) {
     img.style.transition = "none";
     img.style.opacity = "";
     img.src = alt.getAttribute("src");
+    pendingFadeSrc = null;
     void img.offsetWidth;
     img.style.transition = "";
     alt.classList.remove("is-shown");
