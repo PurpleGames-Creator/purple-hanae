@@ -172,9 +172,10 @@ function renderEndingGallery() {
       };
     }
     cell.className = "gallery-cell";
+    // 達成したマスの色は全部同じにする(2026-09-06 本人指示)。
+    // 以前はパーフェクトを金、似顔絵を灰にしていたが、
+    // 並びとハートの数で位置は分かるので、色まで変えると賑やかになりすぎる
     if (got) cell.classList.add("is-got");
-    if (k === "successPerfect") cell.classList.add("is-special");
-    if (k === "nigaoe") cell.classList.add("is-bad");
     const name = document.createElement("span");
     name.className = "gallery-name";
     name.textContent = got ? GAME_DATA.endingLabels[k] : "???";

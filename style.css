@@ -809,16 +809,6 @@ button.gallery-cell:active { transform: scale(0.97); }
   letter-spacing: 0.02em;
   margin: 0 0 6px;
 }
-.gallery-cell.is-bad.is-got {
-  color: var(--text-dim);
-  border-color: rgba(255, 255, 255, 0.28);
-  background: rgba(60, 50, 70, 0.5);
-}
-.gallery-cell.is-special.is-got {
-  border-color: var(--gold-line);
-  background: var(--gold-fill);
-  color: var(--gold);
-}
 /* 図鑑のハート。結末の後に出すものと同じ形にして、同じ物差しだと分かるようにする。
    本文より小さく、点いていないぶんは沈める */
 .gallery-hearts {
