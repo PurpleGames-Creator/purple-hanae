@@ -1947,6 +1947,15 @@ body.is-title .petals {
   /* 紙が出る時の寄せはゆっくり。ただし悪魔化の拡大はここを使わない ——
      あれは一瞬で大きくなる方が効くので、既定の 0.42 秒に任せる */
   body.has-cg:not(.is-demon) .sprite { --sprite-move: 0.9s; }
+  /* 悪魔化の時だけは、寄せ方を以前の書き方(位置指定)に戻す。
+     変形で寄せると拡大の土台が変わり、見た目の大きさと位置がずれる
+     (実測 390x713 で 337x596 → 429x759 になっていた。2026-09-06 本人指摘)。
+     ここは一瞬で切り替わる見せ場なので、滑らかさより元の絵を優先する */
+  body.has-cg.is-demon .sprite {
+    left: auto;
+    right: max(6px, 1.5vw);
+    margin: 0;
+  }
 }
 /* left/right を切り替えると、途中の値が作れないので一瞬で飛ぶ。
    位置は中央のままにして、変形で右へ寄せる —— これなら滑らかに動く。
@@ -1968,6 +1977,13 @@ body.is-title .petals {
 @media (max-width: 640px) and (min-height: 561px) {
   body.has-cg:not(.is-demon) .sprite {
     transform: translateX(calc(50vw - 50% - max(6px, 1.5vw))) scale(0.786);
+  }
+}
+/* 悪魔化の時の高さも以前のまま(縮めた土台の上で 1.9 倍にする) */
+@media (max-width: 640px) {
+  body.has-cg.is-demon .sprite {
+    height: min(44vh, 520px);
+    height: min(44dvh, 520px);
   }
 }
 /* 横向きの端末は立ち絵が元から右端。寄せる必要が無いので、縮めるだけ。
