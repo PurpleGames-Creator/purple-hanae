@@ -3,6 +3,9 @@
    ========================================================================== */
 
 const SAVE_KEY = "sentimentalHanaeSave";
+// 最後に遊んだ名前。セーブは結末に着いた時点で消えるが、
+// 図鑑から結末を読み返す時に {name} を埋める必要があるので別に取っておく
+const NAME_KEY = "sentimentalHanaeName";
 const ASSET_DIR = "assets/";
 // 画像にもキャッシュバスターを付ける。付けないと、後から表情を差し替えたり
 // 追加したりした時に、古い画像や過去の404がブラウザに残り続ける。
@@ -72,6 +75,20 @@ function saveGame() {
   }
 }
 
+function rememberName(name) {
+  try { localStorage.setItem(NAME_KEY, name); } catch (e) { /* 保存できなくても続行 */ }
+}
+
+// 図鑑から読み返す時の名前。最後に遊んだ名前 → 入力欄 → それも無ければ「きみ」
+function lastPlayerName() {
+  let saved = "";
+  try { saved = localStorage.getItem(NAME_KEY) || ""; } catch (e) {}
+  if (saved) return saved;
+  const input = el("player-name-input");
+  const typed = input ? input.value.trim() : "";
+  return typed || "きみ";
+}
+
 function loadGame() {
   let raw = null;
   try {
@@ -134,11 +151,26 @@ function renderEndingGallery() {
   head.textContent = `エンディング ${seen.length} / ${order.length}`;
   box.appendChild(head);
 
+  if (seen.length) {
+    const hint = document.createElement("p");
+    hint.className = "gallery-hint";
+    hint.textContent = "タップすると、その結末をもう一度読めます";
+    box.appendChild(hint);
+  }
+
   const grid = document.createElement("div");
   grid.className = "gallery-grid";
   order.forEach((k) => {
-    const cell = document.createElement("span");
     const got = seen.includes(k);
+    // 到達済みだけ押せる。まだのマスは押しても何も起きないので span のまま
+    const cell = document.createElement(got ? "button" : "span");
+    if (got) {
+      cell.type = "button";
+      cell.onclick = () => {
+        AUDIO.se("choice");
+        askConfirm(GAME_DATA.endingLabels[k], "この結末をもう一度見ますか？", () => replayEnding(k));
+      };
+    }
     cell.className = "gallery-cell";
     if (got) cell.classList.add("is-got");
     if (k === "successPerfect") cell.classList.add("is-special");
@@ -167,6 +199,43 @@ function renderEndingGallery() {
     done.textContent = "全エンディング達成！";
     box.appendChild(done);
   }
+}
+
+/* ---------------- 確認のポップアップ ---------------- */
+
+// ブラウザの confirm() は使わない —— 出している間ページ全体が止まり、
+// 音の処理も止まる。見た目もゲームから浮く
+function askConfirm(title, message, onYes) {
+  const box = el("confirm-overlay");
+  const text = el("confirm-text");
+  const yes = el("btn-confirm-yes");
+  const no = el("btn-confirm-no");
+  text.innerHTML = "";
+  if (title) {
+    const t = document.createElement("span");
+    t.className = "confirm-name";
+    t.textContent = "「" + title + "」";
+    text.appendChild(t);
+  }
+  text.appendChild(document.createTextNode(message));
+
+  const close = () => {
+    box.hidden = true;
+    yes.onclick = null;
+    no.onclick = null;
+    box.onclick = null;
+    document.removeEventListener("keydown", onKey);
+  };
+  const onKey = (e) => {
+    if (e.key === "Escape") { AUDIO.se("choice"); close(); }
+  };
+  yes.onclick = () => { AUDIO.se("next"); close(); onYes(); };
+  no.onclick = () => { AUDIO.se("choice"); close(); };
+  // 外側を押しても閉じる(中身の上は拾わない)
+  box.onclick = (e) => { if (e.target === box) { AUDIO.se("choice"); close(); } };
+  document.addEventListener("keydown", onKey);
+  box.hidden = false;
+  yes.focus();
 }
 
 /* ---------------- 場面ごとの BGM ---------------- */
@@ -1096,6 +1165,7 @@ function initTitleScreen() {
     clearDrawing();
     state = freshState();
     state.name = name;
+    rememberName(name);
     saveGame();
     fadeTo(true, 450).then(() => {
       showPrologue();
@@ -2158,7 +2228,24 @@ function resolveEnding() {
   const testing = endingTestRunning;
   if (!testing) saveGame();
   const isNew = testing ? true : recordEnding(endingKey);
+  showEnding(endingKey, isNew, false);
+}
 
+/* ---------------- 図鑑から結末を読み返す ---------------- */
+
+// 遊び直さずに、達成済みの結末だけをもう一度読む。
+// セーブも図鑑も点数も触らない —— 読むだけで何も変わらないのが約束
+function replayEnding(key) {
+  state = freshState();
+  state.name = lastPlayerName();
+  fadeTo(true, 400).then(() => {
+    showEnding(key, false, true);
+    return fadeTo(false, 500);
+  });
+}
+
+// 結末の画面を組む。判定(resolveEnding)と読み返し(replayEnding)の両方から呼ぶ
+function showEnding(endingKey, isNew, replaying) {
   const ending = GAME_DATA.endings[endingKey];
   showScreen("screen-ending");
   applyScene(GAME_DATA.endingScenes[endingKey]);
@@ -2202,7 +2289,10 @@ function resolveEnding() {
     });
   });
   window.scrollTo(0, 0);
-  el("btn-restart").onclick = () => {
+  // 読み返している時は遊び始めない。読み終わったら図鑑へ戻す
+  // 「図鑑」は開発側の呼び方で、画面には出てこない言葉。戻る先の名前で言う
+  restartBtn.textContent = replaying ? "タイトルにもどる" : "もう一度プレイする";
+  restartBtn.onclick = () => {
     AUDIO.se("next");
     fadeTo(true, 500).then(() => {
       state = freshState();

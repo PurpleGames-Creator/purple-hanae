@@ -790,6 +790,25 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
   border-color: rgba(255, 143, 177, 0.55);
   background: rgba(255, 143, 177, 0.14);
 }
+/* 到達済みのマスは押すと読み返せる。ボタンにしても見た目は変えず、
+   押した時の沈み込みだけで「押せる」ことを伝える */
+button.gallery-cell {
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: transform 0.12s ease, background-color 0.12s ease;
+}
+button.gallery-cell:hover { background: rgba(255, 143, 177, 0.24); }
+button.gallery-cell:active { transform: scale(0.97); }
+.gallery-hint {
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.66rem;
+  letter-spacing: 0.02em;
+  margin: 0 0 6px;
+}
 .gallery-cell.is-bad.is-got {
   color: var(--text-dim);
   border-color: rgba(255, 255, 255, 0.28);
@@ -828,6 +847,69 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
   font-size: 0.8rem;
   margin: 12px 0 0;
 }
+/* 図鑑から結末を読み返す時の確認。画用紙と同じ作りの覆い */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(10, 6, 16, 0.86);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+.confirm-overlay[hidden] { display: none; }
+.confirm-box {
+  width: min(320px, 86vw);
+  padding: 18px 16px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 143, 177, 0.4);
+  background: rgba(24, 16, 32, 0.96);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+  text-align: center;
+  animation: endingAppear 0.24s ease-out both;
+}
+.confirm-text {
+  margin: 0 0 14px;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--text);
+}
+.confirm-name {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--accent);
+  font-weight: bold;
+}
+.confirm-btns {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+.confirm-btn {
+  min-width: 96px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: none;
+  font-size: 0.88rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.confirm-btn:active { transform: scale(0.97); }
+.confirm-btn.is-yes {
+  background: linear-gradient(135deg, var(--accent-strong), var(--purple));
+  color: white;
+  box-shadow: 0 6px 16px rgba(255, 92, 138, 0.32);
+}
+.confirm-btn.is-no {
+  background: rgba(10, 6, 16, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: var(--text-dim);
+}
+
 /* キーボード操作時のフォーカス表示。マウス操作では出さない */
 .choice-btn:focus-visible,
 .free-card:focus-visible,

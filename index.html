@@ -15,8 +15,8 @@
 <meta property="og:image" content="https://purplegames-creator.github.io/purple-hanae/assets/ogp.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💗</text></svg>">
-<link rel="preload" as="image" href="assets/logo_title.webp?v=126">
-<link rel="stylesheet" href="style.css?v=126">
+<link rel="preload" as="image" href="assets/logo_title.webp?v=127">
+<link rel="stylesheet" href="style.css?v=127">
 </head>
 <body>
 
@@ -64,7 +64,7 @@
 
   <section id="screen-title" class="screen active">
     <h1 class="game-title">
-      <img class="game-logo" src="assets/logo_title.webp?v=126" width="960" height="463"
+      <img class="game-logo" src="assets/logo_title.webp?v=127" width="960" height="463"
            alt="センチメンタル・ハナエ" fetchpriority="high" decoding="async">
     </h1>
     <p id="tap-hint" class="tap-hint">画面をタップ</p>
@@ -195,8 +195,21 @@
   </div>
 </div>
 
-<script src="game-data.js?v=126"></script>
-<script src="audio.js?v=126"></script>
-<script src="game.js?v=126"></script>
+<!-- 図鑑から結末を読み返す時の確認。ブラウザの confirm() は使わない ——
+     出している間ページ全体が止まるうえ、見た目もゲームから浮く -->
+<div id="confirm-overlay" class="confirm-overlay" role="dialog" aria-modal="true"
+     aria-labelledby="confirm-text" hidden>
+  <div class="confirm-box">
+    <p id="confirm-text" class="confirm-text"></p>
+    <div class="confirm-btns">
+      <button id="btn-confirm-yes" class="confirm-btn is-yes" type="button">はい</button>
+      <button id="btn-confirm-no" class="confirm-btn is-no" type="button">いいえ</button>
+    </div>
+  </div>
+</div>
+
+<script src="game-data.js?v=127"></script>
+<script src="audio.js?v=127"></script>
+<script src="game.js?v=127"></script>
 </body>
 </html>
