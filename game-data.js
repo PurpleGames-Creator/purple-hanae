@@ -79,6 +79,10 @@ const GAME_DATA = {
         { id:"A", label:"「わかった」", points:2, rival:0, expr:"smile", reaction:"「おおきに、助かるわ」" },
         { id:"B", label:"「えー」", points:-2, rival:0, expr:"normal", reaction:"ハナエは一瞬こちらを見て、何も言わずに机を運び続けた。" },
         { id:"C", label:"周りの様子を見て動く", points:0, rival:0, expr:"normal", reaction:"作業は淡々と進んでいく。" },
+        // 手は動かすが態度が雑、という段が無かった(2026-09-06 本人指示で追加)。
+        // 1場面目で「何をしたか」ではなく「どう言ったか」で点が動くと分かる肢。
+        // 序盤の pushy は3回で最悪ルート(E8B)に入るので、その入口もここから開く
+        { id:"D", label:"「はいはい、了解」", points:-1, rival:0, tag:"pushy", expr:"normal", reaction:"「その『はいはい』、なんか腹立つわ」" },
       ],
     },
 
