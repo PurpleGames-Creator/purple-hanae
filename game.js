@@ -410,23 +410,21 @@ const SPRITE_EXPRESSIONS = {
 
 /* ---------------- 41歳の結末のおまけ(謝る / いじる) ---------------- */
 
-// 段は0(素)から3(最終形態)まで。null は差分ではなくベース画像
-const ADULT_STAGES = [null, "angry1", "angry2", "angry3"];
-// 素の段でさらに謝った時の顔。段は動かさず、顔と一言だけ変える(2026-09-06 追加)
-const ADULT_SORRY_EXPR = "sorry";
+// 5段の階段。謝るで1つ下がり、いじるで1つ上がる(2026-09-06 本人指示)。
+// 0 が笑顔、1 が素(null は差分ではなくベース画像)、4 が最終形態
+const ADULT_STAGES = ["sorry", null, "angry1", "angry2", "angry3"];
 // 段ごとの彼女の一言。押した向き(いじる/謝る)ではなく「いまの段」に
 // 紐づけてあるので、上がっても下がっても噛み合う
 const ADULT_LINES = [
+  "「一旦みたらし買うてこい」",
   "「…ま、ええわ。」",
   "「なんや、反省してへんやろ。」",
   "「24年、根に持っとったんやぞ!」",
   "「もうええ、串刺しにしたる」",
 ];
-// 素の顔でさらに謝った時の一言。段は動かず、セリフだけ変わる
-const ADULT_SORRY_LINE = "「一旦みたらし買うてこい」";
-let adultAnger = 0;
-// 素の段で「謝る」を押したか。段が動いたら戻す
-let adultSorry = false;
+// 始めの段。笑顔(0)ではなく素(1)から始まる
+const ADULT_START = 1;
+let adultAnger = ADULT_START;
 
 // 最終形態の印。立ち絵を大きくするのと、火の粉を出すのに使う
 function markDemon() {
@@ -443,27 +441,15 @@ function markDemon() {
 function renderAdultPoke() {
   const box = el("adult-poke");
   if (!box) return;
-  // 素の段で謝った時だけ、専用の一言に差し替える
-  el("poke-hint-text").textContent =
-    adultSorry && adultAnger === 0 ? ADULT_SORRY_LINE : ADULT_LINES[adultAnger];
-  // 素の顔でも「謝る」は押せる。押しても顔は変わらず、返事だけ返ってくる
-  el("btn-apologize").disabled = false;
+  el("poke-hint-text").textContent = ADULT_LINES[adultAnger];
+  // 端では押せなくする。笑顔より下と、最終形態より上は無い
+  el("btn-apologize").disabled = adultAnger === 0;
   el("btn-tease").disabled = adultAnger === ADULT_STAGES.length - 1;
 }
 
 function setAdultAnger(next) {
   const n = Math.max(0, Math.min(ADULT_STAGES.length - 1, next));
-  if (n === adultAnger) {
-    // 素でこれ以上は下がらない。顔はそのままで、返事だけ変える
-    if (n === 0 && next < 0 && !adultSorry) {
-      adultSorry = true;
-      // 顔も変える。ここだけ段に紐づかない5枚目
-      setSprite("adult", ADULT_SORRY_EXPR);
-      renderAdultPoke();
-    }
-    return;
-  }
-  adultSorry = false;
+  if (n === adultAnger) return;
   adultAnger = n;
   markDemon();
   // 本編の表情差し替えと同じ道を通す(180ms のクロスフェード)
@@ -479,16 +465,14 @@ function setAdultAnger(next) {
 function resetAdultPoke() {
   const box = el("adult-poke");
   if (box) box.hidden = true;
-  adultAnger = 0;
-  adultSorry = false;
+  adultAnger = ADULT_START;
   document.body.classList.remove("is-demon");
 }
 
 function maybeShowAdultPoke() {
   const box = el("adult-poke");
   if (!box) return;
-  adultAnger = 0;
-  adultSorry = false;
+  adultAnger = ADULT_START;
   markDemon();
   box.hidden = true;
   const probe = new Image();
