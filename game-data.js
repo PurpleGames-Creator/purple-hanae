@@ -90,10 +90,10 @@ const GAME_DATA = {
       title: "準備作業でハナエの仕切りを見る",
       text: `体育館の隅、資材置き場代わりの一角。積み上げられた段ボールを前に、実行委員のメンバーが顔を見合わせている。\n\n誰も動かない。誰が仕切るのか、まだ決まっていないからだ。\n\nその沈黙を、昨日の女子が真っ二つにした。\n\n「はい、上から順に降ろすで。軽いのから」\n\n次の瞬間には、こちらを見ていた。\n\n「そこのあんた、突っ立ってんと手伝いや」`,
       choices: [
-        { id:"A", label:"「了解！」", points:1, rival:0, expr:"smile", reaction:"「素直でよろしい！」" },
+        { id:"A", label:"「はいはーい」", points:1, rival:0, expr:"smile", reaction:"「素直でよろしい！」" },
         { id:"B", label:"「班長でもないのに仕切るんだね」", points:-2, rival:0, tag:"pushy", expr:"angry", reaction:"「文句あるなら手ぇ動かしてくれる?」" },
         { id:"C", label:"周りの様子を見て動く", points:-1, rival:0, expr:"trouble", reaction:"「あんた、覇気ないなあ」" },
-        { id:"D", label:"まだ運ばれていない段ボールを先に運び始める", points:2, rival:0, expr:"surprise", reaction:"「言われる前に動くとか、ええ子やん」" },
+        { id:"D", label:"すぐに動き、他の仕事も進んで片づけた。", points:2, rival:0, expr:"surprise", reaction:"「言われる前に動くとか、ええ子やん」" },
       ],
     },
 
