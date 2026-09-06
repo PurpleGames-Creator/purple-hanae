@@ -699,6 +699,17 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
 .poke-btn:disabled { opacity: 0.3; cursor: default; }
 .poke-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 
+/* 読み終わりに増える要素。本文の枠が滑らかに上がっていく間に、
+   こちらは浮かび上がる。両方を同時に動かすと「増えた」ではなく
+   「画面が組み変わった」ように見える(2026-09-06 本人指摘) */
+.ending-appear {
+  animation: endingAppear 0.46s cubic-bezier(0.22, 0.8, 0.28, 1) both;
+}
+@keyframes endingAppear {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
 /* 結末の後に出す「今回の距離」。本編中は好感度を伏せたまま、
    終わってから7段階だけ見せる。数値は出さない */
 .ending-hearts {
@@ -872,6 +883,7 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
   .petals { animation: none; }
   .petal { display: none; }
   .rain-wind, .rain-haze, .rain-near i, .rain-mid i, .rain-far i { animation: none; }
+  .ending-appear { animation: none; }
   .ember, .ember > i, .ember > i > b { animation: none; }
   body.is-demon .ember-layer { animation: none; }
   .sprite { transition: none; }

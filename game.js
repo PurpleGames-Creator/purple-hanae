@@ -2165,13 +2165,16 @@ function resolveEnding() {
   // 途中で場面が変わる結末(パーフェクトの冬、似顔絵の24年後)は、その枠に来た時に切り替える
   const changes = ending.sceneChanges || [];
   playBlocks(el("ending-text"), ending.text, "end:" + endingKey, () => {
-    restartBtn.style.display = "block";
-    titleEl.textContent = titleText;
-    badge.style.display = isNew ? "block" : "none";
-    renderResultHearts();
-    if (endingKey === "nigaoe") maybeShowAdultPoke();
-    else { el("adult-poke").hidden = true; document.body.classList.remove("is-demon"); }
-    el("ending-foot").style.display = "block";
+    slideEndingBox(() => {
+      restartBtn.style.display = "block";
+      titleEl.textContent = titleText;
+      badge.style.display = isNew ? "block" : "none";
+      renderResultHearts();
+      if (endingKey === "nigaoe") maybeShowAdultPoke();
+      else { el("adult-poke").hidden = true; document.body.classList.remove("is-demon"); }
+      el("ending-foot").style.display = "block";
+    });
+    revealEndingParts([badge, titleEl, restartBtn, el("ending-foot")]);
   }, (i, block) => {
     changes.forEach((c) => {
       if (block.text.indexOf(c.marker) === 0) applyScene(c.scene);
@@ -2268,6 +2271,46 @@ function initAudioDebug() {
       `vol:${s.volume} gainNode:${s.gainNode} muted:${s.muted}\n` +
       `play():${s.playCalls} ok:${s.playOk} abort:${s.aborts} err:${s.lastError}`;
   }, 250);
+}
+
+/* ---------------- 結末の締めの動き ---------------- */
+
+// 読み終わると、見出し・ボタン・ハートが一度に増える。結末の画面は下端に
+// 貼り付いているので、増えたぶん本文の枠が上へ押し上げられて「パッと飛ぶ」。
+// 増やす前と後の位置を測り、いったん元の位置へ戻してから 0 へ動かす。
+// レイアウトの計算は一度きりで、目に見えるのは滑らかな移動だけになる
+const ENDING_SLIDE_MS = 460;
+
+function slideEndingBox(apply) {
+  const box = document.querySelector("#screen-ending .textbox");
+  if (!box) {
+    apply();
+    return;
+  }
+  const before = box.getBoundingClientRect().top;
+  apply();
+  const dy = before - box.getBoundingClientRect().top;
+  if (!dy) return;
+  box.style.transition = "none";
+  box.style.transform = `translateY(${dy}px)`;
+  void box.offsetHeight;
+  box.style.transition = `transform ${ENDING_SLIDE_MS}ms cubic-bezier(0.22, 0.8, 0.28, 1)`;
+  box.style.transform = "";
+  setTimeout(() => {
+    box.style.transition = "";
+    box.style.transform = "";
+  }, ENDING_SLIDE_MS + 60);
+}
+
+// 増えた側は、枠が動いている間に浮かび上がらせる。同時に動かすと
+// 「増えた」ではなく「画面が組み変わった」ように見える
+function revealEndingParts(parts) {
+  parts.forEach((e) => {
+    if (!e) return;
+    e.classList.remove("ending-appear");
+    void e.offsetWidth;
+    e.classList.add("ending-appear");
+  });
 }
 
 /* ---------------- 目印の自己点検 ---------------- */
