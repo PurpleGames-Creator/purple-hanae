@@ -2149,9 +2149,8 @@ function resolveEnding() {
   // 出すのは「もう一度プレイする」と同じ瞬間
   const badge = el("ending-new");
   badge.style.display = "none";
-  badge.textContent = endingKey === "successPerfect"
-    ? "NEW — 最も到達が難しいエンディングです"
-    : "NEW — 初めて見るエンディングです";
+  // 到達の難しさで文言を変えていたが、他と同じにする(2026-09-06 本人指示)
+  badge.textContent = "NEW — 初めて見るエンディングです";
   const titleEl = el("ending-title");
   titleEl.textContent = "";
   // 見出しは図鑑のラベルと同じ文字列にする(2026-09-05 本人指示)。
