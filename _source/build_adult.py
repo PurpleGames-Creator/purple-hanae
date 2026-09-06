@@ -47,6 +47,8 @@ FADE = 150                       # 下端を溶かす距離
 
 JOBS = [
     ("_source/hanae_adult_cut.png", "hanae_adult", None),
+    # 素の段で「謝る」を押した時の顔(2026-09-06 追加)。他と同じく顔で揃える
+    ("_source/hanae_adult_sorry_cut.png", "hanae_adult_sorry", None),
     ("_source/hanae_adult_angry1_cut.png", "hanae_adult_angry1", None),
     ("_source/hanae_adult_angry2_cut.png", "hanae_adult_angry2", None),
     # 悪魔だけは顔で揃えない。角が頭の上に大きく出るうえ三叉槍まで持っているので、

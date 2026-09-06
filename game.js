@@ -403,14 +403,17 @@ const BASE_EXPR = "smile";
 const SPRITE_EXPRESSIONS = {
   summer: ["normal", "soft", "trouble", "lonely", "angry", "surprise", "shy", "joy", "cry"],
   winter: ["soft"],
-  // 41歳。素の1枚と、怒りが上がっていく3枚。結末のおまけで押して切り替える
-  adult: ["angry1", "angry2", "angry3"],
+  // 41歳。素の1枚と、怒りが上がっていく3枚、それに素の段で謝った時の1枚。
+  // 結末のおまけで押して切り替える(全部で5枚)
+  adult: ["angry1", "angry2", "angry3", "sorry"],
 };
 
 /* ---------------- 41歳の結末のおまけ(謝る / いじる) ---------------- */
 
 // 段は0(素)から3(最終形態)まで。null は差分ではなくベース画像
 const ADULT_STAGES = [null, "angry1", "angry2", "angry3"];
+// 素の段でさらに謝った時の顔。段は動かさず、顔と一言だけ変える(2026-09-06 追加)
+const ADULT_SORRY_EXPR = "sorry";
 // 段ごとの彼女の一言。押した向き(いじる/謝る)ではなく「いまの段」に
 // 紐づけてあるので、上がっても下がっても噛み合う
 const ADULT_LINES = [
@@ -454,6 +457,8 @@ function setAdultAnger(next) {
     // 素でこれ以上は下がらない。顔はそのままで、返事だけ変える
     if (n === 0 && next < 0 && !adultSorry) {
       adultSorry = true;
+      // 顔も変える。ここだけ段に紐づかない5枚目
+      setSprite("adult", ADULT_SORRY_EXPR);
       renderAdultPoke();
     }
     return;
