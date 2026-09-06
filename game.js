@@ -732,6 +732,29 @@ function loadDrawing() {
   }
 }
 
+// 「ハナエの似顔絵を描く」を出して、押されるまで待つ。押したら画用紙を開き、
+// 描き終わったら解決する。待っている間はタップで先へ進めない(playBlocks 側で制御)
+function waitForDrawStart() {
+  return new Promise((resolve) => {
+    const btn = el("btn-draw-start");
+    if (!btn) {
+      openDrawing().then(resolve);
+      return;
+    }
+    // ボタンが増えるぶん本文の枠が上へ動く。結末や告白と同じように滑らせる
+    slideBox(document.querySelector("#screen-event .textbox"), () => {
+      btn.style.display = "block";
+    });
+    revealEndingParts([btn]);
+    btn.onclick = () => {
+      btn.onclick = null;
+      btn.style.display = "none";
+      AUDIO.se("next");
+      openDrawing().then(resolve);
+    };
+  });
+}
+
 // 画用紙を開いて、描き終わるまで待つ。描かずには閉じられない
 function openDrawing() {
   return new Promise((resolve) => {
@@ -1781,20 +1804,26 @@ function playBlocks(elm, raw, readKey, onDone, onBlock, onAfterBlock) {
     const last = i === blocks.length - 1;
     if (onBlock) onBlock(i, blocks[i]);
     typeText(elm, blocks[i], () => {
-      if (onAfterBlock) onAfterBlock(i, blocks[i]);
-      if (last) {
-        clearPager(elm);
-        if (onDone) onDone();
-        return;
-      }
-      // ▼ を出してタップを待つ
-      elm.classList.add("has-next");
-      pagerNext = () => {
-        pagerNext = null;
-        elm.classList.remove("has-next");
-        i += 1;
-        show();
+      const after = onAfterBlock ? onAfterBlock(i, blocks[i]) : null;
+      const go = () => {
+        if (last) {
+          clearPager(elm);
+          if (onDone) onDone();
+          return;
+        }
+        // ▼ を出してタップを待つ
+        elm.classList.add("has-next");
+        pagerNext = () => {
+          pagerNext = null;
+          elm.classList.remove("has-next");
+          i += 1;
+          show();
+        };
       };
+      // onAfterBlock が待ち(Promise)を返したら、終わるまで送りを作らない。
+      // 作ってしまうと、ボタンを押す前にタップで先へ行けてしまう
+      if (after && typeof after.then === "function") after.then(go);
+      else go();
     }, readKey ? readKey + "#" + i : null);
   };
   show();
@@ -1921,6 +1950,11 @@ function showEvent(key, eventData, scene, onChoice, onCommit) {
   el("reaction-actions").innerHTML = "";
   el("reaction-actions").classList.remove("is-shown");
   el("screen-event").classList.remove("is-reacting");
+  const drawBtn = el("btn-draw-start");
+  if (drawBtn) {
+    drawBtn.style.display = "none";
+    drawBtn.onclick = null;
+  }
   const choicesEl = el("event-choices");
   choicesEl.innerHTML = "";
   // 本文を読み終わるまで選択肢は出さない。連打で読み飛ばして誤爆するのを防ぐ
@@ -1948,8 +1982,12 @@ function showEvent(key, eventData, scene, onChoice, onCommit) {
         renderChoices(key, eventData, scene, choicesEl, onChoice, onCommit);
       };
     }, (i, block) => revealSpriteFor(block), (i, block) => {
-      // 指定の枠を出し終えたら画用紙を開く(E8B の似顔絵)
-      if (eventData.drawAfter && block.text.indexOf(eventData.drawAfter) === 0) openDrawing();
+      // 指定の枠を出し終えたら、画用紙を開くボタンを出す(E8B の似顔絵)。
+      // 自動で開いていた頃は、直前の一文を読む間もなく画面が変わっていた
+      if (eventData.drawAfter && block.text.indexOf(eventData.drawAfter) === 0) {
+        return waitForDrawStart();
+      }
+      return null;
     });
   });
 }

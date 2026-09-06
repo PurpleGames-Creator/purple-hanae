@@ -399,6 +399,9 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
 
 /* ---------------- イベント画面 ---------------- */
 
+/* 似顔絵の画面へ移るボタン(E8B)。既定は隠しておき、その場面でだけ出す */
+#btn-draw-start { display: none; }
+
 .event-title {
   font-size: 1.1rem;
   color: var(--accent);
