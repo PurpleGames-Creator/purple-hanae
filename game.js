@@ -1638,10 +1638,15 @@ function narrationBlocks(text) {
 }
 
 // 本文を送り単位に切る。改行で割り、地の文とセリフに分け、長いものは文で割る
+// 枠(1タップぶん)の区切りは改行。枠の中でさらに行を分けたい時は、
+// シナリオ側に \\n(バックスラッシュ + n の2文字)を書く。
+// 枠の分割を済ませてから本物の改行に戻すので、区切りには使われず、
+// toHtml が <br> にしてくれる
 function splitBlocks(raw) {
   const out = [];
   let offset = 0;
-  raw.split("\n").forEach((line) => {
+  raw.split("\n").forEach((rawLine) => {
+    const line = rawLine.replace(/\\n/g, "\n");
     const lead = line.length - line.replace(/^\s+/, "").length;
     const p = line.trim();
     if (p) {
@@ -1650,7 +1655,7 @@ function splitBlocks(raw) {
         else out.push(...narrationBlocks(part.text));
       });
     }
-    offset += line.length + 1;
+    offset += rawLine.length + 1;
   });
   return out;
 }
@@ -2277,7 +2282,8 @@ function fitEndingTextHeight(text) {
   box.style.height = "auto";
   let max = 0;
   splitBlocks(text).forEach((b) => {
-    box.textContent = b.text;
+    // textContent だと枠内の改行(<br>)が数えられず、1行ぶん低く測ってしまう
+    box.innerHTML = toHtml(b.body !== undefined ? b.body : b.text);
     if (box.scrollHeight > max) max = box.scrollHeight;
   });
   box.textContent = keep;
