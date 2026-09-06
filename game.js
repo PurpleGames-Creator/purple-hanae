@@ -2222,7 +2222,11 @@ function startConfession() {
   showTelop(dateLabel("screen-confession"), placeFor(sceneFor("CONFESSION")), readSet.has(readKey + "#0")).then(() => {
     if (document.querySelector(".screen.active").id !== "screen-confession") return;
     playBlocks(confEl, introText, readKey, () => {
-      btn.style.display = "block";
+      // ボタンが増えるぶん枠が上へ動く。結末と同じ速さで滑らせる(2026-09-06 本人指示)
+      slideBox(document.querySelector("#screen-confession .textbox"), () => {
+        btn.style.display = "block";
+      });
+      revealEndingParts([btn]);
     }, (i, block) => revealSpriteFor(block));
   });
 }
@@ -2452,8 +2456,10 @@ function initAudioDebug() {
 // 速すぎると「飛んだ」に見える。ゆっくり収まる方が締めに合う(2026-09-06 本人指示で 460 → 800)
 const ENDING_SLIDE_MS = 800;
 
-function slideEndingBox(apply) {
-  const box = document.querySelector("#screen-ending .textbox");
+// 枠の下に何かが増えると、枠が上へ押し上げられて「パッと飛ぶ」。
+// 増える前の位置を測り、いったん元の位置へ戻してから 0 へ動かす(FLIP)。
+// 結末(#screen-ending)と告白(#screen-confession)の両方で使う
+function slideBox(box, apply) {
   if (!box) {
     apply();
     return;
@@ -2471,6 +2477,10 @@ function slideEndingBox(apply) {
     box.style.transition = "";
     box.style.transform = "";
   }, ENDING_SLIDE_MS + 60);
+}
+
+function slideEndingBox(apply) {
+  slideBox(document.querySelector("#screen-ending .textbox"), apply);
 }
 
 // 増えた側は、枠が動いている間に浮かび上がらせる。同時に動かすと
