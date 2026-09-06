@@ -1947,9 +1947,24 @@ function showEvent(key, eventData, scene, onChoice, onCommit) {
 }
 showEvent._token = 0;
 
+// パーフェクトの分かれ道になる場面で、選択肢の枠を淡く光らせるか。
+// 1周目には出さない —— 「彼女を読む」のが本作の遊びなので、
+// 初見でどこが大事かを教えてしまうと、その遊びが要らなくなる。
+// 一度でも結末を見た人(＝2周目以降)にだけ光らせ、
+// パーフェクトに到達した人にはもう光らせない(用が済んでいる)。
+// 対象は GAME_DATA.perfectRoute の場面そのもの。ここを唯一の正とする
+function showPerfectHint(key) {
+  if (!GAME_DATA.perfectRoute[key]) return false;
+  const order = GAME_DATA.endingOrder;
+  const seen = loadSeenEndings().filter((k) => order.includes(k));
+  if (!seen.length) return false;
+  return !seen.includes("successPerfect");
+}
+
 function renderChoices(key, eventData, scene, choicesEl, onChoice, onCommit) {
   choicesEl.innerHTML = "";
   choicesEl.style.display = "flex";
+  choicesEl.classList.toggle("is-key", showPerfectHint(key));
 
   // 本文を早送りしたタップがそのまま選択肢に流れ込まないよう、描画直後は受け付けない
   choicesEl.classList.add("is-locked");

@@ -501,6 +501,40 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
   border-color: var(--accent);
   transform: translateX(2px);
 }
+
+/* パーフェクトの分かれ道の印。2周目以降だけ付く(game.js の showPerfectHint)。
+   「【重要】」のような札は攻略情報に見えて作品から浮くので、枠を淡く光らせるだけにする。
+   ゆっくり息をする速さ(2.8秒)で、色は本編のピンクをそのまま使う */
+.event-choices.is-key .choice-btn {
+  border-color: rgba(255, 143, 177, 0.55);
+  animation: choiceIn 0.32s ease-out both, keyGlow 2.8s ease-in-out 0.32s infinite;
+}
+/* ネオン管の見え方に寄せる。芯を細く強く、そのまわりに広く薄いにじみ。
+   1枚の影だと「枠が太くなった」ようにしか見えないので、内側の芯・中間・
+   外の暈(かさ)の3枚を重ね、暗い背景に光が滲む形にする */
+@keyframes keyGlow {
+  0%, 100% {
+    box-shadow:
+      0 0 4px rgba(255, 143, 177, 0.22),
+      0 0 14px rgba(255, 143, 177, 0.14),
+      0 0 30px rgba(255, 92, 138, 0.06),
+      inset 0 0 8px rgba(255, 143, 177, 0.05);
+    border-color: rgba(255, 143, 177, 0.45);
+  }
+  50% {
+    box-shadow:
+      0 0 6px rgba(255, 190, 214, 0.75),
+      0 0 22px rgba(255, 143, 177, 0.5),
+      0 0 46px rgba(255, 92, 138, 0.24),
+      inset 0 0 14px rgba(255, 143, 177, 0.14);
+    border-color: rgba(255, 214, 230, 0.95);
+  }
+}
+/* 選んだ後は光を止める(反応を読んでいる間まで点滅していると落ち着かない) */
+.event-choices.is-key.is-decided .choice-btn {
+  animation: none;
+  box-shadow: none;
+}
 /* 反応の枠と「つづける」を1つの入れ物にまとめる(.textbox の色違い)。
    ボタンを枠の外(下)に置くと、出た瞬間にその高さぶん枠が上へ動く。
    画面下端に寄せている作りなので、下に何かが増えると全部が持ち上がって酔う */
@@ -979,6 +1013,14 @@ button.gallery-cell:active { transform: scale(0.97); }
   .sprite.sprite-in { animation: none; }
   #sprite-b { transition: none; }
   .choice-btn { animation: none; }
+  .event-choices.is-key .choice-btn {
+    animation: none;
+    box-shadow:
+      0 0 5px rgba(255, 190, 214, 0.5),
+      0 0 18px rgba(255, 143, 177, 0.32),
+      0 0 38px rgba(255, 92, 138, 0.15);
+    border-color: rgba(255, 214, 230, 0.8);
+  }
   .event-choices.is-decided .choice-btn { transition: none; }
   body.is-title #sprite, body.is-title #sprite.sprite-in { animation: none; }
   .game-logo { transition: none; opacity: 1; transform: none; }
