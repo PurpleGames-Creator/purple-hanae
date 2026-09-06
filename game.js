@@ -2160,10 +2160,12 @@ function resolveEnding() {
   const restartBtn = el("btn-restart");
   restartBtn.style.display = "none";
   el("ending-foot").style.display = "none";
-  fitEndingTextHeight(ending.text);
+  // 結末の本文でもプレイヤー名を差し込む。枠の高さもこの文字数で測る
+  const endingText = withName(ending.text);
+  fitEndingTextHeight(endingText);
   // 途中で場面が変わる結末(パーフェクトの冬、似顔絵の24年後)は、その枠に来た時に切り替える
   const changes = ending.sceneChanges || [];
-  playBlocks(el("ending-text"), ending.text, "end:" + endingKey, () => {
+  playBlocks(el("ending-text"), endingText, "end:" + endingKey, () => {
     slideEndingBox(() => {
       restartBtn.style.display = "block";
       titleEl.textContent = titleText;
