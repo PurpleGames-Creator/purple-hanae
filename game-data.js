@@ -175,7 +175,7 @@ const GAME_DATA = {
         { id:"A", label:"「もっと聞かせてよ」", points:-1, rival:0, tag:"pushy", expr:"lonely", reaction:"「……いや、ええわ、こんな話」" },
         { id:"B", label:"何も言わず、隣に座って話を聞く", points:3, rival:0, expr:"soft", reaction:"「……なんか、こうやって黙って聞いてくれる人、久しぶりやわ」\n\nそれきり、ハナエは何も言わなかった。二人ぶんの汗が床に落ちて乾くまで、そのままでいた。" },
         { id:"C", label:"「怪我は仕方ないよ、誰のせいでもない」", points:0, rival:0, expr:"trouble", reaction:"「そんなんわかってるって……」" },
-        { id:"D", label:"「そっか」", points:2, rival:0, expr:"soft", reaction:"「うん……ありがと」" },
+        { id:"D", label:"「そっか、抱え込みすぎないでね」", points:2, rival:0, expr:"soft", reaction:"「うん……ありがと」" },
       ],
     },
 
@@ -232,7 +232,7 @@ const GAME_DATA = {
       text: `買い出しの帰り、またミヤコに寄った。運ばれてきたパフェにスプーンを入れたあたりで、ハナエのスマホが短く鳴る。画面を見た瞬間、表情が抜け落ちた。\n\n部活の連絡らしい。しばらく黙って画面を見つめた後、スマホを伏せた。\n\n「……ごめん、なんでもない」\n\nどう見ても、なんでもなくはない。`,
       choices: [
         { id:"A", label:"「何かあった?」", points:-2, rival:0, tag:"pushy", expr:"angry", reaction:"「なんでもないって言うてるやん」" },
-        { id:"B", label:"「話したくなったら聞くよ」", points:2, rival:0, expr:"soft", reaction:"「うん」" },
+        { id:"B", label:"「話したくなったら言ってね」", points:2, rival:0, expr:"soft", reaction:"「うん」" },
         { id:"C", label:"「パフェのアイス溶けるよ」", points:3, rival:0, expr:"soft", reaction:"「……あんた、ほんま聞かへんな」\n\nそう言って、ハナエはスプーンを取った。溶けかけのアイスを、ちゃんと最後まで食べた。" },
         { id:"D", label:"別の話を始める", points:-1, rival:0, tag:"passive", expr:"lonely", reaction:"会話は続くが、ハナエの相槌はどこか上の空だった。" },
       ],
@@ -243,9 +243,9 @@ const GAME_DATA = {
       text: `作業を終えて外に出ると、いつの間にか雨が降り出していた。傘はない。\n\n渡り廊下の軒下で雨宿りすることになった。雨の音が、体育館の熱を少しずつ冷ましていく。\n\nハナエは軒の端に腰を下ろして、濡れた校庭をぼんやり眺めている。いつもの声の大きさが、今は無い。\n\n二人きりの静かな時間が流れる。\n\n「こういう時間、嫌いちゃうな」\n\nハナエがぽつりと呟いた。`,
       choices: [
         { id:"A", label:"何も言わず、ただ隣に並んで雨を眺める", points:4, rival:0, expr:"soft", reaction:"「……こういうの、悪ないな」\n\n雨が弱くなるまで、どちらも動かなかった。" },
-        { id:"B", label:"次々に話題を振る", points:-1, rival:0, tag:"pushy", expr:"trouble", reaction:"「そんな無理に喋らんでもええのに」" },
+        { id:"B", label:"いろいろ話題を振る", points:-1, rival:0, tag:"pushy", expr:"trouble", reaction:"「そんな無理に喋らんでもええのに」" },
         { id:"C", label:"「早く止まないかな～」", points:-2, rival:0, tag:"passive", expr:"lonely", reaction:"「……せやな」" },
-        { id:"D", label:"「俺もだな」", points:3, rival:0, expr:"soft", reaction:"隣を見て小さく笑う。" },
+        { id:"D", label:"「そうだね」", points:3, rival:0, expr:"soft", reaction:"隣を見て小さく笑う。" },
       ],
     },
 
@@ -253,10 +253,10 @@ const GAME_DATA = {
       title: "兄が家を出ると決まり、本音がこぼれる",
       text: `休憩中、ハナエがぼんやりとスマホを眺めていた。「兄ちゃん、寮入るの正式に決まったんやって。野球部の寮で、大学のすぐ近くにあるらしいわ」明るいトーンだが、どこか上の空だ。\n\n「電車で行ける距離やのにな。なんでやろ……ちょっと、寂しいわ」`,
       choices: [
-        { id:"A", label:"「うんうん」", points:4, rival:0, expr:"soft", reaction:"「うちな、兄ちゃんおらんくなったら、一人になる気がして怖いねん。……子供の頃からずっと、誰かがおらんとあかん性格でな」\n\nそこまで言って、ハナエは口をつぐんだ。言い過ぎた、という顔だった。" },
+        { id:"A", label:"黙って相槌を打つ", points:4, rival:0, expr:"soft", reaction:"「うちな、兄ちゃんおらんくなったら、一人になる気がして怖いねん。……子供の頃からずっと、誰かがおらんとあかん性格でな」\n\nそこまで言って、ハナエは口をつぐんだ。言い過ぎた、という顔だった。" },
         { id:"B", label:"「委員会あるし、寂しがってる暇ないよ」", points:-2, rival:0, tag:"passive", expr:"lonely", reaction:"「せやな…」" },
         { id:"C", label:"「一人でも案外平気なものだよ」", points:-3, rival:0, tag:"pushy", expr:"lonely", reaction:"「そんな簡単に言わんといて」\n\nハナエはスマホを伏せて、それきりこちらを見なかった。" },
-        { id:"D", label:"「そりゃ寂しいよな。」", points:2, rival:0, expr:"soft", reaction:"「うん……ありがと」" },
+        { id:"D", label:"「そりゃ寂しいよな。わかるよ」", points:2, rival:0, expr:"soft", reaction:"「うん……ありがと」" },
       ],
     },
 
