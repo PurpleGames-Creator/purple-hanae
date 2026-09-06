@@ -765,6 +765,11 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
   display: grid;
   grid-template-columns: 1fr;
   gap: 4px;
+  /* 中身は「名前(最長84px)＋間8px＋ハート80px＋左右の余白20px」で 192px。
+     画面幅いっぱいに広げると中身に対して横長に見える(2026-09-06 本人指摘)ので、
+     梯子として読める幅に絞って中央に置く */
+  max-width: 216px;
+  margin: 0 auto;
 }
 .gallery-cell {
   display: flex;
