@@ -200,6 +200,17 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
 
 .screen { display: none; flex: 1; flex-direction: column; }
 .screen.active { display: flex; }
+/* イベント画面は overflow が効いている(縦に長い時に中でスクロールさせるため)。
+   その切り取り箱が選択肢と同じ幅なので、枠から外へ出た光がボタンの縁で
+   ぴったり断ち切られ、まっすぐな境界線に見えていた(2026-09-06 本人指摘)。
+   左右を負の margin で広げ、同じ幅の padding で戻す —— 中身の位置は1pxも
+   動かないまま、切り取り箱だけが左右に 20px ぶん広がる */
+#screen-event {
+  margin-left: -20px;
+  margin-right: -20px;
+  padding-left: 20px;
+  padding-right: 20px;
+}
 
 /* ---------------- 進行度バー(プレイ中のみ) ---------------- */
 
@@ -503,44 +514,33 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
 }
 
 /* パーフェクトの分かれ道の印。2周目以降だけ付く(game.js の showPerfectHint)。
-   「【重要】」のような札は攻略情報に見えて作品から浮くので、枠を淡く光らせるだけにする。
+   「【重要】」のような札は攻略情報に見えて作品から浮くので、枠を光らせるだけにする。
 
-   広い暈(かさ)をボタン本体の box-shadow で出すと、html の overflow-x: hidden に
-   画面の左右端で断ち切られ、まっすぐな境界線が見えてしまう(2026-09-06 本人指摘)。
-   そこで暈は「左右を内側に寄せた」擬似要素から出す —— 光は端に届く前に減衰しきる。
-   ボタン本体には、端まで届かない細い芯だけを残す */
+   ボタンの左右には 14px しか余白が無い(実測)。そこへ外向きの光を出すと、
+   html の overflow-x: hidden に画面端で断ち切られ、まっすぐな境界線が出る
+   (2026-09-06 本人指摘・2回)。擬似要素で内側から出す手も、その要素の縁が
+   透けて二重枠に見えた。
+   → **外へ出す光は捨てて、枠そのものを光らせる**。
+      枠の色を明るくし、内側へ滲ませる(inset)。外向きは 6px までに抑え、
+      14px の余白の中で消えきるようにする */
 .event-choices.is-key .choice-btn {
-  position: relative;
-  border-color: rgba(255, 143, 177, 0.55);
-  animation: choiceIn 0.32s ease-out both, keyEdge 2.8s ease-in-out 0.32s infinite;
+  animation: choiceIn 0.32s ease-out both, keyGlow 2.8s ease-in-out 0.32s infinite;
 }
-.event-choices.is-key .choice-btn::after {
-  content: "";
-  position: absolute;
-  inset: 2px 22px;
-  border-radius: 14px;
-  pointer-events: none;
-  z-index: -1;
-  animation: keyGlow 2.8s ease-in-out 0.32s infinite;
-}
-/* 枠そのもの。細く近い光なので、画面端に掛かるほど広がらない */
-@keyframes keyEdge {
-  0%, 100% {
-    border-color: rgba(255, 143, 177, 0.45);
-    box-shadow: 0 0 4px rgba(255, 143, 177, 0.18), inset 0 0 8px rgba(255, 143, 177, 0.05);
-  }
-  50% {
-    border-color: rgba(255, 214, 230, 0.95);
-    box-shadow: 0 0 6px rgba(255, 190, 214, 0.5), inset 0 0 14px rgba(255, 143, 177, 0.14);
-  }
-}
-/* 広い暈。左右22px内側から出るので、端に着く頃には消えている */
 @keyframes keyGlow {
   0%, 100% {
-    box-shadow: 0 0 16px 2px rgba(255, 143, 177, 0.12), 0 0 34px 6px rgba(255, 92, 138, 0.05);
+    border-color: rgba(255, 143, 177, 0.5);
+    box-shadow:
+      0 0 4px rgba(255, 143, 177, 0.16),
+      0 0 10px rgba(255, 143, 177, 0.08),
+      inset 0 0 8px rgba(255, 143, 177, 0.07);
   }
   50% {
-    box-shadow: 0 0 26px 4px rgba(255, 143, 177, 0.42), 0 0 52px 10px rgba(255, 92, 138, 0.2);
+    border-color: rgba(255, 226, 238, 0.98);
+    box-shadow:
+      0 0 5px rgba(255, 232, 242, 0.5),
+      0 0 14px rgba(255, 143, 177, 0.34),
+      inset 0 0 3px rgba(255, 232, 242, 0.3),
+      inset 0 0 20px rgba(255, 143, 177, 0.32);
   }
 }
 /* 選んだ後は光を止める(反応を読んでいる間まで点滅していると落ち着かない) */
@@ -548,7 +548,6 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
   animation: none;
   box-shadow: none;
 }
-.event-choices.is-key.is-decided .choice-btn::after { animation: none; box-shadow: none; }
 /* 反応の枠と「つづける」を1つの入れ物にまとめる(.textbox の色違い)。
    ボタンを枠の外(下)に置くと、出た瞬間にその高さぶん枠が上へ動く。
    画面下端に寄せている作りなので、下に何かが増えると全部が持ち上がって酔う */
@@ -1029,12 +1028,8 @@ button.gallery-cell:active { transform: scale(0.97); }
   .choice-btn { animation: none; }
   .event-choices.is-key .choice-btn {
     animation: none;
-    box-shadow: 0 0 6px rgba(255, 190, 214, 0.45);
-    border-color: rgba(255, 214, 230, 0.8);
-  }
-  .event-choices.is-key .choice-btn::after {
-    animation: none;
-    box-shadow: 0 0 22px 4px rgba(255, 143, 177, 0.3);
+    border-color: rgba(255, 226, 238, 0.9);
+    box-shadow: 0 0 5px rgba(255, 190, 214, 0.35), inset 0 0 16px rgba(255, 143, 177, 0.24);
   }
   .event-choices.is-decided .choice-btn { transition: none; }
   body.is-title #sprite, body.is-title #sprite.sprite-in { animation: none; }
