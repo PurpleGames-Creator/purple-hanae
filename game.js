@@ -123,8 +123,10 @@ function recordEnding(key) {
 
 function renderEndingGallery() {
   const box = el("ending-gallery");
-  const seen = loadSeenEndings();
   const order = GAME_DATA.endingOrder;
+  // 廃止した結末が記録に残っている人がいる(気まずいエンド)。そのまま数えると
+  // 「7 / 6」や誤った「全エンディング達成!」になるので、並びにあるものだけ数える
+  const seen = loadSeenEndings().filter((k) => order.includes(k));
   box.innerHTML = "";
 
   const head = document.createElement("p");
@@ -215,8 +217,10 @@ const BGM_ENDING = {
   successPerfect: "end_true",
   friend: "end_false",
   soretigai: "end_false",
-  awkward: "end_false",
   nishino: "end_rival",
+  // 書き忘れていると playBgm が何もせず、告白の曲が鳴り続けてしまう
+  // (キーが無ければ即 return する作り)。2026-09-06 の点検で発覚
+  nigaoe: "end_false",
 };
 
 // 場面を足した時にここへ書き忘れても無音にはしない
@@ -949,7 +953,7 @@ function fadeTo(dark, ms) {
 // 広い画面では、立ち絵が出ている間だけ本文を左カラムに寄せる。
 // 常に寄せるとタイトル画面まで左に偏り、立ち絵の有無で切り替えるだけだと
 // プレイ中に本文の位置が飛ぶので、「プレイ中」も条件に含める。
-// プロローグと、立ち絵を出さないエンディング(awkward/soretigai/nishino)は
+// プロローグと、立ち絵を出さないエンディング(soretigai/nishino)は
 // sprite: null なので、ここに入れておかないと
 // タイトル(左)→プロローグ(中央)→本編(左)→エンディング(中央)と枠が左右に飛ぶ
 function updateLayout() {
@@ -2128,7 +2132,10 @@ function resolveEnding() {
     // 似顔絵を持たれたまま点数も低い: 最下位
     endingKey = "nigaoe";
   } else {
-    endingKey = state.pushyCount > state.passiveCount ? "awkward" : "soretigai";
+    // 「気まずい」は廃止(2026-09-06 本人指示)。似た読後感の結末が2つ並んでいて、
+    // 押しの強さで罰する役目は「あの日の似顔絵」が担っているため、
+    // ここは「すれ違い」1本にした
+    endingKey = "soretigai";
   }
 
   state.finished = true;
@@ -2206,7 +2213,6 @@ const ENDING_TEST = {
   success:   (s) => { s.score = GAME_DATA.SUCCESS_THRESHOLD + 14; },
   friend:    (s) => { s.score = GAME_DATA.FRIEND_THRESHOLD + 8; },
   soretigai: (s) => { s.score = GAME_DATA.FRIEND_THRESHOLD - 20; s.passiveCount = 3; },
-  awkward:   (s) => { s.score = GAME_DATA.FRIEND_THRESHOLD - 20; s.pushyCount = 3; },
   nishino:   (s) => { s.score = GAME_DATA.FRIEND_THRESHOLD + 8; s.rival = GAME_DATA.RIVAL_FAIL_THRESHOLD; },
   nigaoe:    (s) => { s.score = GAME_DATA.FRIEND_THRESHOLD - 40; s.nigaoe = true; },
 };
