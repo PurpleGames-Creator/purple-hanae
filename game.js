@@ -468,6 +468,17 @@ function setAdultAnger(next) {
 
 // 差分が1枚でも読めた時だけ出す。素材が届く前にボタンだけ並ぶと、
 // 押しても何も起きない出来損ないになる
+// 41歳の「謝る / いじる」を片付ける。出しっぱなしにすると、タイトルへ戻っても
+// 画面の右上に残り、別の結末を読み返した時までついてくる(2026-09-06 本人報告)。
+// 出すのは結末を読み終えた時だけなので、片付けは「入る時」と「戻る時」の両方でやる
+function resetAdultPoke() {
+  const box = el("adult-poke");
+  if (box) box.hidden = true;
+  adultAnger = 0;
+  adultSorry = false;
+  document.body.classList.remove("is-demon");
+}
+
 function maybeShowAdultPoke() {
   const box = el("adult-poke");
   if (!box) return;
@@ -1099,7 +1110,7 @@ function preloadExpressions() {
 
 function initTitleScreen() {
   showScreen("screen-title");
-  document.body.classList.remove("is-demon");
+  resetAdultPoke();
   lastTelop = "";
   currentEventKey = null;
   dropPendingSprite();
@@ -1122,6 +1133,7 @@ function initTitleScreen() {
     continueBtn.style.display = "inline-block";
     continueBtn.onclick = () => {
       AUDIO.se("next");
+      endingTestRunning = false;   // 同上
       state = saved;
       el("player-name-input").value = state.name;
       advanceQueue();
@@ -1161,6 +1173,9 @@ function initTitleScreen() {
     }
     AUDIO.se("next");
     clearDrawing();
+    // 試用モード(?ending= / ?scene= から入った状態)を必ず解く。
+    // 解かないと、この回の結末がセーブにも図鑑にも残らない(2026-09-06 発覚)
+    endingTestRunning = false;
     state = freshState();
     state.name = name;
     rememberName(name);
@@ -2262,6 +2277,8 @@ function replayEnding(key) {
 // 結末の画面を組む。判定(resolveEnding)と読み返し(replayEnding)の両方から呼ぶ
 function showEnding(endingKey, isNew, replaying) {
   const ending = GAME_DATA.endings[endingKey];
+  // 前に見た結末の名残(41歳の「謝る / いじる」と悪魔化)を先に片付ける
+  resetAdultPoke();
   showScreen("screen-ending");
   applyScene(GAME_DATA.endingScenes[endingKey]);
   AUDIO.playBgm(BGM_ENDING[endingKey], 700);
@@ -2294,7 +2311,7 @@ function showEnding(endingKey, isNew, replaying) {
       badge.style.display = isNew ? "block" : "none";
       renderResultHearts(endingKey);
       if (endingKey === "nigaoe") maybeShowAdultPoke();
-      else { el("adult-poke").hidden = true; document.body.classList.remove("is-demon"); }
+      else resetAdultPoke();
       el("ending-foot").style.display = "block";
     });
     revealEndingParts([badge, titleEl, restartBtn, el("ending-foot")]);
