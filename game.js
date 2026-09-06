@@ -419,7 +419,7 @@ const ADULT_LINES = [
   "「一旦みたらし買うてこい」",
   "「…ま、ええわ。」",
   "「なんや、反省してへんやろ。」",
-  "「24年、根に持っとったんやぞ!」",
+  "「24年、根に持っとったんやぞ」",
   "「もうええ、串刺しにしたる」",
 ];
 // 始めの段。笑顔(0)ではなく素(1)から始まる
@@ -482,6 +482,12 @@ function maybeShowAdultPoke() {
   };
   probe.onerror = () => { box.hidden = true; };
   probe.src = ASSET_DIR + "hanae_adult_angry1.webp" + ASSET_V;
+  // 押した時に読み込みから始めると、その1回だけ溶け方が遅れて見える。
+  // 5枚とも先に読んでおく(表示はしない)
+  ADULT_STAGES.forEach((expr) => {
+    const pre = new Image();
+    pre.src = ASSET_DIR + "hanae_adult" + (expr ? "_" + expr : "") + ".webp" + ASSET_V;
+  });
 }
 
 function hasExpressionFile(outfit, expr) {
@@ -489,6 +495,9 @@ function hasExpressionFile(outfit, expr) {
 }
 
 const SPRITE_FADE_MS = 180;
+// 41歳の5枚は写真そのものが入れ替わる(夏服の差分と違って全体が変わる)。
+// 180ms だと「溶けた」ではなく「切り替わった」に見えるので、こちらは長く取る
+const SPRITE_FADE_MS_ADULT = 360;
 let spriteFadeToken = 0;
 
 function setSprite(outfit, expr) {
@@ -544,18 +553,21 @@ function setSprite(outfit, expr) {
   }
 
   if (current === wanted) return;
-  crossfadeSprite(wanted, base);
+  crossfadeSprite(wanted, base, outfit === "adult" ? SPRITE_FADE_MS_ADULT : SPRITE_FADE_MS);
 }
 
 // 表情の切り替え。裏のレイヤーに次の表情を読み込んでから重ねて溶かす。
 // 表情差分はすべて同じポーズ・同じシルエットなので、顔だけが変化して見える
-async function crossfadeSprite(wanted, base) {
+async function crossfadeSprite(wanted, base, ms) {
   const img = el("sprite");
   const alt = el("sprite-b");
   const token = ++spriteFadeToken;
+  const fade = ms || SPRITE_FADE_MS;
 
   alt.style.display = "block";
   alt.classList.remove("is-shown");
+  // 裏の溶け方は CSS 側が既定 0.18秒。長くしたい時はここで上書きする
+  alt.style.transition = `opacity ${fade}ms ease-out`;
   alt.src = wanted;
 
   try {
@@ -566,7 +578,7 @@ async function crossfadeSprite(wanted, base) {
     if (token !== spriteFadeToken) return;
     if (alt.naturalWidth === 0) missingSprites.add(wanted);
     if (wanted !== base && img.getAttribute("src") !== base) {
-      crossfadeSprite(base, base);
+      crossfadeSprite(base, base, fade);
     } else {
       alt.classList.remove("is-shown");
       alt.style.display = "none";
@@ -581,7 +593,7 @@ async function crossfadeSprite(wanted, base) {
   // はみ出した部分が最後まで残り、入れ替わった瞬間にパッと消える
   // (悪魔の角や三叉槍で特に目立つ)。ease-in で「最初はあまり減らない」ので、
   // 立ち上がりの速い ease-out と重なって、途中で背景が透けることもない
-  img.style.transition = `opacity ${SPRITE_FADE_MS}ms ease-in`;
+  img.style.transition = `opacity ${fade}ms ease-in`;
   img.style.opacity = "0";
 
   setTimeout(() => {
@@ -595,8 +607,8 @@ async function crossfadeSprite(wanted, base) {
     alt.classList.remove("is-shown");
     setTimeout(() => {
       if (token === spriteFadeToken) alt.style.display = "none";
-    }, SPRITE_FADE_MS + 40);
-  }, SPRITE_FADE_MS + 10);
+    }, fade + 40);
+  }, fade + 10);
 }
 
 // 場面の入りで立ち絵を出すと、まだ彼女が出てきていない地の文の間も

@@ -1737,8 +1737,13 @@ body.is-demon .ember-layer {
 /* 悪魔は最終形態。小さいままだと見せ場にならないので、切り替わりと一緒に大きくする。
    起点を右上にすると、角を画面の外に出さずに下へ伸びる(中央や下起点だと角が切れる) */
 /* 既定は 0.42秒(悪魔化の拡大はこの速さが合う)。紙が出る時の寄せだけ、
-   --sprite-move で長くする */
-.sprite { transition: transform var(--sprite-move, 0.42s) ease-out, height var(--sprite-move, 0.42s) ease-out; }
+   --sprite-move で長くする。
+   動かすのは transform だけにする —— height を動かすと毎フレーム画像を
+   拡大し直すことになり、目に見えてカクつく(2026-09-06 本人指摘) */
+.sprite {
+  transition: transform var(--sprite-move, 0.42s) cubic-bezier(0.22, 0.8, 0.28, 1);
+  transform-origin: top right;
+}
 @media (max-width: 999px) {
   body.is-demon .sprite {
     /* 右上へ寄せる(2026-09-05 本人指示)。右肩が画面の外に出るのは構わない
@@ -1957,12 +1962,19 @@ body.is-title .petals {
 }
 /* 縮めるのは、右へ寄せただけでは足りない端末だけ。640px より広ければ
    (portrait のタブレット、横向きの端末)寄せるだけで 150px 以上あくので、
-   立ち絵は大きいまま見せる */
-@media (max-width: 640px) {
-  body.has-cg .sprite {
-    height: min(44vh, 520px);
-    height: min(44dvh, 520px);
+   立ち絵は大きいまま見せる。
+   0.786 は元の 44dvh ÷ 56dvh。起点が右上なので、右端に合わせたまま
+   左下へ縮む(高さを直接変えていた頃と同じ収まりになる) */
+@media (max-width: 640px) and (min-height: 561px) {
+  body.has-cg:not(.is-demon) .sprite {
+    transform: translateX(calc(50vw - 50% - max(6px, 1.5vw))) scale(0.786);
   }
+}
+/* 横向きの端末は立ち絵が元から右端。寄せる必要が無いので、縮めるだけ。
+   ただし縮小率が違う —— こちらの基準は 94dvh なので 44 ÷ 94 = 0.468。
+   縦向きと同じ 0.786 にすると紙と 58px 重なる(実測 320x553) */
+@media (max-width: 640px) and (max-height: 560px) {
+  body.has-cg:not(.is-demon) .sprite { transform: scale(0.468); }
 }
 
 /* 画面が低い端末(iPhone SE の Safari 表示 553px、360x640 級の Chrome 570px など)は、
