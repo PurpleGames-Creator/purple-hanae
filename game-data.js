@@ -80,9 +80,10 @@ const GAME_DATA = {
         { id:"B", label:"「えー」", points:-2, rival:0, expr:"normal", reaction:"ハナエは一瞬こちらを見て、何も言わずに机を運び続けた。" },
         { id:"C", label:"周りの様子を見て動く", points:0, rival:0, expr:"normal", reaction:"作業は淡々と進んでいく。" },
         // 手は動かすが態度が雑、という段が無かった(2026-09-06 本人指示で追加)。
+        // 文言は E2 の「はいはーい」(+1)と被らないものにする(似た言葉で評価が逆になる)。
         // 1場面目で「何をしたか」ではなく「どう言ったか」で点が動くと分かる肢。
         // 序盤の pushy は3回で最悪ルート(E8B)に入るので、その入口もここから開く
-        { id:"D", label:"「はいはい、了解」", points:-1, rival:0, tag:"pushy", expr:"normal", reaction:"「その『はいはい』、なんか腹立つわ」" },
+        { id:"D", label:"「いきなり人使うね」", points:-1, rival:0, tag:"pushy", expr:"normal", reaction:"「人使うも何も、まだ何もしてくれてへんやん」" },
       ],
     },
 
@@ -93,7 +94,7 @@ const GAME_DATA = {
         { id:"A", label:"「はいはーい」", points:1, rival:0, expr:"smile", reaction:"「素直でよろしい！」" },
         { id:"B", label:"「班長でもないのに仕切るんだね」", points:-2, rival:0, tag:"pushy", expr:"angry", reaction:"「文句あるなら手ぇ動かしてくれる?」" },
         { id:"C", label:"周りの様子を見て動く", points:-1, rival:0, expr:"trouble", reaction:"「あんた、覇気ないなあ」" },
-        { id:"D", label:"すぐに動き、他の仕事も進んで片づけた。", points:2, rival:0, expr:"surprise", reaction:"「言われる前に動くとか、ええ子やん」" },
+        { id:"D", label:"すぐに動き、他の仕事も進んで片づける", points:2, rival:0, expr:"surprise", reaction:"「言われる前に動くとか、ええ子やん」" },
       ],
     },
 
