@@ -727,14 +727,6 @@ function loadDrawing() {
   }
 }
 
-function clearDrawing() {
-  try {
-    localStorage.removeItem(DRAW_KEY);
-  } catch (e) {
-    /* 消せなくても進行には影響しない */
-  }
-}
-
 // 画用紙を開いて、描き終わるまで待つ。描かずには閉じられない
 function openDrawing() {
   return new Promise((resolve) => {
@@ -1172,7 +1164,10 @@ function initTitleScreen() {
       return;
     }
     AUDIO.se("next");
-    clearDrawing();
+    // 描いた似顔絵はここでは消さない(2026-09-06)。消すと、図鑑から
+    // 「あの日の似顔絵」を読み返した時に絵が出なくなる。
+    // 似顔絵の場面(E8B)を通れば必ず上書きされるので、古い絵が
+    // 別の回に紛れ込むことはない
     // 試用モード(?ending= / ?scene= から入った状態)を必ず解く。
     // 解かないと、この回の結末がセーブにも図鑑にも残らない(2026-09-06 発覚)
     endingTestRunning = false;
