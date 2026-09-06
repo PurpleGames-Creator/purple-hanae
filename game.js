@@ -1955,6 +1955,8 @@ showEvent._token = 0;
 // 対象は GAME_DATA.perfectRoute の場面そのもの。ここを唯一の正とする
 function showPerfectHint(key) {
   if (!GAME_DATA.perfectRoute[key]) return false;
+  // 光り方だけ確かめたい時に、記録に関係なく点ける(&glow=1)
+  if (/[?&]glow=1/.test(location.search)) return true;
   const order = GAME_DATA.endingOrder;
   const seen = loadSeenEndings().filter((k) => order.includes(k));
   if (!seen.length) return false;
@@ -2364,7 +2366,40 @@ function jumpToEnding(key) {
 }
 
 // タイトルの最初のタップ(音の解錠)が済んでから飛ぶ。先に飛ぶと曲が鳴らない
+/* ---------------- 場面だけを試す(?scene=キー) ---------------- */
+
+// 選択肢の見え方や光り方を実機で確かめたい時に、そこまで遊ばずに飛ぶ。
+// 結末の試用(?ending=)と同じく、セーブも図鑑も点数も触らない。
+// 選び終えたらタイトルへ戻る —— 続きの場面へは進まない(1場面だけの確認用)
+function sceneTestKey() {
+  const m = /[?&]scene=([A-Za-z0-9_]+)/.exec(location.search);
+  const k = m && m[1];
+  if (!k) return null;
+  return GAME_DATA.events[k] || GAME_DATA.freePool[k] ? k : null;
+}
+
+function jumpToScene(key) {
+  const data = GAME_DATA.events[key] || GAME_DATA.freePool[key];
+  state = freshState();
+  state.name = "テスト";
+  endingTestRunning = true;
+  const back = () => {
+    fadeTo(true, 400).then(() => {
+      state = freshState();
+      initTitleScreen();
+      return fadeTo(false, 500);
+    });
+  };
+  showEvent(key, data, sceneFor(key), back, () => {});
+}
+
 function armEndingTest() {
+  const sceneKey = sceneTestKey();
+  if (sceneKey) {
+    if (AUDIO.isUnlocked() || AUDIO.isMuted()) setTimeout(() => jumpToScene(sceneKey), 60);
+    else document.addEventListener("click", () => jumpToScene(sceneKey), { once: true });
+    return;
+  }
   const key = endingTestKey();
   if (!key) return;
   if (AUDIO.isUnlocked() || AUDIO.isMuted()) {
