@@ -953,9 +953,9 @@ function fadeTo(dark, ms) {
 // 広い画面では、立ち絵が出ている間だけ本文を左カラムに寄せる。
 // 常に寄せるとタイトル画面まで左に偏り、立ち絵の有無で切り替えるだけだと
 // プレイ中に本文の位置が飛ぶので、「プレイ中」も条件に含める。
-// プロローグと、立ち絵を出さないエンディング(soretigai/nishino)は
-// sprite: null なので、ここに入れておかないと
-// タイトル(左)→プロローグ(中央)→本編(左)→エンディング(中央)と枠が左右に飛ぶ
+// プロローグは sprite: null なので、ここに入れておかないと
+// タイトル(左)→プロローグ(中央)→本編(左)→エンディング(左)と枠が左右に飛ぶ。
+// エンディングは6つとも立ち絵を出す(endingScenes が唯一の正)
 function updateLayout() {
   const active = document.querySelector(".screen.active");
   const id = active ? active.id : "";
