@@ -14,9 +14,19 @@
 <meta property="og:url" content="https://purplegames-creator.github.io/purple-hanae/">
 <meta property="og:image" content="https://purplegames-creator.github.io/purple-hanae/assets/ogp.jpg">
 <meta name="twitter:card" content="summary_large_image">
+<!-- ホーム画面に追加した時のアイコン。無いと iOS がタイトルの1文字目(「セ」)で代用する。
+     絵はタイトルロゴの円形マーク(_source/build_icon.py で切り出し) -->
+<link rel="apple-touch-icon" href="assets/icon-180.png?v=150">
+<meta name="apple-mobile-web-app-title" content="ハナエ">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<!-- 半透明(black-translucent)にすると本文が時計の下へ潜る。上部の余白を安全域ぶん取っていないので、不透明の黒にする -->
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="theme-color" content="#2b1f3d">
+<link rel="manifest" href="site.webmanifest?v=150">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💗</text></svg>">
-<link rel="preload" as="image" href="assets/logo_title.webp?v=149">
-<link rel="stylesheet" href="style.css?v=149">
+<link rel="preload" as="image" href="assets/logo_title.webp?v=150">
+<link rel="stylesheet" href="style.css?v=150">
 </head>
 <body>
 
@@ -64,7 +74,7 @@
 
   <section id="screen-title" class="screen active">
     <h1 class="game-title">
-      <img class="game-logo" src="assets/logo_title.webp?v=149" width="960" height="463"
+      <img class="game-logo" src="assets/logo_title.webp?v=150" width="960" height="463"
            alt="センチメンタル・ハナエ" fetchpriority="high" decoding="async">
     </h1>
     <p id="tap-hint" class="tap-hint">画面をタップ</p>
@@ -208,8 +218,8 @@
   </div>
 </div>
 
-<script src="game-data.js?v=149"></script>
-<script src="audio.js?v=149"></script>
-<script src="game.js?v=149"></script>
+<script src="game-data.js?v=150"></script>
+<script src="audio.js?v=150"></script>
+<script src="game.js?v=150"></script>
 </body>
 </html>

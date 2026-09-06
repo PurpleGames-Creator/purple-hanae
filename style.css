@@ -184,7 +184,9 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
 #app {
   max-width: 640px;
   margin: 0 auto;
-  padding: 24px 20px 48px;
+  /* ホーム画面から起動した時(standalone)に、上端が時計に掛からないようにする。
+     ふつうのブラウザでは安全域が 0 なので、これまでと同じ 24px になる */
+  padding: calc(24px + env(safe-area-inset-top, 0px)) 20px 48px;
   min-height: 100vh;
   min-height: 100dvh;
   display: flex;
@@ -1963,7 +1965,7 @@ body.is-title .petals {
   }
   .gallery-name { text-align: center; }
   .gallery-hearts { font-size: 0.56rem; }
-  #app { padding-top: 8px; }
+  #app { padding-top: calc(8px + env(safe-area-inset-top, 0px)); }
   .game-title { margin: 6px 0 10px; }
   .game-logo { width: min(72%, 360px); }
 }
@@ -1971,7 +1973,7 @@ body.is-title .petals {
 /* タイトルの上半分。図鑑を1列7段で見せたいので、ロゴから「はじめる」までを詰める。
    1列のまま iPhone 13(表示 713px)に収めるのが目的 */
 @media (max-width: 999px) {
-  #app { padding-top: 10px; }
+  #app { padding-top: calc(10px + env(safe-area-inset-top, 0px)); }
   .game-title { margin: 8px 0 10px; }
   .game-logo { width: min(82%, 420px); }
   .name-form { gap: 6px; margin: 0 auto 12px; }
