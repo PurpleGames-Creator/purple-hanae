@@ -749,17 +749,25 @@ function drawDrawingPreset(ctx, w, h) {
 const DRAW_KEY = "sentimentalHanaeDrawing";
 // 描いた量の記録。絵そのもの(PNG)とは別に持つ —— 図鑑から結末を読み返した時も、その絵に対する反応が変わらないようにするため
 const DRAW_INK_KEY = "sentimentalHanaeDrawInk";
-// 線の総長を紙の対角線で割った値。端末の解像度にも紙の大きさにも左右されない。
-// 閾値は 390x844 の紙(343x243、対角420)で実測して決めた:
-//   短い線2本               0.17  → すかすか
-//   丸ひとつ                1.09  → ふつう(顔を描こうとはしている)
-//   輪郭+目2つ+口           1.39  → ふつう
-//   それに髪を足したもの    2.48  → ふつう(ちゃんと描いた絵)
-//   紙を横線で埋め尽くす   19.13  → 描きすぎ
-// 指で描くと線が揺れるぶん実際の値は3〜5割増しになるので、
-// 「描きすぎ」は 5.0 に置いた(狙えば届くが、ふつうに描いて偶然当たらない)
-const DRAW_THIN = 0.7;
-const DRAW_DENSE = 5.0;
+// 線の総長 ÷ 紙の対角線(比)と、線の本数で決める。
+// 比だけで見ると「丸ひとつ」が大きさ次第で段0にも段1にもなってしまい、
+// 同じ絵なのに反応が変わる(2026-09-07 に実際に描いて確認)。
+// 本数を併せて見れば「丸だけ」は大きさに関わらず素朴のままになる。
+// 390x844 の紙(343x243・対角420)で描いた実測:
+//   点と短い線だけ            比 0.14 / 2本  → 素朴
+//   小さい丸ひとつ            比 0.66 / 1本  → 素朴
+//   丸ひとつ                  比 0.82 / 1本  → 素朴
+//   輪郭+目2つ+口             比 1.23 / 4本  → ふつう
+//   それに髪                  比 2.03 / 16本 → ふつう
+//   さらに影を足す            比 3.68 / 36本 → しっかり
+//   顔の外にも描き込む        比 7.19 / 60本 → しっかり
+const DRAW_THIN = 0.9;
+// 線が2本以下なら、この量までは「素朴」(丸だけ・線だけ)
+const DRAW_SIMPLE = 2.0;
+// 「しっかり描いた」は量と本数の両方。指で一筆書きしただけの長い線を
+// 描き込みと取り違えない
+const DRAW_DENSE = 3.2;
+const DRAW_DENSE_STROKES = 4;
 
 function measureDrawing(strokes, w, h) {
   let len = 0;
@@ -777,8 +785,9 @@ function drawLevel() {
   let m = null;
   try { m = JSON.parse(localStorage.getItem(DRAW_INK_KEY) || "null"); } catch (e) { m = null; }
   if (!m || typeof m.r !== "number") return 1;
-  if (m.r < DRAW_THIN) return 0;
-  if (m.r >= DRAW_DENSE) return 2;
+  const n = typeof m.s === "number" ? m.s : 99;
+  if (m.r < DRAW_THIN || (n <= 2 && m.r < DRAW_SIMPLE)) return 0;
+  if (m.r >= DRAW_DENSE && n >= DRAW_DENSE_STROKES) return 2;
   return 1;
 }
 
