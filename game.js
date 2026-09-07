@@ -2118,7 +2118,8 @@ function renderChoices(key, eventData, scene, choicesEl, onChoice, onCommit) {
   eventData.choices.forEach((choice, i) => {
     const btn = document.createElement("button");
     btn.className = "choice-btn";
-    btn.textContent = choice.label;
+    // ラベルにも {name} を差し込む。E16B の「{name}だから呼んでみてよ」で使う
+    btn.textContent = withName(choice.label);
     btn.style.animationDelay = (i * CHOICE_STAGGER_MS) / 1000 + "s";
     btn.onclick = () => {
       if (choicesEl.classList.contains("is-locked")) return;
@@ -2134,7 +2135,7 @@ function renderChoices(key, eventData, scene, choicesEl, onChoice, onCommit) {
         if ((GAME_DATA.earlyEvents || []).includes(key)) state.rudeEarly++;
       }
       if (choice.tag === "passive") state.passiveCount++;
-      attachLogChoice(choice.label, reactionTextFor(key, choice));
+      attachLogChoice(withName(choice.label), reactionTextFor(key, choice));
       // 進行(queueIndex など)も選択と同時に確定させてから保存する。
       // ここを「つづける」まで遅らせると、反応を読んでいる途中で閉じた時に
       // 点数だけ入った状態で同じイベントがもう一度出て、二重に加算される
