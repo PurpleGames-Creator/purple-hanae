@@ -47,6 +47,8 @@ function freshState() {
     senshu: false,
     // 序盤(E1〜E8)の無神経な選択の回数。閾値を超えると似顔絵の場面(E8B)が挟まる
     rudeEarly: 0,
+    // 「用のない一日」を出したか。一周に一度だけ
+    hanaeShown: false,
     nigaoeShown: false,
     nigaoe: false,
     finished: false,
@@ -277,6 +279,7 @@ const BGM_BY_KEY = {
   // 静かな場面。夏のまだ距離がある静けさ(quiet1)と、本音が出る終盤(quiet2)で分ける。
   // E19 は quiet1 に戻す —— 最後の夜だけ最初の静けさが返ってくる
   E5: "quiet1",
+  E15B: "quiet1",
   E8: "quiet1",
   E12: "quiet1",
   E13: "quiet1",
@@ -2275,6 +2278,17 @@ function advanceQueue() {
     return;
   }
 
+  // 好感度が高い人だけ、夏休みの終わりに「用のない一日」が挟まる。
+  // order には入れず、ここで差し込む(E8B と同じ形)。onCommit を空にしてあるので
+  // queueIndex は動かず、この場面が終わると改めて E16 に入る
+  if (key === "E16" && !state.hanaeShown && GAME_DATA.events.E15B &&
+      state.score >= GAME_DATA.HANAE_SCENE_SCORE) {
+    state.hanaeShown = true;
+    saveGame();
+    showEvent("E15B", GAME_DATA.events.E15B, sceneFor("E15B"), () => advanceQueue(), () => {});
+    return;
+  }
+
   // Act3開始時にドリフトを一度だけ加算
   if (key === "E14" && !state.act3DriftApplied) {
     state.rival = Math.max(0, state.rival + GAME_DATA.ACT3_RIVAL_DRIFT);
@@ -2671,6 +2685,12 @@ function markerProblems() {
     (e.sceneChanges || []).forEach((c) => {
       if (!has(e.text, c.marker)) bad.push(`結末 ${key} の場面切り替え: ${c.marker}`);
     });
+  });
+  // 場面ごとの背景と日付。どちらも欠けても落ちないので気づけない ——
+  // 背景が前の場面のまま残る / HUD の日付が空になる
+  Object.keys(GAME_DATA.events).forEach((k) => {
+    if (!GAME_DATA.scenes[k]) bad.push(`場面 ${k} の背景設定が無い`);
+    if (!GAME_DATA.dates[k]) bad.push(`場面 ${k} の日付が無い`);
   });
   // 曲の割り当て。AUDIO の TRACKS に無い名前を指すと、その場面だけ黙って
   // 無音になる(2026-09-06 に nigaoe の書き忘れで実際に起きた)
