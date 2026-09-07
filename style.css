@@ -375,7 +375,6 @@ body.is-ending .sound-panel { left: 16px; right: auto; }
   width: 100%;
   max-width: 320px;
 }
-.name-form label { font-size: 0.85rem; color: var(--text-dim); }
 #player-name-input {
   padding: 12px 14px;
   border-radius: 10px;
