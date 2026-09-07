@@ -268,6 +268,9 @@ const BGM_BY_KEY = {
 
   // 誕生日。1イベントだけ専用にして、ここが特別だと分かるようにする
   E15: "daily5",
+  // 文化祭本番の初日。祝祭の曲がまだ無いので暫定で daily5 を借りている。
+  // DOVA から祭り用の曲を足したら、ここを差し替えて E15 の専用に戻すこと
+  E20: "daily5",
 
   // 静かな場面。夏のまだ距離がある静けさ(quiet1)と、本音が出る終盤(quiet2)で分ける。
   // E19 は quiet1 に戻す —— 最後の夜だけ最初の静けさが返ってくる
@@ -278,6 +281,9 @@ const BGM_BY_KEY = {
   E19: "quiet1",
   E14: "quiet2",
   E14B: "quiet2",
+  // 最終日の撤収。告白と同じ曲にしてある —— playBgm は同じ曲を鳴らし直さないので、
+  // ここから告白まで音が途切れない。祭りの終わりと告白がひと続きに聞こえる
+  E21: "quiet2",
   CONFESSION: "quiet2",
 
   // 緊張
@@ -2422,7 +2428,7 @@ function showEnding(endingKey, isNew, replaying) {
   restartBtn.style.display = "none";
   el("ending-foot").style.display = "none";
   // 結末の本文でもプレイヤー名を差し込む。枠の高さもこの文字数で測る
-  const endingText = withDrawEnding(endingKey, withName(ending.text));
+  const endingText = withDrawEnding(endingKey, withSenshuText(endingKey, withName(ending.text)));
   fitEndingTextHeight(endingText);
   // 途中で場面が変わる結末(パーフェクトの冬、似顔絵の24年後)は、その枠に来た時に切り替える
   const changes = ending.sceneChanges || [];
@@ -2454,6 +2460,16 @@ function showEnding(endingKey, isNew, replaying) {
       return fadeTo(false, 600);
     });
   };
+}
+
+// 先手を打った回は 9/4 の夜に告白しているので、後夜祭にはまだ2日ある。
+// その前提で書いてある行だけ差し替える(差し替えが無い結末はそのまま)
+function withSenshuText(endingKey, text) {
+  if (!state.senshu) return text;
+  const swaps = (GAME_DATA.endings[endingKey] || {}).senshuSwap || [];
+  let out = text;
+  swaps.forEach((pair) => { out = out.split(withName(pair[0])).join(withName(pair[1])); });
+  return out;
 }
 
 // 似顔絵エンドだけ、描いた量に応じた一言を目印の直後に差し込む。
@@ -2652,6 +2668,12 @@ function markerProblems() {
   Object.entries(GAME_DATA.endings).forEach(([key, e]) => {
     (e.sceneChanges || []).forEach((c) => {
       if (!has(e.text, c.marker)) bad.push(`結末 ${key} の場面切り替え: ${c.marker}`);
+    });
+  });
+  // 先手用の差し替え元。本文を書き換えるとここから外れて、黙って効かなくなる
+  Object.entries(GAME_DATA.endings).forEach(([key, e]) => {
+    (e.senshuSwap || []).forEach((pair) => {
+      if (e.text.indexOf(pair[0]) < 0) bad.push(`結末 ${key} の先手用の差し替え: ${pair[0]}`);
     });
   });
   // 描いた量で差し込む台詞の目印。本文を書き換えるとここから外れて、
