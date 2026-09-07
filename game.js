@@ -49,6 +49,8 @@ function freshState() {
     rudeEarly: 0,
     // 「用のない一日」を出したか。一周に一度だけ
     hanaeShown: false,
+    // 「名札」を出したか。一周に一度だけ
+    hanae2Shown: false,
     nigaoeShown: false,
     nigaoe: false,
     finished: false,
@@ -265,6 +267,7 @@ const BGM_BY_KEY = {
 
   // 中盤
   E9: "daily4",
+  E16B: "daily4",
   E10: "daily4",
   E11: "daily4",
 
@@ -2286,6 +2289,16 @@ function advanceQueue() {
     state.hanaeShown = true;
     saveGame();
     showEvent("E15B", GAME_DATA.events.E15B, sceneFor("E15B"), () => advanceQueue(), () => {});
+    return;
+  }
+
+  // さらに好感度が高い人だけ、文化祭の直前に「名札」が挟まる。
+  // 「呼び方」は成立エンド2つの締めに使ってあるので、その伏線をここで張る
+  if (key === "E17" && !state.hanae2Shown && GAME_DATA.events.E16B &&
+      state.score >= GAME_DATA.HANAE_SCENE2_SCORE) {
+    state.hanae2Shown = true;
+    saveGame();
+    showEvent("E16B", GAME_DATA.events.E16B, sceneFor("E16B"), () => advanceQueue(), () => {});
     return;
   }
 
