@@ -51,6 +51,8 @@ function freshState() {
     hanaeShown: false,
     // 「名札」を出したか。一周に一度だけ
     hanae2Shown: false,
+    // 「缶ジュース」を出したか。一周に一度だけ
+    hanae3Shown: false,
     nigaoeShown: false,
     nigaoe: false,
     finished: false,
@@ -283,6 +285,7 @@ const BGM_BY_KEY = {
   // E19 は quiet1 に戻す —— 最後の夜だけ最初の静けさが返ってくる
   E5: "quiet1",
   E15B: "quiet1",
+  E20B: "quiet1",
   E8: "quiet1",
   E12: "quiet1",
   E13: "quiet1",
@@ -2300,6 +2303,16 @@ function advanceQueue() {
     state.hanae2Shown = true;
     saveGame();
     showEvent("E16B", GAME_DATA.events.E16B, sceneFor("E16B"), () => advanceQueue(), () => {});
+    return;
+  }
+
+  // さらに好感度が高い人だけ、文化祭初日の終わりに「缶ジュース」が挟まる。
+  // 3つ目にして初めて、彼女が他の誰かを気にする場面になる
+  if (key === "E21" && !state.hanae3Shown && GAME_DATA.events.E20B &&
+      state.score >= GAME_DATA.HANAE_SCENE3_SCORE) {
+    state.hanae3Shown = true;
+    saveGame();
+    showEvent("E20B", GAME_DATA.events.E20B, sceneFor("E20B"), () => advanceQueue(), () => {});
     return;
   }
 
