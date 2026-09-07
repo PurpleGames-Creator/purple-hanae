@@ -342,15 +342,23 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
 
 /* 結末の画面だけに出る音の設定。#screen-ending の中に入れると、
    あの画面は縦に長い時スクロールするので一緒に流れてしまう。
-   暗転(.fade は z-index 900)には隠れてほしいので、それより下に置く */
+   暗転(.fade は z-index 900)には隠れてほしいので、それより下に置く。
+
+   置き場所は左上。右上は 41歳の「謝る / いじる」の一言(.adult-poke)が
+   同じ座標に出ていて、文字が重なっていた(2026-09-07 本人報告)。
+   あちらは「彼女の頭のあたりにセリフを出す」ための位置なので動かせない。
+   左上は結末では空いている —— 一枚絵(.cg)はいちばん上でも 10% / 18dvh で、
+   このボタンの下端(約38px)より下に来る */
 #ending-sound {
   display: none;
   position: fixed;
   top: calc(14px + env(safe-area-inset-top, 0px));
-  right: 16px;
+  left: 14px;
   z-index: 500;
 }
 body.is-ending #ending-sound { display: block; }
+/* 押した場所の近くで開く。結末だけ左上にボタンがあるので、パネルも左へ寄せる */
+body.is-ending .sound-panel { left: 16px; right: auto; }
 .credits {
   text-align: center;
   color: var(--text-dim);
