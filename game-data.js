@@ -458,10 +458,10 @@ const GAME_DATA = {
     // 成り立つようにするため(受付に入るのは A を選んだ時だけ)
     E20B: {
       title: "缶ジュース",
-      text: `初日が終わって、体育館の照明が半分落ちた。\n\n昼に道を聞かれて案内した一年の女子が、礼だと言って缶ジュースを置いていった。\n\n名前も聞かないまま、短いやりとりで終わった。\n\n振り返ると、ハナエが少し離れたところに立っていた。\n\nハナエ「……誰、あの子」\n\nハナエ「いや、別に。聞いただけ」\n\nそう言って、先に歩き出した。缶を持った俺の方は、一度も見なかった。`,
+      text: `初日が終わって、体育館の照明が半分落ちた。\n\n昼に道を聞かれて案内した一年の女子が、礼だと言って缶ジュースを置いていった。\n\n名前も聞かないまま、短いやりとりで終わった。\n\n振り返ると、ハナエが少し離れたところに立っていた。\n\nハナエ「……あの子だぁれ?」\n\nハナエ「いや、別に。聞いただけ」\n\nそう言って、先に歩き出した。缶を持った俺の方は、一度も見なかった。`,
       choices: [
-        { id:"A", label:"「道を聞かれただけだよ」", points:3, rival:0, expr:"normal", reaction:"ハナエ「……ふうん」\n\n歩く速さが、少しだけ落ちた。" },
-        { id:"B", label:"「ハナエも飲む?」と缶を差し出す", points:2, rival:0, expr:"soft", reaction:"ハナエ「……もらう」\n\n一口だけ飲んで、黙って返してきた。" },
+        { id:"A", label:"「道を聞かれただけだよ」", points:2, rival:0, expr:"normal", reaction:"ハナエ「……ふうん」\n\n歩く速さが、少しだけ落ちた。" },
+        { id:"B", label:"「ハナエも飲む?」と缶を差し出す", points:3, rival:0, expr:"soft", reaction:"ハナエ「……もらう」\n\n一口だけ飲んで、黙って返してきた。" },
         { id:"C", label:"何も言わずについていく", points:0, rival:0, tag:"passive", expr:"normal", reaction:"二人とも黙ったまま、体育館を出た。" },
         { id:"D", label:"「もしかして妬いてる?」", points:-3, rival:0, tag:"pushy", expr:"angry", reaction:"ハナエ「は? ちゃうし」\n\n歩く速さが上がって、追いつけなかった。" },
       ],
@@ -660,7 +660,7 @@ const GAME_DATA = {
     E19: { bg: "bg_gym_night",    sprite: "summer", expr: "normal" },
     // 本番初日は展示のある体育館。最終日の撤収は夜の校庭(E18 と同じ場所だが嵐は無い)
     E20: { bg: "bg_gym",          sprite: "summer", expr: "normal" },
-    E20B:{ bg: "bg_gym",          sprite: "summer", expr: "normal" },
+    E20B:{ bg: "bg_gym",          sprite: "summer", expr: "smile" },
     E21: { bg: "bg_ground_night", sprite: "summer", expr: "lonely" },
 
     F1_neji:     { bg: "bg_gym",       sprite: "summer" },
