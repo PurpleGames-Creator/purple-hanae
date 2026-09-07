@@ -111,7 +111,7 @@ const GAME_DATA = {
       title: "準備作業でハナエの仕切りを見る",
       text: `体育館の隅、資材置き場代わりの一角。積み上げられた段ボールを前に、実行委員のメンバーが顔を見合わせている。\n\n誰も動かない。誰が仕切るのか、まだ決まっていないからだ。\n\nその沈黙を、昨日のハナエが真っ二つにした。\n\n「はい、上から順に降ろすで。軽いのから」\n\n次の瞬間には、こちらを見ていた。\n\n「そこのあんた、突っ立ってんと手伝いや」`,
       choices: [
-        { id:"A", label:"「はいはーい」", points:1, rival:0, expr:"smile", reaction:"「素直でよろしい！」" },
+        { id:"A", label:"「はいはーい」", points:1, rival:0, expr:"smile", reaction:"「素直でよろしい!」" },
         { id:"B", label:"「班長でもないのに仕切るんだね」", points:-2, rival:0, tag:"pushy", expr:"angry", reaction:"「文句あるなら手ぇ動かしてくれる?」" },
         { id:"C", label:"周りの様子を見て動く", points:-1, rival:0, expr:"trouble", reaction:"「あんた、覇気ないなあ」" },
         { id:"D", label:"すぐに動き、他の仕事も進んで片づける", points:2, rival:0, expr:"surprise", reaction:"「言われる前に動くとか、ええ子やん」" },
@@ -161,8 +161,8 @@ const GAME_DATA = {
       choices: [
         { id:"A", label:"「いや、ここは俺が払うよ」", points:-2, rival:0, tag:"pushy", expr:"trouble", reaction:"「そんなんええって、意地張らんでも」" },
         { id:"B", label:"「じゃあ、半分ずつで」", points:3, rival:0, expr:"smile", reaction:"「そういう対等な感じ、嫌いちゃうで」" },
-        { id:"C", label:"あたふたする", points:-1, rival:0, tag:"passive", expr:"trouble", reaction:"「なにしてんねん。」" },
-        { id:"D", label:"「じゃあ、ごちそうになります」", points:0, rival:0, expr:"normal", reaction:"「まあええけど。」" },
+        { id:"C", label:"あたふたする", points:-1, rival:0, tag:"passive", expr:"trouble", reaction:"「なにしてんねん」" },
+        { id:"D", label:"「じゃあ、ごちそうになります」", points:0, rival:0, expr:"normal", reaction:"「まあええけど」" },
       ],
     },
 
@@ -179,7 +179,7 @@ const GAME_DATA = {
 
     E7: {
       title: "兄・トウマが差し入れに来る",
-      text: `委員会の作業中、体育館の入り口にひょっこり顔を出す人影があった。がっしりとした体格の男子――大学生らしき私服姿だ。\n\n「ハナエ、差し入れ。みんなでどうぞ」\n\nハナエが顔を上げ、途端に表情が緩む。\n\n「あ、兄ちゃん!」\n\n紙袋の中には、みたらし団子がぎっしり詰まっていた。\n\n「昔から、コイツ試合負けた日は決まってコレなんですわ」\n\nトウマが笑いながら言う。\n\n「兄ちゃん、それ今言わんでええし」\n\nハナエは少し照れくさそうに、肘で小突いた。\n\n昨日の大会で負けたことを、ハナエは委員会で一度も口にしていなかった。\n\n「うちら家族、そろって和菓子好きでな。ちっちゃい頃から親に連れられて、休みのたびに和菓子屋ばっかり回っとってん」`,
+      text: `委員会の作業中、体育館の入り口にひょっこり顔を出す人影があった。がっしりとした体格の男の人――大学生らしい私服姿だ。\n\n「ハナエ、差し入れ。みんなでどうぞ」\n\nハナエが顔を上げ、途端に表情が緩む。\n\n「あ、兄ちゃん!」\n\n紙袋の中には、みたらし団子がぎっしり詰まっていた。\n\n「昔から、コイツ試合負けた日は決まってコレなんですわ」\n\nトウマが笑いながら言う。\n\n「兄ちゃん、それ今言わんでええし」\n\nハナエは少し照れくさそうに、肘で小突いた。\n\n昨日の大会で負けたことを、ハナエは委員会で一度も口にしていなかった。\n\n「うちら家族、そろって和菓子好きでな。ちっちゃい頃から親に連れられて、休みのたびに和菓子屋ばっかり回っとってん」`,
       choices: [
         { id:"A", label:"微笑ましく見守る", points:1, rival:0, tag:"passive", expr:"normal", reaction:"会話の輪には入らなかった。" },
         { id:"B", label:"「へえ、そうなんですね」", points:2, rival:0, expr:"smile", reaction:"「まあ、そうやねん。昔からのお守りみたいなもんや」" },
@@ -274,7 +274,7 @@ const GAME_DATA = {
       text: `休憩中、ハナエがぼんやりとスマホを眺めていた。「兄ちゃん、寮入るの正式に決まったんやって。野球部の寮で、大学のすぐ近くにあるらしいわ」明るいトーンだが、どこか上の空だ。\n\n「電車で行ける距離やのにな。なんでやろ……ちょっと、寂しいわ」`,
       choices: [
         { id:"A", label:"黙って相槌を打つ", points:4, rival:0, expr:"soft", reaction:"「うちな、兄ちゃんおらんくなったら、一人になる気がして怖いねん。……子供の頃からずっと、誰かがおらんとあかん性格でな」\n\nそこまで言って、ハナエは口をつぐんだ。言い過ぎた、という顔だった。" },
-        { id:"B", label:"「委員会あるし、寂しがってる暇ないよ」", points:-2, rival:0, tag:"passive", expr:"lonely", reaction:"「せやな…」" },
+        { id:"B", label:"「委員会あるし、寂しがってる暇ないよ」", points:-2, rival:0, tag:"passive", expr:"lonely", reaction:"「せやな……」" },
         { id:"C", label:"「一人でも案外平気なものだよ」", points:-3, rival:0, tag:"pushy", expr:"lonely", reaction:"「そんな簡単に言わんといて」\n\nハナエはスマホを伏せて、それきりこちらを見なかった。" },
         { id:"D", label:"「そりゃ寂しいよな。わかるよ」", points:2, rival:0, expr:"soft", reaction:"「うん……ありがと」" },
       ],
@@ -300,10 +300,10 @@ const GAME_DATA = {
 
 兄のトウマが差し入れの紙袋に『誕生日』と書いて寄越したせいで、委員会中に知れ渡った。\n\n作業終わり、誰かが買ってきたコンビニのケーキに、蝋燭が一本だけ立つ。\n\n「なんやこれ、恥ずかしいねんけど」\n\nそう言いながら、ハナエは蝋燭を消すまで誰にも席を譲らなかった。`,
       choices: [
-        { id:"A", label:"「おめでとう」", points:0, rival:0, expr:"smile", reaction:"「ありがと！」" },
+        { id:"A", label:"「おめでとう」", points:0, rival:0, expr:"smile", reaction:"「ありがと!」" },
         { id:"B", label:"プレゼントをみんなの前で渡す", points:-1, rival:0, tag:"pushy", expr:"shy", reaction:"「え、みんなの前でそんな……」" },
         { id:"C", label:"いつも通り接する", points:-2, rival:0, tag:"passive", expr:"lonely", reaction:"「別にええけど、ちょっと寂しいな」" },
-        { id:"D", label:"「これ、好きそうだったから」とみたらし団子を渡す", points:4, rival:0, expr:"cry", reaction:"「……めっちゃうれしい！」\n\n団子の袋を両手で持ったまま、ハナエはしばらく何も言えずにいた。" },
+        { id:"D", label:"「これ、好きそうだったから」とみたらし団子を渡す", points:4, rival:0, expr:"cry", reaction:"「……めっちゃうれしい!」\n\n団子の袋を両手で持ったまま、ハナエはしばらく何も言えずにいた。" },
       ],
     },
 
@@ -389,7 +389,7 @@ const GAME_DATA = {
       title: "台風接近、土壇場の緊迫イベント",
       text: `文化祭まであと二日。朝から風が湿っていた。\n\n昼のニュースで、台風の進路が変わったと知る。上陸は明日の夜。屋外展示が吹き飛ばされる恐れがあり、吊るしたばかりの提灯も含めて急遽の対応が必要になった。\n\n校庭に出ると、提灯が風に煽られて、ぶつかり合う音がしていた。\n\n「これ全部、今日中に固定せなあかん……」\n\nハナエの声にも焦りが滲む。手元のリストを見て、もう一度空を見た。`,
       choices: [
-        { id:"A", label:"「どうしよう、間に合わない！」", points:-3, rival:0, tag:"pushy", expr:"trouble", reaction:"「あんたが慌ててどうすんの」" },
+        { id:"A", label:"「どうしよう、間に合わない!」", points:-3, rival:0, tag:"pushy", expr:"trouble", reaction:"「あんたが慌ててどうすんの」" },
         { id:"B", label:"黙って自分の判断で作業を始める", points:1, rival:0, tag:"passive", expr:"normal", reaction:"ハナエは一瞬こちらを見て、すぐ自分の作業に戻った。" },
         { id:"C", label:"「大丈夫、なんとかなるよ」", points:-2, rival:0, tag:"pushy", expr:"angry", reaction:"「そんな軽く言わんといて、マジでヤバいねん」" },
         { id:"D", label:"「手分けしてやろう、指示出して」", points:3, rival:0, expr:"normal", reaction:"「せやな、頼むわ。宴の前に吹き飛ばされてたまるか」" },
@@ -404,7 +404,7 @@ const GAME_DATA = {
       choices: [
         { id:"A", label:"片付けを黙々と続ける", points:0, rival:0, tag:"passive", expr:"normal", reaction:"そのまま片付けが終わる。" },
         { id:"B", label:"「終わってほしくないな」", points:4, rival:0, expr:"shy", reaction:"「……うちも、ちょっとそう思うわ」\n\n窓の外の暗さに、ハナエの声が溶けていった。" },
-        { id:"C", label:"「お疲れさま、また明日な！」", points:-2, rival:0, tag:"passive", expr:"lonely", reaction:"「……そっか」" },
+        { id:"C", label:"「お疲れさま、また明日な!」", points:-2, rival:0, tag:"passive", expr:"lonely", reaction:"「……そっか」" },
         { id:"D", label:"「明日なにかおもしろいこと起こるかな」", points:-1, rival:0, tag:"pushy", expr:"normal", reaction:"「さあ、知らんけど」" },
       ],
     },
@@ -472,7 +472,7 @@ const GAME_DATA = {
       blurb: "看板を立てる作業。時間が押している",
       text: `看板を立てようとしたところで、支柱のネジが足りないことが発覚。時間も押している。\n\n「昨日、確かに数えたんやけどな……」\n\nハナエが袋の中を三回ひっくり返す。三回目で諦めた。\n\n「どうする、買いに走る?」`,
       choices: [
-        { id:"A", label:"「ハナエはどう思う?」", points:0, rival:0, tag:"passive", expr:"trouble", reaction:"「また私が決めるんか」" },
+        { id:"A", label:"「ハナエはどう思う?」", points:0, rival:0, tag:"passive", expr:"trouble", reaction:"「またうちが決めるんか」" },
         { id:"B", label:"結束バンドなど代用品での応急処置を提案する", points:3, rival:0, expr:"surprise", reaction:"「発想の転換やな。そういうの、ロマンあるわ」" },
         { id:"C", label:"「近くの金物屋、俺知ってるから走ってくる」", points:2, rival:0, expr:"smile", reaction:"「頼りになるやん」" },
         { id:"D", label:"「まあ、なんとかなるでしょ」", points:-2, rival:0, tag:"passive", expr:"angry", reaction:"「そのままにしとったら終わらへんやろ」" },
@@ -499,7 +499,7 @@ const GAME_DATA = {
     F3_kaidashi: {
       title: "二人で買い出し",
       blurb: "買い出しの荷物を、二人で体育館まで運ぶ",
-      text: `買い出しから戻ったところで、校門から体育館まで荷物を運ぶことになった。両手の袋がずっしり重い。\n\n校門から体育館までは、緩い上り坂だ。荷物を持ってみると、いつもの倍は長く感じる。\n\n「ちょい、それ何入ってんの」\n\n俺「たぶん、ペンキと……水」\n\n「なんで水」\n\n笑いながら、ハナエは自分の袋を軽々と持ち直した。\n\n「うち、意外と力持ちやから、そっちの重いのも持つで?」`,
+      text: `買い出しから戻ったところで、校門から体育館まで荷物を運ぶことになった。両手の袋がずっしり重い。\n\nそこまでは緩い上り坂で、いつもの倍は長く感じる。\n\n「ちょい、それ何入ってんの」\n\n俺「たぶん、ペンキと……水」\n\n「なんで水」\n\n笑いながら、ハナエは自分の袋を軽々と持ち直した。\n\n「うち、意外と力持ちやから、そっちの重いのも持つで?」`,
       choices: [
         { id:"A", label:"素直に半分渡す", points:3, rival:0, expr:"smile", reaction:"「持ちつ持たれつ、これでええねん」" },
         { id:"B", label:"「大丈夫、俺が持つよ」", points:0, rival:0, tag:"pushy", expr:"trouble", reaction:"「ちょっと悔しいな」" },
