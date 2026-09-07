@@ -16,7 +16,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <!-- ホーム画面に追加した時のアイコン。無いと iOS がタイトルの1文字目(「セ」)で代用する。
      絵はタイトルロゴの円形マーク(_source/build_icon.py で切り出し) -->
-<link rel="apple-touch-icon" href="assets/icon-180.png?v=184">
+<link rel="apple-touch-icon" href="assets/icon-180.png?v=188">
 <!-- ホーム画面のアイコン下に出る名前。iOS は11〜12文字ほどで打ち切るので短くする
      (2026-09-06 に「センチメンタル・ハナエ」を試して省略されるため戻した) -->
 <meta name="apple-mobile-web-app-title" content="ハナエ">
@@ -25,10 +25,10 @@
 <!-- 半透明(black-translucent)にすると本文が時計の下へ潜る。上部の余白を安全域ぶん取っていないので、不透明の黒にする -->
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="theme-color" content="#2b1f3d">
-<link rel="manifest" href="site.webmanifest?v=184">
+<link rel="manifest" href="site.webmanifest?v=188">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💗</text></svg>">
-<link rel="preload" as="image" href="assets/logo_title.webp?v=184">
-<link rel="stylesheet" href="style.css?v=184">
+<link rel="preload" as="image" href="assets/logo_title.webp?v=188">
+<link rel="stylesheet" href="style.css?v=188">
 </head>
 <body>
 
@@ -76,11 +76,17 @@
 
   <section id="screen-title" class="screen active">
     <h1 class="game-title">
-      <img class="game-logo" src="assets/logo_title.webp?v=184" width="960" height="463"
+      <img class="game-logo" src="assets/logo_title.webp?v=188" width="960" height="463"
            alt="センチメンタル・ハナエ" fetchpriority="high" decoding="async">
     </h1>
     <p id="tap-hint" class="tap-hint">画面をタップ</p>
     <div id="title-menu" class="title-menu">
+      <!-- 初めて来た人に、これが何のゲームなのかを伝える2行。これまで説明は
+           <meta description> にしか無く、画面には1文字も出ていなかった(2026-09-07) -->
+      <p class="title-lead">
+        <span>ひと夏の恋愛アドベンチャー。所要 20〜30分。</span>
+        <span>好感度は表示されません。彼女の反応だけが手がかりです。</span>
+      </p>
       <div class="name-form">
         <label for="player-name-input">あなたの名前(必須)</label>
         <input type="text" id="player-name-input" maxlength="12" placeholder="名前を入力"
@@ -150,6 +156,12 @@
   </section>
 
 </main>
+
+<!-- 結末の画面には HUD が出ない(進行度も履歴も要らない画面のため)。
+     ただし Perfect は33枠あり、その間ずっと音を変えられないのは不便なので、
+     音の設定だけ HUD と同じ右上に出す(2026-09-07 本人指示)。
+     .js-sound なので initSoundPanel と renderSoundLabel が自動で拾う -->
+<button id="ending-sound" class="link-btn js-sound" type="button">♪ オン</button>
 
 <!-- 場面転換のテロップ(日付と場所)。本文が出る前に一拍置く -->
 <div id="telop" class="telop" aria-hidden="true">
@@ -223,8 +235,8 @@
   </div>
 </div>
 
-<script src="game-data.js?v=184"></script>
-<script src="audio.js?v=184"></script>
-<script src="game.js?v=184"></script>
+<script src="game-data.js?v=188"></script>
+<script src="audio.js?v=188"></script>
+<script src="game.js?v=188"></script>
 </body>
 </html>

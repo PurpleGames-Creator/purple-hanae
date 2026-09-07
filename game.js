@@ -747,6 +747,46 @@ function drawDrawingPreset(ctx, w, h) {
 /* ---------------- 似顔絵を描く ---------------- */
 
 const DRAW_KEY = "sentimentalHanaeDrawing";
+// 描いた量の記録。絵そのもの(PNG)とは別に持つ —— 図鑑から結末を読み返した時も、その絵に対する反応が変わらないようにするため
+const DRAW_INK_KEY = "sentimentalHanaeDrawInk";
+// 線の総長を紙の対角線で割った値。端末の解像度にも紙の大きさにも左右されない。
+// 閾値は 390x844 の紙(343x243、対角420)で実測して決めた:
+//   短い線2本               0.17  → すかすか
+//   丸ひとつ                1.09  → ふつう(顔を描こうとはしている)
+//   輪郭+目2つ+口           1.39  → ふつう
+//   それに髪を足したもの    2.48  → ふつう(ちゃんと描いた絵)
+//   紙を横線で埋め尽くす   19.13  → 描きすぎ
+// 指で描くと線が揺れるぶん実際の値は3〜5割増しになるので、
+// 「描きすぎ」は 5.0 に置いた(狙えば届くが、ふつうに描いて偶然当たらない)
+const DRAW_THIN = 0.7;
+const DRAW_DENSE = 5.0;
+
+function measureDrawing(strokes, w, h) {
+  let len = 0;
+  (strokes || []).forEach((pts) => {
+    for (let i = 1; i < pts.length; i++) {
+      len += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+    }
+  });
+  return { r: len / (Math.hypot(w, h) || 1), s: (strokes || []).length };
+}
+
+// 0 = ほとんど描いていない / 1 = ふつう / 2 = 描き込んだ。
+// この計測を入れる前に描いた絵は記録が無いので「ふつう」にする
+function drawLevel() {
+  let m = null;
+  try { m = JSON.parse(localStorage.getItem(DRAW_INK_KEY) || "null"); } catch (e) { m = null; }
+  if (!m || typeof m.r !== "number") return 1;
+  if (m.r < DRAW_THIN) return 0;
+  if (m.r >= DRAW_DENSE) return 2;
+  return 1;
+}
+
+// 量で変わる台詞。ふつう(1)は空文字が返る
+function drawComment(which) {
+  const c = (GAME_DATA.drawComment || {})[which];
+  return (c && c[drawLevel()]) || "";
+}
 // 保存する絵の大きさ。線画なので PNG で 10〜30KB 程度に収まる
 const DRAW_SAVE_W = 480;
 const DRAW_SAVE_H = 339;   // A4 と同じ 1:1.414
@@ -981,6 +1021,11 @@ function openDrawing() {
         octx.fillRect(0, 0, DRAW_SAVE_W, DRAW_SAVE_H);
         octx.drawImage(canvas, 0, 0, DRAW_SAVE_W, DRAW_SAVE_H);
         localStorage.setItem(DRAW_KEY, out.toDataURL("image/png"));
+        // 絵と一緒に「どれだけ描いたか」も残す。ハナエの反応がこれで変わる
+        localStorage.setItem(
+          DRAW_INK_KEY,
+          JSON.stringify(measureDrawing(strokesNow(), paper.offsetWidth, paper.offsetHeight))
+        );
       } catch (e) {
         /* 保存できない環境では、結末で絵が出ないだけ */
       }
@@ -1949,6 +1994,15 @@ function closeLog() {
 
 /* ---------------- イベント表示 ---------------- */
 
+// 反応の本文。似顔絵の場面だけ、描いた量に応じた一言を頭に足す。
+// 画面と会話履歴で違うものが出ないよう、どちらもここを通す
+function reactionTextFor(key, choice) {
+  const base = choice.reaction || "";
+  if (key !== "E8B") return base;
+  const line = drawComment("e8b");
+  return line ? line + "\n\n" + base : base;
+}
+
 function buildEventText(rawText, key) {
   let text = rawText;
   // 伏線は一度だけ差し込む。毎回付けると同じ一文が終盤まで延々繰り返され、
@@ -2067,7 +2121,7 @@ function renderChoices(key, eventData, scene, choicesEl, onChoice, onCommit) {
         if ((GAME_DATA.earlyEvents || []).includes(key)) state.rudeEarly++;
       }
       if (choice.tag === "passive") state.passiveCount++;
-      attachLogChoice(choice.label, choice.reaction);
+      attachLogChoice(choice.label, reactionTextFor(key, choice));
       // 進行(queueIndex など)も選択と同時に確定させてから保存する。
       // ここを「つづける」まで遅らせると、反応を読んでいる途中で閉じた時に
       // 点数だけ入った状態で同じイベントがもう一度出て、二重に加算される
@@ -2112,7 +2166,7 @@ function showReaction(key, choice, scene, points, onChoice) {
       actions.classList.remove("is-shown");
       // 横向きの携帯だけ、反応を出している間は本文を畳む(CSS 側で判定)
       el("screen-event").classList.add("is-reacting");
-      playBlocks(reactionEl, choice.reaction || "", "r:" + key + ":" + choice.id, () => {
+      playBlocks(reactionEl, reactionTextFor(key, choice), "r:" + key + ":" + choice.id, () => {
         const nextBtn = document.createElement("button");
         nextBtn.className = "next-btn";
         nextBtn.textContent = "つづける";
@@ -2369,7 +2423,7 @@ function showEnding(endingKey, isNew, replaying) {
   restartBtn.style.display = "none";
   el("ending-foot").style.display = "none";
   // 結末の本文でもプレイヤー名を差し込む。枠の高さもこの文字数で測る
-  const endingText = withName(ending.text);
+  const endingText = withDrawEnding(endingKey, withName(ending.text));
   fitEndingTextHeight(endingText);
   // 途中で場面が変わる結末(パーフェクトの冬、似顔絵の24年後)は、その枠に来た時に切り替える
   const changes = ending.sceneChanges || [];
@@ -2401,6 +2455,18 @@ function showEnding(endingKey, isNew, replaying) {
       return fadeTo(false, 600);
     });
   };
+}
+
+// 似顔絵エンドだけ、描いた量に応じた一言を目印の直後に差し込む。
+// 目印が見つからなければ足さないだけ(本文を書き換えても壊れない)
+function withDrawEnding(endingKey, text) {
+  const c = (GAME_DATA.drawComment || {})[endingKey];
+  const line = drawComment(endingKey);
+  if (!c || !c.anchor || !line) return text;
+  const at = text.indexOf(c.anchor);
+  if (at < 0) return text;
+  const cut = at + c.anchor.length;
+  return text.slice(0, cut) + "\n\n" + line + text.slice(cut);
 }
 
 /* ---------------- 結末だけを試す(?ending=キー) ---------------- */
@@ -2588,6 +2654,14 @@ function markerProblems() {
     (e.sceneChanges || []).forEach((c) => {
       if (!has(e.text, c.marker)) bad.push(`結末 ${key} の場面切り替え: ${c.marker}`);
     });
+  });
+  // 描いた量で差し込む台詞の目印。本文を書き換えるとここから外れて、
+  // 一言が黙って出なくなる(壊れはしないので気づけない)
+  Object.entries(GAME_DATA.drawComment || {}).forEach(([key, c]) => {
+    if (!c.anchor) return;
+    const e = GAME_DATA.endings[key];
+    if (!e) { bad.push(`描いた量の台詞 ${key}: 結末が無い`); return; }
+    if (e.text.indexOf(c.anchor) < 0) bad.push(`描いた量の台詞 ${key} の目印: ${c.anchor}`);
   });
   const all = Object.assign({}, GAME_DATA.events, GAME_DATA.freePool);
   Object.entries(all).forEach(([key, ev]) => {
