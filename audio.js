@@ -53,6 +53,8 @@ const AUDIO = (() => {
     daily3: { file: "daily3", vol: 0.5 },
     daily4: { file: "daily4", vol: 0.5 },
     daily5: { file: "daily5", vol: 0.5 },
+    // 文化祭本番の初日(E20)。他と同じ -16 LUFS に揃えてあるので音量も daily と同じ
+    festival: { file: "festival", vol: 0.5 },
     quiet1: { file: "quiet1", vol: 0.4 },
     quiet2: { file: "quiet2", vol: 0.4 },
     tension: { file: "tension", vol: 0.5 },
@@ -523,6 +525,10 @@ const AUDIO = (() => {
     isUnlocked: () => unlocked,
     toggleMuted: () => setMuted(!muted),
     getLevels: () => ({ bgm: levels.bgm, se: levels.se }),
+    // 用意してある曲の一覧。game.js 側の割り当てに書き忘れや打ち間違いが
+    // 無いかを markerProblems() が突き合わせる(TRACKS に無い曲を指すと
+    // elementFor が null を返し、その場面だけ黙って無音になる)
+    trackKeys: () => Object.keys(TRACKS),
     setLevel,
     // 実機で音が出ない時の切り分け用。ブラウザによって詰まる場所が違う
     state: () => ({

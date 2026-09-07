@@ -268,9 +268,11 @@ const BGM_BY_KEY = {
 
   // 誕生日。1イベントだけ専用にして、ここが特別だと分かるようにする
   E15: "daily5",
-  // 文化祭本番の初日。祝祭の曲がまだ無いので暫定で daily5 を借りている。
-  // DOVA から祭り用の曲を足したら、ここを差し替えて E15 の専用に戻すこと
-  E20: "daily5",
+
+  // 文化祭本番の初日。ここだけの曲(2026-09-07 に DOVA から追加)。
+  // 準備期間の daily1〜5 とも、終盤の静けさとも違う音にして、
+  // 「二か月かけたものが動き出す一日」だと音で分かるようにする
+  E20: "festival",
 
   // 静かな場面。夏のまだ距離がある静けさ(quiet1)と、本音が出る終盤(quiet2)で分ける。
   // E19 は quiet1 に戻す —— 最後の夜だけ最初の静けさが返ってくる
@@ -2670,6 +2672,20 @@ function markerProblems() {
       if (!has(e.text, c.marker)) bad.push(`結末 ${key} の場面切り替え: ${c.marker}`);
     });
   });
+  // 曲の割り当て。AUDIO の TRACKS に無い名前を指すと、その場面だけ黙って
+  // 無音になる(2026-09-06 に nigaoe の書き忘れで実際に起きた)
+  if (typeof AUDIO !== "undefined" && AUDIO.trackKeys) {
+    const known = new Set(AUDIO.trackKeys());
+    Object.entries(BGM_BY_KEY).forEach(([k, v]) => {
+      if (!known.has(v)) bad.push(`場面 ${k} の曲が無い: ${v}`);
+    });
+    Object.entries(BGM_ENDING).forEach(([k, v]) => {
+      if (!known.has(v)) bad.push(`結末 ${k} の曲が無い: ${v}`);
+    });
+    GAME_DATA.endingOrder.forEach((k) => {
+      if (!BGM_ENDING[k]) bad.push(`結末 ${k} に曲が割り当てられていない`);
+    });
+  }
   // 先手用の差し替え元。本文を書き換えるとここから外れて、黙って効かなくなる
   Object.entries(GAME_DATA.endings).forEach(([key, e]) => {
     (e.senshuSwap || []).forEach((pair) => {
