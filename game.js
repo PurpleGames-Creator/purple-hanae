@@ -34,8 +34,6 @@ function freshState() {
     name: "",
     score: GAME_DATA.START_SCORE,
     rival: GAME_DATA.START_RIVAL,
-    pushyCount: 0,
-    passiveCount: 0,
     perfect: {},
     freeChosen: [],
     freeRemaining: Object.keys(GAME_DATA.freePool),
@@ -1170,6 +1168,8 @@ function updateLayout() {
   el("app").classList.toggle("col-left", playing || spriteVisible);
   // エンディングだけは HUD が出ない。狭い画面で立ち絵を HUD ぶん上げるための目印
   document.body.classList.toggle("is-ending", id === "screen-ending");
+  // プロローグも HUD が出ない。音の設定ボタン(#float-sound)を出すための目印
+  document.body.classList.toggle("is-prologue", id === "screen-prologue");
 }
 
 function sceneFor(key) {
@@ -2133,11 +2133,7 @@ function renderChoices(key, eventData, scene, choicesEl, onChoice, onCommit) {
       const points = choice.points || 0;
       state.score += points;
       state.rival = Math.max(0, state.rival + (choice.rival || 0));
-      if (choice.tag === "pushy") {
-        state.pushyCount++;
-        if ((GAME_DATA.earlyEvents || []).includes(key)) state.rudeEarly++;
-      }
-      if (choice.tag === "passive") state.passiveCount++;
+      if (choice.tag === "pushy" && (GAME_DATA.earlyEvents || []).includes(key)) state.rudeEarly++;
       attachLogChoice(withName(choice.label), reactionTextFor(key, choice));
       // 進行(queueIndex など)も選択と同時に確定させてから保存する。
       // ここを「つづける」まで遅らせると、反応を読んでいる途中で閉じた時に
@@ -2540,7 +2536,7 @@ const ENDING_TEST = {
   },
   success:   (s) => { s.score = GAME_DATA.SUCCESS_THRESHOLD + 14; },
   friend:    (s) => { s.score = GAME_DATA.FRIEND_THRESHOLD + 8; },
-  soretigai: (s) => { s.score = GAME_DATA.FRIEND_THRESHOLD - 20; s.passiveCount = 3; },
+  soretigai: (s) => { s.score = GAME_DATA.FRIEND_THRESHOLD - 20; },
   nishino:   (s) => { s.score = GAME_DATA.FRIEND_THRESHOLD + 8; s.rival = GAME_DATA.RIVAL_FAIL_THRESHOLD; },
   nigaoe:    (s) => { s.score = GAME_DATA.FRIEND_THRESHOLD - 40; s.nigaoe = true; },
 };

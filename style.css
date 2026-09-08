@@ -347,18 +347,20 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
    置き場所は左上。右上は 41歳の「謝る / いじる」の一言(.adult-poke)が
    同じ座標に出ていて、文字が重なっていた(2026-09-07 本人報告)。
    あちらは「彼女の頭のあたりにセリフを出す」ための位置なので動かせない。
-   左上は結末では空いている —— 一枚絵(.cg)はいちばん上でも 10% / 18dvh で、
-   このボタンの下端(約38px)より下に来る */
-#ending-sound {
+   左上はプロローグでも結末でも空いている —— 一枚絵(.cg)はいちばん上でも
+   10% / 18dvh で、このボタンの下端(約38px)より下に来る */
+#float-sound {
   display: none;
   position: fixed;
   top: calc(14px + env(safe-area-inset-top, 0px));
   left: 14px;
   z-index: 500;
 }
-body.is-ending #ending-sound { display: block; }
-/* 押した場所の近くで開く。結末だけ左上にボタンがあるので、パネルも左へ寄せる */
-body.is-ending .sound-panel { left: 16px; right: auto; }
+body.is-ending #float-sound,
+body.is-prologue #float-sound { display: block; }
+/* 押した場所の近くで開く。プロローグと結末は左上にボタンがあるので、パネルも左へ寄せる */
+body.is-ending .sound-panel,
+body.is-prologue .sound-panel { left: 16px; right: auto; }
 .credits {
   text-align: center;
   color: var(--text-dim);
