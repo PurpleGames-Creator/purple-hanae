@@ -1356,7 +1356,7 @@ function showPrologue() {
   const prologueText = withName(GAME_DATA.prologue);
   pushLog("プロローグ", prologueText);
   const textEl = el("prologue-text");
-  playBlocks(textEl, prologueText, "prologue", () => {
+  playLoggedBlocks("b", textEl, prologueText, "prologue", () => {
     textEl.classList.add("has-next");
     pagerNext = () => {
       pagerNext = null;
@@ -1962,6 +1962,15 @@ function clearPager(elm) {
   if (elm) elm.classList.remove("has-next");
 }
 
+// 履歴に残す場面はこちらを通す。field は履歴のどちらを進めるか("b" = 本文 / "r" = 反応)。
+// onBlock を包むだけなので、playBlocks 本体は素のまま使える
+function playLoggedBlocks(field, elm, raw, readKey, onDone, onBlock, onAfterBlock) {
+  playBlocks(elm, raw, readKey, onDone, (i, block) => {
+    markLogProgress(field, i + 1);
+    if (onBlock) onBlock(i, block);
+  }, onAfterBlock);
+}
+
 // ブロックを1つずつ出し、最後まで出し終えたら onDone を呼ぶ
 function playBlocks(elm, raw, readKey, onDone, onBlock, onAfterBlock) {
   const blocks = splitBlocks(raw);
@@ -2011,8 +2020,13 @@ function pushLog(title, body) {
   if (!Array.isArray(state.log)) state.log = [];
   const last = state.log[state.log.length - 1];
   // リロードで同じイベントが出し直された時に、同じ話が二重に積まれないようにする
-  if (last && !last.c && last.t === title && last.b === body) return;
-  state.log.push({ t: title || "", b: body || "", c: "", r: "" });
+  if (last && !last.c && last.t === title && last.b === body) {
+    // 進捗を持たない古いセーブは、本文を最初から出し直すので 0 から数え直す
+    if (typeof last.bn !== "number") last.bn = 0;
+    return;
+  }
+  // bn / rn = 本文・反応をそれぞれ何枠まで出したか。履歴はここまでしか見せない
+  state.log.push({ t: title || "", b: body || "", c: "", r: "", bn: 0, rn: 0 });
   if (state.log.length > LOG_LIMIT) state.log.splice(0, state.log.length - LOG_LIMIT);
 }
 
@@ -2022,14 +2036,26 @@ function attachLogChoice(label, reaction) {
   const last = state.log[state.log.length - 1];
   last.c = label || "";
   last.r = reaction || "";
+  // 反応はこれから読む。選んだ時点で全文を見せない
+  last.rn = 0;
+}
+
+// 履歴に出してよいのは、実際に画面へ出した枠まで。読む前に全文を積むと、
+// 途中で履歴を開いた人にこの先の展開が見えてしまう(2026-09-08 本人報告)
+function markLogProgress(field, count) {
+  if (!Array.isArray(state.log) || !state.log.length) return;
+  const last = state.log[state.log.length - 1];
+  const key = field === "r" ? "rn" : "bn";
+  if (!(last[key] >= count)) last[key] = count;
 }
 
 // 履歴も本編と同じ割り方で見せる(セリフは 名前「〜」)。
 // 表示と履歴で見え方が違うと、読み返した時に別物に見える
-function logBody(text) {
-  return splitBlocks(text)
-    .map((b) => b.text)
-    .join("\n");
+function logBody(text, limit) {
+  const blocks = splitBlocks(text);
+  // limit が数字でない = 進捗を持たない古い記録。その時は全部見せる
+  const shown = typeof limit === "number" ? blocks.slice(0, Math.max(0, limit)) : blocks;
+  return shown.map((b) => b.text).join("\n");
 }
 
 // 本文は textContent で入れて CSS の pre-wrap で折る。
@@ -2050,6 +2076,10 @@ function renderLog() {
     return;
   }
   entries.forEach((e) => {
+    const body = e.b ? logBody(e.b, e.bn) : "";
+    const react = e.r ? logBody(e.r, e.rn) : "";
+    // 場面に入った直後(まだ1枠も出していない)は、見出しだけ先に出さない
+    if (!body && !react && !e.c) return;
     const item = document.createElement("section");
     item.className = "log-item";
     if (e.t) {
@@ -2058,9 +2088,9 @@ function renderLog() {
       h.textContent = e.t;
       item.appendChild(h);
     }
-    if (e.b) item.appendChild(logLine("log-text", logBody(e.b)));
+    if (body) item.appendChild(logLine("log-text", body));
     if (e.c) item.appendChild(logLine("log-choice", "→ " + e.c));
-    if (e.r) item.appendChild(logLine("log-react", logBody(e.r)));
+    if (react) item.appendChild(logLine("log-react", react));
     box.appendChild(item);
   });
 }
@@ -2155,7 +2185,7 @@ function showEvent(key, eventData, scene, onChoice, onCommit) {
   showTelop(dateLabel("screen-event"), placeFor(scene), readSet.has("t:" + key + "#0")).then(() => {
     // テロップの間にタイトルへ戻られたら、その本文は出さない
     if (token !== showEvent._token) return;
-    playBlocks(textEl, bodyText, "t:" + key, () => {
+    playLoggedBlocks("b", textEl, bodyText, "t:" + key, () => {
       textEl.classList.add("has-next");
       pagerNext = () => {
         pagerNext = null;
@@ -2267,7 +2297,7 @@ function showReaction(key, choice, scene, points, onChoice) {
       actions.classList.remove("is-shown");
       // 横向きの携帯だけ、反応を出している間は本文を畳む(CSS 側で判定)
       el("screen-event").classList.add("is-reacting");
-      playBlocks(reactionEl, reactionTextFor(key, choice), "r:" + key + ":" + choice.id, () => {
+      playLoggedBlocks("r", reactionEl, reactionTextFor(key, choice), "r:" + key + ":" + choice.id, () => {
         const nextBtn = document.createElement("button");
         nextBtn.className = "next-btn";
         nextBtn.textContent = "つづける";
@@ -2477,7 +2507,7 @@ function startConfession() {
   confEl.innerHTML = "";
   showTelop(dateLabel("screen-confession"), placeFor(sceneFor("CONFESSION")), readSet.has(readKey + "#0")).then(() => {
     if (document.querySelector(".screen.active").id !== "screen-confession") return;
-    playBlocks(confEl, introText, readKey, () => {
+    playLoggedBlocks("b", confEl, introText, readKey, () => {
       // ボタンが増えるぶん枠が上へ動く。結末と同じ速さで滑らせる(2026-09-06 本人指示)
       slideBox(document.querySelector("#screen-confession .textbox"), () => {
         btn.style.display = "block";
