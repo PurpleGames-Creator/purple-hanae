@@ -16,7 +16,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <!-- ホーム画面に追加した時のアイコン。無いと iOS がタイトルの1文字目(「セ」)で代用する。
      絵はタイトルロゴの円形マーク(_source/build_icon.py で切り出し) -->
-<link rel="apple-touch-icon" href="assets/icon-180.png?v=214">
+<link rel="apple-touch-icon" href="assets/icon-180.png?v=215">
 <!-- ホーム画面のアイコン下に出る名前。iOS は11〜12文字ほどで打ち切るので短くする
      (2026-09-06 に「センチメンタル・ハナエ」を試して省略されるため戻した) -->
 <meta name="apple-mobile-web-app-title" content="ハナエ">
@@ -25,10 +25,10 @@
 <!-- 半透明(black-translucent)にすると本文が時計の下へ潜る。上部の余白を安全域ぶん取っていないので、不透明の黒にする -->
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="theme-color" content="#2b1f3d">
-<link rel="manifest" href="site.webmanifest?v=214">
+<link rel="manifest" href="site.webmanifest?v=215">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💗</text></svg>">
-<link rel="preload" as="image" href="assets/logo_title.webp?v=214">
-<link rel="stylesheet" href="style.css?v=214">
+<link rel="preload" as="image" href="assets/logo_title.webp?v=215">
+<link rel="stylesheet" href="style.css?v=215">
 </head>
 <body>
 
@@ -66,6 +66,8 @@
     <div class="hud-row">
       <span id="hud-progress" class="hud-progress"></span>
       <span class="hud-actions">
+        <button id="btn-skip" class="link-btn js-skip" type="button"
+                title="押している間、読んだところを飛ばします" hidden>早送り</button>
         <button id="btn-sound" class="link-btn js-sound" type="button">♪ オン</button>
         <button id="btn-log" class="link-btn" type="button">会話履歴</button>
         <button id="btn-title" class="link-btn" type="button">タイトルへ</button>
@@ -76,7 +78,7 @@
 
   <section id="screen-title" class="screen active">
     <h1 class="game-title">
-      <img class="game-logo" src="assets/logo_title.webp?v=214" width="960" height="463"
+      <img class="game-logo" src="assets/logo_title.webp?v=215" width="960" height="463"
            alt="センチメンタル・ハナエ" fetchpriority="high" decoding="async">
     </h1>
     <p id="tap-hint" class="tap-hint">画面をタップ</p>
@@ -163,7 +165,11 @@
      変えられないのは不便なので、音の設定だけ左上に出す(2026-09-07 本人指示。
      プロローグへの追加は 2026-09-08)。
      .js-sound なので initSoundPanel と renderSoundLabel が自動で拾う -->
-<button id="float-sound" class="link-btn js-sound" type="button">♪ オン</button>
+<div id="float-actions">
+  <button id="float-sound" class="link-btn js-sound" type="button">♪ オン</button>
+  <button id="float-skip" class="link-btn js-skip" type="button"
+          title="押している間、読んだところを飛ばします" hidden>早送り</button>
+</div>
 
 <!-- 場面転換のテロップ(日付と場所)。本文が出る前に一拍置く -->
 <div id="telop" class="telop" aria-hidden="true">
@@ -237,8 +243,8 @@
   </div>
 </div>
 
-<script src="game-data.js?v=214"></script>
-<script src="audio.js?v=214"></script>
-<script src="game.js?v=214"></script>
+<script src="game-data.js?v=215"></script>
+<script src="audio.js?v=215"></script>
+<script src="game.js?v=215"></script>
 </body>
 </html>

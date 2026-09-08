@@ -330,6 +330,9 @@ function showScreen(id) {
   el(id).classList.add("active");
   // タイトルだけ、立ち絵をゆっくり呼吸させて花びらを降らせる
   document.body.classList.toggle("is-title", id === "screen-title");
+  // 画面をまたいで押しっぱなしにはしない(タイトルへ戻る等)
+  stopSkip();
+  renderSkipButtons();
   renderHud(id);
   updateLayout();
 }
@@ -1511,6 +1514,10 @@ function initSoundPanel() {
 
 let typeTimer = null;
 let finishTyping = null; // 表示中に呼ぶと即座に全文表示する
+// 早送りが見る値。いま出している枠が「出し始めた時点で」既読だったか。
+// 出し終わると markRead で既読になるので、後から見ると未読が消えてしまう
+let blockWasRead = false;
+let skipHeld = false;
 
 // raw は改行を \n で含む素のテキスト。1文字ずつ出し、タップで即全表示できる
 const TYPE_MS_READ = { narration: 8, line: 16 };
@@ -1626,6 +1633,7 @@ function announce(text) {
 
 function typeText(elm, block, onDone, readKey) {
   clearTimeout(typeTimer);
+  blockWasRead = !!(readKey && readSet.has(readKey));
   const raw = block.body !== undefined ? block.body : block.text;
   const voice = block.voice;
   // 「＿＿＿＿」だけの段落は場面の区切り。文字として送らず、中央の罫線にして一拍置く
@@ -1639,7 +1647,8 @@ function typeText(elm, block, onDone, readKey) {
     elm.innerHTML = html;
     elm.classList.remove("is-typing");
     markRead(readKey);
-    announce(isRule ? "" : block.text);
+    // 早送り中は読み上げへ投げない(1秒に何枠も流れて用をなさない)
+    if (!skipHeld) announce(isRule ? "" : block.text);
     if (onDone) onDone();
   };
   if (raw.length === 0) {
@@ -1683,6 +1692,70 @@ function typeText(elm, block, onDone, readKey) {
 
 function skipTyping() {
   if (finishTyping) finishTyping();
+}
+
+/* ---------------- 早送り(押している間だけ進む) ---------------- */
+
+// 1周 約210枠。図鑑を6つ埋めるには何周も要るのに、既読でもタップ回数は変わらない。
+// ボタンを押している間だけ、既読の枠を続けて送る(2026-09-08 本人指示)。
+// 文字送りの速度設定は持たない方針なので、初見の読み味には触れない ——
+// 送るのは「一度読み終えた枠」だけで、未読に着いた時点で止まる。
+const SKIP_STEP_MS = 110;
+// 送り先が無いまま何回空振りしたら諦めるか。結末の罫線(＿＿＿)は 350ms 待つので、
+// 1回で止めると場面の変わり目で必ず切れてしまう
+const SKIP_IDLE_MAX = 6;
+
+let skipTimer = null;
+let skipIdle = 0;
+
+function startSkip() {
+  // 1周目は送る先が無い。ボタン自体を出していないが、キー操作の保険として見る
+  if (skipHeld || !readSet.size) return;
+  skipHeld = true;
+  skipIdle = 0;
+  document.body.classList.add("is-skipping");
+  skipTick();
+}
+
+function stopSkip() {
+  if (!skipHeld && !skipTimer) return;
+  skipHeld = false;
+  clearTimeout(skipTimer);
+  skipTimer = null;
+  document.body.classList.remove("is-skipping");
+}
+
+function skipTick() {
+  if (!skipHeld) return;
+  // 未読に着いたら止める。初見の本文を飛ばさないための一線
+  if (!blockWasRead) { stopSkip(); return; }
+  if (finishTyping) { skipTyping(); skipIdle = 0; }
+  else if (pagerNext) { pagerNext(); skipIdle = 0; }
+  // 送り先が無い = 選択肢・似顔絵・「つづける」で待っている。数回粘って諦める
+  else if (++skipIdle > SKIP_IDLE_MAX) { stopSkip(); return; }
+  skipTimer = setTimeout(skipTick, SKIP_STEP_MS);
+}
+
+// 既読が1つも無いうち(＝1周目)は出さない。押しても動かないボタンは壊れて見える
+function renderSkipButtons() {
+  const on = readSet.size > 0;
+  document.querySelectorAll(".js-skip").forEach((b) => { b.hidden = !on; });
+}
+
+function initSkip() {
+  document.querySelectorAll(".js-skip").forEach((btn) => {
+    // pointerdown を止めておかないと、長押しで文字選択やコンテキストメニューが出る
+    btn.addEventListener("pointerdown", (ev) => { ev.preventDefault(); startSkip(); });
+    btn.addEventListener("pointerup", stopSkip);
+    btn.addEventListener("pointercancel", stopSkip);
+    btn.addEventListener("pointerleave", stopSkip);
+    btn.addEventListener("contextmenu", (ev) => ev.preventDefault());
+  });
+  // ボタンの外で指を離した時・画面から離れた時の保険
+  document.addEventListener("pointerup", stopSkip);
+  document.addEventListener("pointercancel", stopSkip);
+  window.addEventListener("blur", stopSkip);
+  renderSkipButtons();
 }
 
 /* ---------------- 本文のページ送り ---------------- */
@@ -2837,6 +2910,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   // 進行はセーブ済みなので、タイトルに戻っても「つづきから」で復帰できる
   initSoundPanel();
+  initSkip();
   renderSoundLabel();
   // iOS も Chrome も、最初のタップより前は音を出せない。
   // 環境によって拾えるイベントが違うので、最初に来たものを使う

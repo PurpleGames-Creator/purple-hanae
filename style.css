@@ -226,7 +226,9 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
   justify-content: space-between;
   gap: 4px 12px;
   margin-bottom: 6px;
-  /* ボタンが3つあり、375px 幅では1行に収まらない。
+  /* ボタンが4つあり、375px 幅では1行に収まらない。実測(2026-09-08):
+     早送り49 + ♪47 + 会話履歴62 + タイトルへ74 = 244px。日付がいちばん長い
+     「9月6日 ―― 最終日」は123px で、合わせて379px。
      縮めずに折り返す(縮めると横スクロールが出る) */
   flex-wrap: wrap;
 }
@@ -349,18 +351,35 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
    あちらは「彼女の頭のあたりにセリフを出す」ための位置なので動かせない。
    左上はプロローグでも結末でも空いている —— 一枚絵(.cg)はいちばん上でも
    10% / 18dvh で、このボタンの下端(約38px)より下に来る */
-#float-sound {
+#float-actions {
   display: none;
   position: fixed;
   top: calc(14px + env(safe-area-inset-top, 0px));
   left: 14px;
   z-index: 500;
+  align-items: center;
+  gap: 8px;
 }
-body.is-ending #float-sound,
-body.is-prologue #float-sound { display: block; }
+body.is-ending #float-actions,
+body.is-prologue #float-actions { display: flex; }
 /* 押した場所の近くで開く。プロローグと結末は左上にボタンがあるので、パネルも左へ寄せる */
 body.is-ending .sound-panel,
 body.is-prologue .sound-panel { left: 16px; right: auto; }
+/* 早送り。押している間だけ既読の枠を送る(2026-09-08)。
+   長押しで文字が選択されたり、iOS で吹き出しが出たりしないようにする */
+.js-skip {
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.js-skip[hidden] { display: none; }
+/* 押している間だけ色を変える。未読に着いて止まると色が戻るので、
+   「ここから先は読んでいない」が指を離さなくても分かる */
+body.is-skipping .js-skip { color: var(--accent-strong); }
+/* 押した瞬間の手応え。未読の枠では送りが始まらないので、
+   :active が無いと「押しても何も起きない」に見えてしまう */
+.js-skip:active { color: var(--accent); }
 .credits {
   text-align: center;
   color: var(--text-dim);
