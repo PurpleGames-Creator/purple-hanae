@@ -226,9 +226,7 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
   justify-content: space-between;
   gap: 4px 12px;
   margin-bottom: 6px;
-  /* ボタンが4つあり、375px 幅では1行に収まらない。実測(2026-09-08):
-     早送り49 + ♪47 + 会話履歴62 + タイトルへ74 = 244px。日付がいちばん長い
-     「9月6日 ―― 最終日」は123px で、合わせて379px。
+  /* ボタンが3つあり、375px 幅では1行に収まらない。
      縮めずに折り返す(縮めると横スクロールが出る) */
   flex-wrap: wrap;
 }
@@ -351,35 +349,49 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
    あちらは「彼女の頭のあたりにセリフを出す」ための位置なので動かせない。
    左上はプロローグでも結末でも空いている —— 一枚絵(.cg)はいちばん上でも
    10% / 18dvh で、このボタンの下端(約38px)より下に来る */
-#float-actions {
+#float-sound {
   display: none;
   position: fixed;
   top: calc(14px + env(safe-area-inset-top, 0px));
   left: 14px;
   z-index: 500;
-  align-items: center;
-  gap: 8px;
 }
-body.is-ending #float-actions,
-body.is-prologue #float-actions { display: flex; }
+body.is-ending #float-sound,
+body.is-prologue #float-sound { display: block; }
 /* 押した場所の近くで開く。プロローグと結末は左上にボタンがあるので、パネルも左へ寄せる */
 body.is-ending .sound-panel,
 body.is-prologue .sound-panel { left: 16px; right: auto; }
-/* 早送り。押している間だけ既読の枠を送る(2026-09-08)。
+/* 早送り。押している間だけ既読の枠を送る。本文の枠の中、右下に置く
+   (2026-09-08 本人指示)。送りマーク ▼ と同じ隅なので、▼ の方を左へ寄せる。
    長押しで文字が選択されたり、iOS で吹き出しが出たりしないようにする */
-.js-skip {
+.skip-btn {
+  position: absolute;
+  right: 10px;
+  bottom: 8px;
+  z-index: 2;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  background: rgba(0, 0, 0, 0.34);
+  color: var(--text-dim);
+  font-size: 0.76rem;
+  cursor: pointer;
   touch-action: manipulation;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
 }
-.js-skip[hidden] { display: none; }
-/* 押している間だけ色を変える。未読に着いて止まると色が戻るので、
+.skip-btn[hidden] { display: none; }
+/* 押している間は塗る。未読に着いて止まると色が戻るので、
    「ここから先は読んでいない」が指を離さなくても分かる */
-body.is-skipping .js-skip { color: var(--accent-strong); }
-/* 押した瞬間の手応え。未読の枠では送りが始まらないので、
-   :active が無いと「押しても何も起きない」に見えてしまう */
-.js-skip:active { color: var(--accent); }
+.skip-btn:active,
+body.is-skipping .skip-btn {
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+  color: #fff;
+}
+/* 「つづける」が出ている間は引っ込める。同じ隅を取り合うため */
+.reaction-actions.is-shown ~ .skip-btn { display: none; }
 .credits {
   text-align: center;
   color: var(--text-dim);
@@ -642,6 +654,10 @@ body.is-skipping .js-skip { color: var(--accent-strong); }
   color: var(--accent);
   animation: pagerBlink 1.1s ease-in-out infinite;
 }
+/* 早送りボタンが出ている間だけ、送りマークをボタンの左へ寄せる。
+   1周目(ボタンを出さない)は隅のままにする */
+body.has-skip .event-text.has-next::after,
+body.has-skip .event-reaction.has-next::after { right: 92px; }
 @keyframes pagerBlink {
   0%, 100% { opacity: 0.25; }
   50% { opacity: 1; }

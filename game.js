@@ -1739,6 +1739,8 @@ function skipTick() {
 // 既読が1つも無いうち(＝1周目)は出さない。押しても動かないボタンは壊れて見える
 function renderSkipButtons() {
   const on = readSet.size > 0;
+  // 送りマーク ▼ を左へ寄せるかの目印。ボタンを出さない1周目は隅のまま
+  document.body.classList.toggle("has-skip", on);
   document.querySelectorAll(".js-skip").forEach((b) => { b.hidden = !on; });
 }
 
