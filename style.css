@@ -392,6 +392,8 @@ body.is-skipping .skip-btn {
 }
 /* 「つづける」が出ている間は引っ込める。同じ隅を取り合うため */
 .reaction-actions.is-shown ~ .skip-btn { display: none; }
+/* 選択肢を選んでいる間も出さない。送る先が無く、押せても何も起きないため */
+body.is-choosing .skip-btn { display: none; }
 .credits {
   text-align: center;
   color: var(--text-dim);

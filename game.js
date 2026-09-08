@@ -83,10 +83,14 @@ function rememberName(name) {
   try { localStorage.setItem(NAME_KEY, name); } catch (e) { /* 保存できなくても続行 */ }
 }
 
+// 前に遊んだ時の名前。読めなければ空文字
+function savedName() {
+  try { return localStorage.getItem(NAME_KEY) || ""; } catch (e) { return ""; }
+}
+
 // 図鑑から読み返す時の名前。最後に遊んだ名前 → 入力欄 → それも無ければ「きみ」
 function lastPlayerName() {
-  let saved = "";
-  try { saved = localStorage.getItem(NAME_KEY) || ""; } catch (e) {}
+  const saved = savedName();
   if (saved) return saved;
   const input = el("player-name-input");
   const typed = input ? input.value.trim() : "";
@@ -332,6 +336,7 @@ function showScreen(id) {
   document.body.classList.toggle("is-title", id === "screen-title");
   // 画面をまたいで押しっぱなしにはしない(タイトルへ戻る等)
   stopSkip();
+  document.body.classList.remove("is-choosing");
   renderSkipButtons();
   renderHud(id);
   updateLayout();
@@ -1257,6 +1262,9 @@ function initTitleScreen() {
   const nameInput = el("player-name-input");
   const nameError = el("name-error");
   const startBtn = el("btn-start");
+  // 前に遊んだ名前を入れておく。毎回打ち直さずに「はじめる」を押せる
+  // (2026-09-08 本人指示)。消して別の名前にするのは自由
+  if (!nameInput.value) nameInput.value = savedName();
   const syncStart = () => {
     const ok = nameInput.value.trim().length > 0;
     startBtn.classList.toggle("is-off", !ok);
@@ -2131,6 +2139,7 @@ function showEvent(key, eventData, scene, onChoice, onCommit) {
   choicesEl.innerHTML = "";
   // 本文を読み終わるまで選択肢は出さない。連打で読み飛ばして誤爆するのを防ぐ
   choicesEl.style.display = "none";
+  document.body.classList.remove("is-choosing");
   window.scrollTo(0, 0);
 
   // 伏線の差し込みまで済ませた「実際に表示した本文」を履歴に残す
@@ -2184,6 +2193,9 @@ function showPerfectHint(key) {
 function renderChoices(key, eventData, scene, choicesEl, onChoice, onCommit) {
   choicesEl.innerHTML = "";
   choicesEl.style.display = "flex";
+  // 選んでいる間は早送りを引っ込める。ここでは送る先が無く、押せても何も起きない
+  // (2026-09-08 本人指示)
+  document.body.classList.add("is-choosing");
   choicesEl.classList.toggle("is-key", showPerfectHint(key));
 
   // 本文を早送りしたタップがそのまま選択肢に流れ込まないよう、描画直後は受け付けない
@@ -2222,6 +2234,7 @@ function renderChoices(key, eventData, scene, choicesEl, onChoice, onCommit) {
         if (!active || active.id !== "screen-event") return;
         choicesEl.style.display = "none";
         choicesEl.classList.remove("is-decided");
+        document.body.classList.remove("is-choosing");
         btn.classList.remove("is-chosen");
         showReaction(key, choice, scene, points, onChoice);
       }, hold);
