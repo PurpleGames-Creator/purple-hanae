@@ -2387,12 +2387,17 @@ function advanceQueue() {
       return;
     }
     // 序盤に無神経な選択を重ねていたら、自由行動の前に似顔絵の場面を挟む。
-    // どの選択肢でも似顔絵はハナエの手に渡る(= nigaoe)。最下位の結末で戻ってくる
+    // どの選択肢でも似顔絵はハナエの手に渡る(= nigaoe)。最下位の結末で戻ってくる。
+    //
+    // 印を付けるのは「選択を確定した時」= 似顔絵を描き終えた後(2026-09-08 本人報告)。
+    // 場面に入った時点で付けていたため、絵を描く前に「タイトルへ」やリロードで
+    // 抜けると、nigaoeShown だけが残って E8B は二度と出ないのに nigaoe は立ったまま
+    // になり、その周の結末に「前の周で描いた絵」が出ていた
     if (!state.nigaoeShown && state.rudeEarly >= GAME_DATA.NIGAOE_RUDE_THRESHOLD && GAME_DATA.events.E8B) {
-      state.nigaoeShown = true;
-      state.nigaoe = true;
-      saveGame();
-      showEvent("E8B", GAME_DATA.events.E8B, sceneFor("E8B"), () => advanceQueue(), () => {});
+      showEvent("E8B", GAME_DATA.events.E8B, sceneFor("E8B"), () => advanceQueue(), () => {
+        state.nigaoeShown = true;
+        state.nigaoe = true;
+      });
       return;
     }
     showFreeSelect();
@@ -2400,13 +2405,15 @@ function advanceQueue() {
   }
 
   // 好感度が高い人だけ、夏休みの終わりに「用のない一日」が挟まる。
-  // order には入れず、ここで差し込む(E8B と同じ形)。onCommit を空にしてあるので
-  // queueIndex は動かず、この場面が終わると改めて E16 に入る
+  // order には入れず、ここで差し込む(E8B と同じ形)。onCommit では印を付けるだけで
+  // queueIndex は動かさないので、この場面が終わると改めて E16 に入る。
+  // 「見た」印を選択の確定まで遅らせるのは E8B と同じ理由 —— 途中で抜けた回に
+  // 印だけ残ると、その場面を二度と見られなくなる
   if (key === "E16" && !state.hanaeShown && GAME_DATA.events.E15B &&
       state.score >= GAME_DATA.HANAE_SCENE_SCORE) {
-    state.hanaeShown = true;
-    saveGame();
-    showEvent("E15B", GAME_DATA.events.E15B, sceneFor("E15B"), () => advanceQueue(), () => {});
+    showEvent("E15B", GAME_DATA.events.E15B, sceneFor("E15B"), () => advanceQueue(), () => {
+      state.hanaeShown = true;
+    });
     return;
   }
 
@@ -2414,9 +2421,9 @@ function advanceQueue() {
   // 「呼び方」は成立エンド2つの締めに使ってあるので、その伏線をここで張る
   if (key === "E17" && !state.hanae2Shown && GAME_DATA.events.E16B &&
       state.score >= GAME_DATA.HANAE_SCENE2_SCORE) {
-    state.hanae2Shown = true;
-    saveGame();
-    showEvent("E16B", GAME_DATA.events.E16B, sceneFor("E16B"), () => advanceQueue(), () => {});
+    showEvent("E16B", GAME_DATA.events.E16B, sceneFor("E16B"), () => advanceQueue(), () => {
+      state.hanae2Shown = true;
+    });
     return;
   }
 
@@ -2424,9 +2431,9 @@ function advanceQueue() {
   // 3つ目にして初めて、彼女が他の誰かを気にする場面になる
   if (key === "E21" && !state.hanae3Shown && GAME_DATA.events.E20B &&
       state.score >= GAME_DATA.HANAE_SCENE3_SCORE) {
-    state.hanae3Shown = true;
-    saveGame();
-    showEvent("E20B", GAME_DATA.events.E20B, sceneFor("E20B"), () => advanceQueue(), () => {});
+    showEvent("E20B", GAME_DATA.events.E20B, sceneFor("E20B"), () => advanceQueue(), () => {
+      state.hanae3Shown = true;
+    });
     return;
   }
 
