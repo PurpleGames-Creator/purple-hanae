@@ -390,8 +390,10 @@ body.is-skipping .skip-btn {
   border-color: var(--accent-strong);
   color: #fff;
 }
-/* 「つづける」が出ている間は引っ込める。同じ隅を取り合うため */
-.reaction-actions.is-shown ~ .skip-btn { display: none; }
+/* 反応を出している間は、上下どちらの枠にも出さない(2026-09-08 本人指示)。
+   本文はもう送れず、反応には「つづける」がある。
+   is-reacting は showReaction で付き、次の場面の頭(showEvent)で外れる */
+#screen-event.is-reacting .skip-btn { display: none; }
 /* 選択肢を選んでいる間も出さない。送る先が無く、押せても何も起きないため */
 body.is-choosing .skip-btn { display: none; }
 .credits {
