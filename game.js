@@ -280,7 +280,7 @@ function renderEndingGallery() {
     box.appendChild(done);
     const note = document.createElement("p");
     note.className = "gallery-reveal";
-    note.textContent = "「答え合わせ」が使えるようになりました（上のボタンから）";
+    note.textContent = "「答え合わせモード」が使えるようになりました";
     box.appendChild(note);
   }
 }
