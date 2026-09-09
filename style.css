@@ -231,9 +231,10 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
   flex-wrap: wrap;
 }
 .hud-progress {
-  /* 日付は場面の手がかりなので、他のHUD要素より一段強く出す(2026-09-09 本人指示) */
+  /* 日付は場面の手がかりなので、他のHUD要素より一段強く出す(2026-09-09 本人指示)。
+     メーター0.8rem・リンク0.78rem に対してはっきり主役にする */
   color: var(--text);
-  font-size: 1rem;
+  font-size: 1.3rem;
   font-weight: bold;
   letter-spacing: 0.04em;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
@@ -1508,7 +1509,8 @@ body.is-drawing .log-overlay { z-index: 1300; }
     margin: 0;
     padding: 12px 28px 0;
   }
-  .hud-progress { font-size: 0.84rem; }
+  /* 基本(スマホ)は 1.3rem。PC は少しだけ大きく揃える(2026-09-09) */
+  .hud-progress { font-size: 1.35rem; }
   .hud-bar { max-width: 420px; }
 
   /* 告白・エンディング */
