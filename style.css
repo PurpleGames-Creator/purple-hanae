@@ -2354,6 +2354,11 @@ body.reveal-on .hud-meter {
 /* 「答え合わせ」と「オン/オフ」を2行に積んで幅を詰める。
    狭い画面でも「はじめる」の右に収めるため(2026-09-09 本人指示)。
    1行だと 360px 幅で右の列に入らず、下へ回さざるを得なかった */
+/* display を持たせているので、hidden 属性だけでは消えない。
+   UA の [hidden]{display:none} よりこちらが強いため明示する
+   (.skip-btn でも同じ手当てをしている) */
+.reveal-btn[hidden] { display: none; }
+
 .reveal-btn {
   margin: 0 0 14px;
   padding: 8px 14px;
