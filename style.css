@@ -382,6 +382,8 @@ body.is-prologue .sound-panel { left: 16px; right: auto; }
   -webkit-touch-callout: none;
 }
 .skip-btn[hidden] { display: none; }
+/* 送り先が無い枠では消す。結末の最後の枠で文字に重なるため */
+.textbox.is-text-done .skip-btn { display: none; }
 /* 押している間は塗る。未読に着いて止まると色が戻るので、
    「ここから先は読んでいない」が指を離さなくても分かる */
 .skip-btn:active,

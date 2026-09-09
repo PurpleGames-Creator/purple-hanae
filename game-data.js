@@ -259,7 +259,7 @@ const GAME_DATA = {
       choices: [
         { id:"A", label:"「何かあった?」", points:-2, rival:0, tag:"pushy", expr:"angry", reaction:"「なんでもないって言うてるやん」" },
         { id:"B", label:"「まぁいろいろあるよね」", points:2, rival:0, expr:"soft", reaction:"「……せやな。いろいろあるわ」" },
-        { id:"C", label:"「パフェのアイス溶けるよ」", points:3, rival:0, expr:"soft", reaction:"「……あんた、ほんま聞かへんな」\n\nそう言って、ハナエはスプーンを取った。溶けかけのアイスを、ちゃんと最後まで食べた。" },
+        { id:"C", label:"「そっか。あ、パフェのアイス溶けるよ」", points:3, rival:0, expr:"soft", reaction:"「……あんた、ほんま聞かへんな」\n\nそう言って、ハナエはスプーンを取った。溶けかけのアイスを、ちゃんと最後まで食べた。" },
         { id:"D", label:"「えー、なになに?」", points:-1, rival:0, tag:"pushy", expr:"trouble", reaction:"「……そんな食いつくとこちゃうって」" },
       ],
     },

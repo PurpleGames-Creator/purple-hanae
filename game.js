@@ -2050,6 +2050,15 @@ function clearPager(elm) {
   if (elm) elm.classList.remove("has-next");
 }
 
+// 送り先が無くなった枠では早送りを消す。押しても動かないうえ、結末の最後の枠では
+// 文字の上に重なって読めない(2026-09-09 本人指摘)。
+// renderSkipButtons は「1周目は出さない」を hidden で見ているので、こちらは
+// クラスで持って干渉させない
+function setTextDone(elm, done) {
+  const box = elm && elm.closest ? elm.closest(".textbox") : null;
+  if (box) box.classList.toggle("is-text-done", !!done);
+}
+
 // 履歴に残す場面はこちらを通す。field は履歴のどちらを進めるか("b" = 本文 / "r" = 反応)。
 // onBlock を包むだけなので、playBlocks 本体は素のまま使える
 function playLoggedBlocks(field, elm, raw, readKey, onDone, onBlock, onAfterBlock) {
@@ -2063,7 +2072,9 @@ function playLoggedBlocks(field, elm, raw, readKey, onDone, onBlock, onAfterBloc
 function playBlocks(elm, raw, readKey, onDone, onBlock, onAfterBlock) {
   const blocks = splitBlocks(raw);
   clearPager(elm);
+  setTextDone(elm, false);
   if (!blocks.length) {
+    setTextDone(elm, true);
     if (onDone) onDone();
     return;
   }
@@ -2076,6 +2087,7 @@ function playBlocks(elm, raw, readKey, onDone, onBlock, onAfterBlock) {
       const go = () => {
         if (last) {
           clearPager(elm);
+          setTextDone(elm, true);
           if (onDone) onDone();
           return;
         }
