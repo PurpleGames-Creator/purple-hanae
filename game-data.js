@@ -7,7 +7,7 @@
 const GAME_DATA = {
 
   // セーブ互換バージョン。イベント追加・点数調整をしたら必ず上げる(古いセーブは破棄される)
-  SAVE_VERSION: 13,
+  SAVE_VERSION: 14,
 
   // 開始値
   START_SCORE: 50,
@@ -257,10 +257,10 @@ const GAME_DATA = {
       title: "喫茶店で、ハナエが黙り込む",
       text: `買い出しの帰り、また例の喫茶店に寄った。運ばれてきたパフェにスプーンを入れたあたりで、ハナエのスマホが短く鳴る。画面を見た瞬間、表情が抜け落ちた。\n\n部活の連絡らしい。しばらく黙って画面を見つめた後、スマホを伏せた。\n\n「……ごめん、なんでもない」\n\nどう見ても、なんでもなくはない。`,
       choices: [
-        { id:"A", label:"「何かあった?」", points:-2, rival:0, tag:"pushy", expr:"angry", reaction:"「なんでもないって言うてるやん」" },
+        { id:"A", label:"「えー、なになに?」", points:-1, rival:0, tag:"pushy", expr:"trouble", reaction:"「……そんな食いつくとこちゃうって」" },
         { id:"B", label:"「まぁいろいろあるよね」", points:2, rival:0, expr:"soft", reaction:"「……せやな。いろいろあるわ」" },
         { id:"C", label:"「そっか。あ、パフェのアイス溶けるよ」", points:3, rival:0, expr:"soft", reaction:"「……あんた、ほんま聞かへんな」\n\nそう言って、ハナエはスプーンを取った。溶けかけのアイスを、ちゃんと最後まで食べた。" },
-        { id:"D", label:"「えー、なになに?」", points:-1, rival:0, tag:"pushy", expr:"trouble", reaction:"「……そんな食いつくとこちゃうって」" },
+        { id:"D", label:"「何かあった?」", points:-2, rival:0, tag:"pushy", expr:"angry", reaction:"「なんでもないって言うてるやん」" },
       ],
     },
 
