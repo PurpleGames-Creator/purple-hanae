@@ -148,6 +148,21 @@ function setRevealOn(on) {
 function applyRevealClass() {
   document.body.classList.toggle("reveal-on", revealOn());
   updateRevealMeter();
+  renderRevealButton();
+}
+
+// タイトルの「はじめる」の右に出すボタン。解放前は出さない。
+// renderEndingGallery から呼ぶ —— 図鑑と同じくタイトルを描くたびに更新したいので
+function renderRevealButton() {
+  const btn = el("btn-reveal");
+  if (!btn) return;
+  const unlocked = revealUnlocked();
+  btn.hidden = !unlocked;
+  if (!unlocked) return;
+  const on = revealOn();
+  btn.setAttribute("aria-pressed", on ? "true" : "false");
+  const st = el("reveal-state");
+  if (st) st.textContent = on ? "オン" : "オフ";
 }
 
 function signed(n) {
@@ -207,6 +222,9 @@ function recordEnding(key) {
 }
 
 function renderEndingGallery() {
+  // ボタンだけでなく body のクラスも更新する。記録が減った時に
+  // reveal-on が残ると、解放していないのに札が出たままになる
+  applyRevealClass();
   const box = el("ending-gallery");
   const order = GAME_DATA.endingOrder;
   // 廃止した結末が記録に残っている人がいる(気まずいエンド)。そのまま数えると
@@ -262,7 +280,7 @@ function renderEndingGallery() {
     box.appendChild(done);
     const note = document.createElement("p");
     note.className = "gallery-reveal";
-    note.textContent = "「答え合わせ」が使えるようになりました（⚙ 設定から）";
+    note.textContent = "「答え合わせ」が使えるようになりました（上のボタンから）";
     box.appendChild(note);
   }
 }
@@ -1547,9 +1565,6 @@ function isSoundPanelOpen() {
 
 function openSoundPanel() {
   renderSoundLabel();
-  const row = el("reveal-row"), box = el("opt-reveal");
-  if (row) row.hidden = !revealUnlocked();
-  if (box) box.checked = revealOn();
   el("sound-panel").hidden = false;
   el("vol-bgm").focus();
 }
@@ -1558,13 +1573,16 @@ function closeSoundPanel() {
   el("sound-panel").hidden = true;
 }
 
+function initRevealButton() {
+  const btn = el("btn-reveal");
+  if (btn) btn.onclick = () => setRevealOn(!revealOn());
+}
+
 function initSoundPanel() {
   document.querySelectorAll(".js-sound").forEach((btn) => {
     btn.onclick = () => (isSoundPanelOpen() ? closeSoundPanel() : openSoundPanel());
   });
   el("btn-sound-close").onclick = closeSoundPanel;
-  const revBox = el("opt-reveal");
-  if (revBox) revBox.onchange = () => setRevealOn(revBox.checked);
   el("btn-mute").onclick = () => {
     AUDIO.toggleMuted();
     renderSoundLabel();
@@ -3035,6 +3053,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   // 進行はセーブ済みなので、タイトルに戻っても「つづきから」で復帰できる
   initSoundPanel();
+  initRevealButton();
   initSkip();
   renderSoundLabel();
   // iOS も Chrome も、最初のタップより前は音を出せない。
