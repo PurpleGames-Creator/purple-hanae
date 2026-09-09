@@ -124,6 +124,66 @@ function loadGame() {
 // セーブとは別に保存する。「もう一度プレイする」で消えてはいけない
 const ENDINGS_KEY = "sentimentalHanaeEndings";
 
+/* ---------------- 答え合わせ(全6結末を見た人だけ) ---------------- */
+
+// 保存するのはオン/オフだけ。「解放したか」は図鑑の記録から導けるので持たない
+const REVEAL_KEY = "sentimentalHanaeReveal";
+
+function revealUnlocked() {
+  const order = GAME_DATA.endingOrder;
+  return loadSeenEndings().filter((k) => order.includes(k)).length >= order.length;
+}
+
+function revealOn() {
+  if (!revealUnlocked()) return false;
+  try { return localStorage.getItem(REVEAL_KEY) === "1"; } catch (e) { return false; }
+}
+
+function setRevealOn(on) {
+  try { localStorage.setItem(REVEAL_KEY, on ? "1" : "0"); } catch (e) { /* 保存できなくても続行 */ }
+  applyRevealClass();
+}
+
+// 表示の切り替えは body のクラスだけで行う(選択肢を作り直さない)
+function applyRevealClass() {
+  document.body.classList.toggle("reveal-on", revealOn());
+  updateRevealMeter();
+}
+
+function signed(n) {
+  if (n > 0) return "+" + n;
+  if (n < 0) return "−" + Math.abs(n);   // 見た目を揃えるためマイナス記号を使う
+  return "±0";
+}
+
+// 選択肢に付ける点数の札。ライバル度は動く肢(134中11)にだけ出す
+function choiceScoreBadge(choice) {
+  const p = choice.points || 0;
+  const r = choice.rival || 0;
+  const box = document.createElement("span");
+  box.className = "choice-score";
+  const pt = document.createElement("span");
+  pt.className = "choice-score-pt" + (p > 0 ? " is-plus" : p < 0 ? " is-minus" : "");
+  pt.textContent = signed(p);
+  box.appendChild(pt);
+  if (r !== 0) {
+    const rv = document.createElement("span");
+    rv.className = "choice-score-rival";
+    rv.textContent = "吉沢 " + signed(r);
+    box.appendChild(rv);
+  }
+  return box;
+}
+
+function updateRevealMeter() {
+  const m = el("hud-meter");
+  if (!m) return;
+  if (!revealUnlocked() || typeof state === "undefined" || !state) { m.textContent = ""; return; }
+  m.textContent =
+    "好感度 " + state.score + " / " + GAME_DATA.SUCCESS_THRESHOLD +
+    "　吉沢 " + state.rival + " / " + GAME_DATA.RIVAL_FAIL_THRESHOLD;
+}
+
 function loadSeenEndings() {
   try {
     const arr = JSON.parse(localStorage.getItem(ENDINGS_KEY) || "[]");
@@ -200,6 +260,10 @@ function renderEndingGallery() {
     done.className = "gallery-done";
     done.textContent = "全エンディング達成！";
     box.appendChild(done);
+    const note = document.createElement("p");
+    note.className = "gallery-reveal";
+    note.textContent = "「答え合わせ」が使えるようになりました（♪ の設定から）";
+    box.appendChild(note);
   }
 }
 
@@ -358,6 +422,7 @@ function totalSteps() {
 }
 
 function renderHud(screenId) {
+  applyRevealClass();
   const hud = el("hud");
   const playing = screenId === "screen-event" || screenId === "screen-free" || screenId === "screen-confession";
   hud.style.display = playing ? "block" : "none";
@@ -1482,6 +1547,9 @@ function isSoundPanelOpen() {
 
 function openSoundPanel() {
   renderSoundLabel();
+  const row = el("reveal-row"), box = el("opt-reveal");
+  if (row) row.hidden = !revealUnlocked();
+  if (box) box.checked = revealOn();
   el("sound-panel").hidden = false;
   el("vol-bgm").focus();
 }
@@ -1495,6 +1563,8 @@ function initSoundPanel() {
     btn.onclick = () => (isSoundPanelOpen() ? closeSoundPanel() : openSoundPanel());
   });
   el("btn-sound-close").onclick = closeSoundPanel;
+  const revBox = el("opt-reveal");
+  if (revBox) revBox.onchange = () => setRevealOn(revBox.checked);
   el("btn-mute").onclick = () => {
     AUDIO.toggleMuted();
     renderSoundLabel();
@@ -2240,6 +2310,8 @@ function renderChoices(key, eventData, scene, choicesEl, onChoice, onCommit) {
     btn.className = "choice-btn";
     // ラベルにも {name} を差し込む。E16B の「{name}だから呼んでみてよ」で使う
     btn.textContent = withName(choice.label);
+    // 解放済みなら常に付けておき、出す/出さないは CSS(body.reveal-on)で切り替える
+    if (revealUnlocked()) btn.appendChild(choiceScoreBadge(choice));
     btn.style.animationDelay = (i * CHOICE_STAGGER_MS) / 1000 + "s";
     btn.onclick = () => {
       if (choicesEl.classList.contains("is-locked")) return;
@@ -2250,6 +2322,7 @@ function renderChoices(key, eventData, scene, choicesEl, onChoice, onCommit) {
       const points = choice.points || 0;
       state.score += points;
       state.rival = Math.max(0, state.rival + (choice.rival || 0));
+      updateRevealMeter();
       if (choice.tag === "pushy" && (GAME_DATA.earlyEvents || []).includes(key)) state.rudeEarly++;
       attachLogChoice(withName(choice.label), reactionTextFor(key, choice));
       // 進行(queueIndex など)も選択と同時に確定させてから保存する。

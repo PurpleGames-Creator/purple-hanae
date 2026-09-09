@@ -2268,3 +2268,68 @@ body.is-drawing * {
 @media (prefers-reduced-motion: reduce) {
   .draw-paper.shake { animation: none; }
 }
+
+
+/* ---------------- 答え合わせ(全6結末を見た人だけ) ----------------
+   札は解放済みなら常に描いておき、出す/出さないはこのクラスで切り替える。
+   選択肢を作り直すと出現アニメと誤タップ防止のロックが壊れるため。 */
+
+.choice-score,
+.hud-meter { display: none; }
+
+body.reveal-on .choice-score {
+  display: inline-flex;
+  gap: 8px;
+  align-items: baseline;
+  float: right;
+  margin-left: 12px;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  opacity: 0.9;
+}
+
+.choice-score-pt { color: rgba(255, 255, 255, 0.62); }
+.choice-score-pt.is-plus { color: #8fd6a8; }
+.choice-score-pt.is-minus { color: #e2879b; }
+
+.choice-score-rival {
+  color: #d7b3ff;
+  border: 1px solid rgba(215, 179, 255, 0.4);
+  border-radius: 999px;
+  padding: 0 8px;
+  font-size: 0.76rem;
+}
+
+body.reveal-on .hud-meter {
+  display: inline;
+  margin-left: 12px;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.gallery-reveal {
+  margin: 6px 0 0;
+  font-size: 0.85rem;
+  color: var(--accent);
+  text-align: center;
+}
+
+.sound-row-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  cursor: pointer;
+}
+.sound-row-check .sound-label {
+  /* 音量行のラベル幅を継ぐと「答え合わせ」が2行に折れるので、ここだけ幅を解く */
+  width: auto;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+.sound-row-check .sound-note {
+  font-size: 0.8rem;
+  opacity: 0.72;
+}
