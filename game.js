@@ -1546,7 +1546,7 @@ function markRead(key) {
 function renderSoundLabel() {
   const on = !AUDIO.isMuted();
   document.querySelectorAll(".js-sound").forEach((btn) => {
-    btn.textContent = "⚙ 設定";
+    btn.textContent = "設定";
     btn.setAttribute("aria-label", "設定を開く");
   });
   const mute = el("btn-mute");
