@@ -257,7 +257,10 @@ function renderEndingGallery() {
     if (got) cell.classList.add("is-got");
     const name = document.createElement("span");
     name.className = "gallery-name";
-    name.textContent = got ? GAME_DATA.endingLabels[k] : "???";
+    // 未到達でもヒントが用意されている結末は、???ではなくそれを薄く出す
+    const hint = (GAME_DATA.endingHints || {})[k];
+    name.textContent = got ? GAME_DATA.endingLabels[k] : (hint || "???");
+    if (!got && hint) name.classList.add("is-hint");
     cell.appendChild(name);
     // まだ見ていない結末もハートは出す。中身は伏せたまま、
     // 「上から多い順の梯子」であることと、残りがどこかを見せる
@@ -267,7 +270,7 @@ function renderEndingGallery() {
     cell.appendChild(hearts);
     cell.setAttribute(
       "aria-label",
-      `${got ? GAME_DATA.endingLabels[k] : "未到達"} ハート${GAME_DATA.endingHearts[k] || 0}`
+      `${got ? GAME_DATA.endingLabels[k] : (hint ? "未到達 " + hint : "未到達")} ハート${GAME_DATA.endingHearts[k] || 0}`
     );
     grid.appendChild(cell);
   });
