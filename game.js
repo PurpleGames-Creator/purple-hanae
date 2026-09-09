@@ -262,7 +262,7 @@ function renderEndingGallery() {
     box.appendChild(done);
     const note = document.createElement("p");
     note.className = "gallery-reveal";
-    note.textContent = "「答え合わせ」が使えるようになりました（♪ の設定から）";
+    note.textContent = "「答え合わせ」が使えるようになりました（⚙ 設定から）";
     box.appendChild(note);
   }
 }
@@ -1241,7 +1241,7 @@ function updateLayout() {
   el("app").classList.toggle("col-left", playing || spriteVisible);
   // エンディングだけは HUD が出ない。狭い画面で立ち絵を HUD ぶん上げるための目印
   document.body.classList.toggle("is-ending", id === "screen-ending");
-  // プロローグも HUD が出ない。音の設定ボタン(#float-sound)を出すための目印
+  // プロローグも HUD が出ない。設定ボタン(#float-sound)を出すための目印
   document.body.classList.toggle("is-prologue", id === "screen-prologue");
 }
 
@@ -1528,8 +1528,8 @@ function markRead(key) {
 function renderSoundLabel() {
   const on = !AUDIO.isMuted();
   document.querySelectorAll(".js-sound").forEach((btn) => {
-    btn.textContent = on ? "♪ オン" : "♪ オフ";
-    btn.setAttribute("aria-label", "音の設定を開く");
+    btn.textContent = "⚙ 設定";
+    btn.setAttribute("aria-label", "設定を開く");
   });
   const mute = el("btn-mute");
   if (mute) mute.textContent = on ? "音を消す" : "音を出す";
@@ -1539,7 +1539,7 @@ function renderSoundLabel() {
   if (se) { se.value = Math.round(lv.se * 100); el("vol-se-out").textContent = se.value; }
 }
 
-/* ---------------- 音の設定パネル ---------------- */
+/* ---------------- 設定パネル ---------------- */
 
 function isSoundPanelOpen() {
   return !el("sound-panel").hidden;
