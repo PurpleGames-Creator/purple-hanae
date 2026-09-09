@@ -2329,28 +2329,35 @@ body.reveal-on .hud-meter {
 .start-row .main-btn { grid-column: 2; margin-left: 0; margin-right: 0; }
 .reveal-btn { grid-column: 3; justify-self: start; }
 
-/* 横に置けない幅では下へ回す(「はじめる」は中央のまま) */
-@media (max-width: 460px) {
-  .start-row { grid-template-columns: 1fr; justify-items: center; }
-  .start-row .main-btn { grid-column: 1; }
-  .reveal-btn { grid-column: 1; justify-self: center; }
+/* 340px 以下だと 1fr の空き列を確保できないので、中央維持をあきらめて詰める。
+   「右に置く」方を優先する */
+@media (max-width: 340px) {
+  .start-row { grid-template-columns: auto auto; justify-content: center; column-gap: 8px; }
+  .start-row .main-btn { grid-column: 1; padding-left: 26px; padding-right: 26px; }
+  .reveal-btn { grid-column: 2; }
 }
 
+
+/* 「答え合わせ」と「オン/オフ」を2行に積んで幅を詰める。
+   狭い画面でも「はじめる」の右に収めるため(2026-09-09 本人指示)。
+   1行だと 360px 幅で右の列に入らず、下へ回さざるを得なかった */
 .reveal-btn {
   margin: 0 0 14px;
-  padding: 12px 18px;
-  border-radius: 999px;
+  padding: 8px 14px;
+  border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.3);
   background: rgba(10, 6, 16, 0.55);
   color: var(--text-dim);
-  font-size: 0.9rem;
   cursor: pointer;
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 1px;
+  line-height: 1.25;
   white-space: nowrap;
   transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
+.reveal-label { font-size: 0.76rem; }
 .reveal-btn[aria-pressed="true"] {
   border-color: var(--accent);
   background: rgba(255, 143, 177, 0.22);
@@ -2358,5 +2365,5 @@ body.reveal-on .hud-meter {
 }
 .reveal-state {
   font-weight: bold;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
