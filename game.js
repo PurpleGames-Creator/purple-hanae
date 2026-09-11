@@ -445,8 +445,8 @@ const BGM_BY_KEY = {
   E19: "quiet1",
   E14: "quiet2",
   E14B: "quiet2",
-  // 最終日の撤収。告白と同じ曲にしてある —— playBgm は同じ曲を鳴らし直さないので、
-  // ここから告白まで音が途切れない。祭りの終わりと告白がひと続きに聞こえる
+  // 最終日の撤収。後夜祭の後の告白は無音にした(2026-09-12 本人指示)ので、
+  // 曲は告白に入るところで下げ切る。CONFESSION は先手(9/4 の夜)の告白だけが使う
   E21: "quiet2",
   CONFESSION: "quiet2",
 
@@ -464,7 +464,7 @@ const BGM_ENDING = {
   friend: "end_false",
   // すれ違いは「不成立」というより「そもそも始まらなかった」話なので、
   // 不成立の曲(end_false)ではなく告白と同じ quiet2 を当てる(2026-09-06 本人指示)。
-  // playBgm は同じ曲なら鳴らし直さないため、告白からこの結末までは曲が変わらない。
+  // 後夜祭の後の告白は無音なので、この結末に入ったところで quiet2 が鳴り始める。
   // 6つの結末で唯一、音が切り替わらない —— 何も起きなかったことが音でも分かる
   soretigai: "quiet2",
   nishino: "end_rival",
@@ -2757,7 +2757,11 @@ function startConfession() {
   currentEventKey = null;
   showScreen("screen-confession");
   applyScene(sceneFor("CONFESSION"), true);
-  AUDIO.playBgm(bgmForKey("CONFESSION"));
+  // 後夜祭の後の告白は音楽を鳴らさない(2026-09-12 本人指示)。E21 から続いていた曲を
+  // 暗転のテロップの間に下げ切り、無音のまま気持ちを伝える。曲は結末で戻る。
+  // 先手(9/4 の夜)の告白は今まで通り曲を鳴らす
+  if (state.senshu) AUDIO.playBgm(bgmForKey("CONFESSION"));
+  else AUDIO.stopBgm(1200);
   const intro = state.senshu ? GAME_DATA.confessionIntroSenshu : GAME_DATA.confessionIntro;
   const btn = el("btn-confess");
   btn.style.display = "none";
