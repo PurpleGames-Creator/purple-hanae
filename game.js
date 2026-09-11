@@ -2778,6 +2778,8 @@ function startConfession() {
   const readKey = state.senshu ? "confession:senshu" : "confession";
   const confEl = el("confession-text");
   confEl.innerHTML = "";
+  // 結末と同じく、いちばん長い枠に合わせて高さを決め、早送りの行を空ける
+  fitTextHeight(confEl, introText);
   showTelop(dateLabel("screen-confession"), placeFor(sceneFor("CONFESSION")), readSet.has(readKey + "#0")).then(() => {
     if (document.querySelector(".screen.active").id !== "screen-confession") return;
     playLoggedBlocks("b", confEl, introText, readKey, () => {
@@ -3177,17 +3179,38 @@ function markerProblems() {
 // そこで、その結末のいちばん長い枠に合わせて高さを決める ——
 // 結末の中では動かないので目は疲れず、余りは最小になる
 function fitEndingTextHeight(text) {
-  const box = el("ending-text");
+  fitTextHeight(el("ending-text"), text);
+}
+
+// 結末と告白で使う。いちばん長い枠に合わせて高さを決め、「早送り」が出る時は
+// その下にボタンの行を空けておく(2026-09-11 本人指摘)。ボタンは枠の右下に重ねて
+// 置いているので、最後の行が右端まで届く枠では文字に掛かっていた(両想いエンドの
+// 「…シャツの端をつまんだ。」など)。どこで改行するかは端末のフォントで変わるので、
+// 行を空ける形にして、改行の位置に左右されないようにした。
+// 足す量は実際のボタンの高さと下の余白から出す(画面ごとに余白の指定が違うため)
+function fitTextHeight(box, text) {
   if (!box) return;
-  const keep = box.textContent;
+  const keep = box.innerHTML;
   box.style.height = "auto";
+  box.style.paddingBottom = "";
+  const tb = box.closest(".textbox");
+  const btn = tb && tb.querySelector(".js-skip");
+  if (btn && !btn.hidden) {
+    // 前の結末の最後の枠で付いた「出し終わり」(ボタンを隠す)を外して測る
+    const done = tb.classList.contains("is-text-done");
+    tb.classList.remove("is-text-done");
+    const need = btn.offsetHeight + (parseFloat(getComputedStyle(btn).bottom) || 0) + 6;
+    if (done) tb.classList.add("is-text-done");
+    const base = parseFloat(getComputedStyle(box).paddingBottom) || 0;
+    if (need > base) box.style.paddingBottom = need + "px";
+  }
   let max = 0;
   splitBlocks(text).forEach((b) => {
     // textContent だと枠内の改行(<br>)が数えられず、1行ぶん低く測ってしまう
     box.innerHTML = toHtml(b.body !== undefined ? b.body : b.text);
     if (box.scrollHeight > max) max = box.scrollHeight;
   });
-  box.textContent = keep;
+  box.innerHTML = keep;
   box.style.height = max ? max + "px" : "";
 }
 
