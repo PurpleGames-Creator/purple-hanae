@@ -828,9 +828,21 @@ body.has-skip .event-reaction.has-next::after { right: 92px; }
 }
 .poke-btn:disabled { opacity: 0.3; cursor: default; }
 .poke-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-/* Perfect の「呼ぶ」。一言は押すまで出さない —— 最初から出ていると、
-   呼ぶ前に返事をしていることになる */
-.poke-hint:empty { display: none; }
+/* 結末の画面では連打で拡大させない(2026-09-11 本人指摘)。「呼ぶ」「謝る」「いじる」は
+   連打される。iPhone の Safari は同じ所を素早く2回たたくと画面を拡大する(viewport の
+   user-scalable=no は無視される)。touch-action: manipulation はダブルタップ拡大だけを止め、
+   指2本での拡大は残す。300ms の待ちも無くなるので、連打がそのまま数えられる。
+   ボタンを外れて周りをたたいても拡大しないよう、結末の間は画面全体に掛ける
+   (touch-action は継承しないので * にも書く。SUPER HANAE と同じ手当て)。
+   古い iOS 向けの保険は game.js(.adult-poke の touchend) */
+body.is-ending,
+body.is-ending * {
+  touch-action: manipulation;
+}
+/* Perfect の「呼ぶ」。一言は押すまで見せない —— 最初から出ていると、
+   呼ぶ前に返事をしていることになる。ただし場所は取っておく(詰めると、最初に押した瞬間に
+   「呼ぶ」が一言のぶん下へずれて、連打の2回目以降が吹き出しに当たって空振りする。2026-09-11 実測) */
+.poke-hint.is-blank { visibility: hidden; }
 .poke-call {
   border-color: rgba(255, 170, 200, 0.5);
   background: rgba(255, 140, 180, 0.14);

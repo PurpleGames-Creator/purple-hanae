@@ -652,7 +652,11 @@ function maybeShowCallPoke() {
   const box = el("call-poke");
   if (!box || !GAME_DATA.perfectCall) return;
   callStep = -1;
-  el("call-line").textContent = "";
+  // 押す前は一言を見せないが、場所は取っておく。詰めてしまうと、最初に押した瞬間に
+  // 一言のぶん「呼ぶ」が下へずれ、連打の2回目以降が吹き出しに当たって空振りする(2026-09-11 実測)
+  const hint = el("call-line");
+  hint.textContent = "　";
+  hint.classList.add("is-blank");
   box.hidden = false;
   // 押した時に読み込みから始めると、その1回だけ表情が遅れて変わる。先に読んでおく
   SPRITE_EXPRESSIONS.winter.forEach((e) => {
@@ -665,6 +669,7 @@ function callHanae() {
   callStep = callStep + 1 >= call.lines.length ? call.loopFrom : callStep + 1;
   const line = call.lines[callStep];
   const hint = el("call-line");
+  hint.classList.remove("is-blank");
   hint.textContent = withName(line.text);
   // 同じ長さの一言が続くと、変わったことに気づきにくい。出し直すたびに軽く浮かせる
   hint.classList.remove("is-pop");
@@ -3250,6 +3255,22 @@ document.addEventListener("DOMContentLoaded", () => {
   el("btn-tease").onclick = () => { AUDIO.se("heartShrink"); setAdultAnger(adultAnger + 1); };
   el("btn-apologize").onclick = () => { AUDIO.se("choice"); setAdultAnger(adultAnger - 1); };
   el("btn-call").onclick = () => { AUDIO.se("choice"); callHanae(); };
+  // 連打で拡大させない保険(2026-09-11 本人指摘)。止めるのは基本 CSS の touch-action だが、
+  // それが効かない古い iOS もある。前のタップから 350ms 以内の touchend は既定動作
+  // (=ダブルタップ拡大)を取り消し、押したことだけは自分で伝える。取り消すと click も
+  // 飛ばなくなるので、二重に数えることはない
+  document.querySelectorAll(".adult-poke").forEach((box) => {
+    let lastTap = 0;
+    box.addEventListener("touchend", (ev) => {
+      const now = performance.now();
+      if (now - lastTap < 350) {
+        ev.preventDefault();
+        const btn = ev.target.closest("button");
+        if (btn && !btn.disabled) btn.click();
+      }
+      lastTap = now;
+    }, { passive: false });
+  });
   el("btn-log").onclick = openLog;
   el("btn-log-close").onclick = closeLog;
   // 余白をタップしても閉じる。パネルの中のタップは拾わない
