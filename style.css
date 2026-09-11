@@ -1467,7 +1467,7 @@ body.is-drawing .log-overlay { z-index: 1300; }
 .sound-mute:hover { border-color: var(--accent); color: var(--accent); }
 .sound-mute:focus-visible,
 .sound-row input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-/* 好感度表示のスイッチ(両想いを見た人だけ。2026-09-11 本人指示)。
+/* 好感度表示のスイッチ(2周遊んだ人だけ。2026-09-11 本人指示)。
    .sound-mute は display:block を持つので、hidden 属性だけでは消えない。明示する
    (.reveal-btn / .skip-btn と同じ手当て) */
 .reveal-toggle[hidden] { display: none; }
@@ -2062,9 +2062,7 @@ body.is-winter-title .petal > i > b {
 }
 /* 横向きの端末は縦の余白が少ない(実測 320x553 で紙と枠のすき間 66px)。
    同じだけ下げるとぶつかるので、下げ幅を抑える */
-@media (max-width: 999px) and (max-height: 560px) {
-  body.is-ending .cg { top: 18dvh; }
-}
+/* 高さ 560px 以下の結末の一枚絵は、下の「立ち絵を縮める」指定の後ろにまとめて書いてある */
 .cg:not([src]) { display: none; }
 /* 狭い画面。ここは横幅が足りないので、絵をそのまま出すと立ち絵に重なって
    ハナエの顔を隠してしまう(390px 幅で実測 165px の重なり)。
@@ -2125,6 +2123,28 @@ body.is-winter-title .petal > i > b {
    縦向きと同じ 0.786 にすると紙と 58px 重なる(実測 320x553) */
 @media (max-width: 640px) and (max-height: 560px) {
   body.has-cg:not(.is-demon) .sprite { transform: scale(0.468); }
+}
+/* 高さ 560px 以下の結末では、紙を右下(立ち絵の胸から下の前)に置く(2026-09-11)。
+   この高さは縦横どちらも「左に文章・右に立ち絵」の組みになる(iPhone SE の Safari を
+   縦に持った 375x553 も入る)。以前は紙が左上で文章の列と同じ側にあり、読み終わった後の
+   「NEW」の帯と見出し(似顔絵エンドでは本文と「謝る / いじる」まで)に重なっていた
+   (844x390 / 375x553 / 320x553 で実測)。
+   大きさは幅と高さの上限で決める(width/height を auto のままにすると、置換要素は縦横比を
+   保ったまま縮む)。幅の上限は右の列の幅: 100vw - (左余白 16px + 文章の列 62vw) から、
+   右余白と -4deg の傾きで広がる分を引いた 38vw - 46px。正方形の紙ナプキンも縦長の
+   似顔絵も同じ枠に収まる。紙が左に無いので、立ち絵を縮める必要もない */
+@media (max-width: 999px) and (max-height: 560px) {
+  body.is-ending .cg {
+    left: auto;
+    right: max(6px, 2vw);
+    top: auto;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    width: auto;
+    height: auto;
+    max-width: calc(38vw - 46px);
+    max-height: min(46dvh, 190px);
+  }
+  body.has-cg:not(.is-demon) .sprite { transform: none; }
 }
 
 /* 画面が低い端末(iPhone SE の Safari 表示 553px、360x640 級の Chrome 570px など)は、
@@ -2319,7 +2339,7 @@ body.is-drawing * {
 }
 
 
-/* ---------------- 好感度表示(両想いの結末を見た人だけ。旧称: 答え合わせ) ----------------
+/* ---------------- 好感度表示(どんな結末でも2周遊んだ人だけ。旧称: 答え合わせ) ----------------
    札は解放済みなら常に描いておき、出す/出さないはこのクラスで切り替える。
    選択肢を作り直すと出現アニメと誤タップ防止のロックが壊れるため。 */
 

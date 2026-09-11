@@ -6,6 +6,9 @@ const SAVE_KEY = "sentimentalHanaeSave";
 // 最後に遊んだ名前。セーブは結末に着いた時点で消えるが、
 // 図鑑から結末を読み返す時に {name} を埋める必要があるので別に取っておく
 const NAME_KEY = "sentimentalHanaeName";
+// 結末まで遊んだ回数。好感度表示は「どんな結末でも2周」で解放する(2026-09-11 本人指示)。
+// 図鑑(ENDINGS_KEY)は結末の種類しか持たないので、同じ結末を2回見た人を数えられない
+const PLAYS_KEY = "sentimentalHanaePlays";
 const ASSET_DIR = "assets/";
 // 画像にもキャッシュバスターを付ける。付けないと、後から表情を差し替えたり
 // 追加したりした時に、古い画像や過去の404がブラウザに残り続ける。
@@ -124,19 +127,38 @@ function loadGame() {
 // セーブとは別に保存する。「もう一度プレイする」で消えてはいけない
 const ENDINGS_KEY = "sentimentalHanaeEndings";
 
-/* ---------------- 好感度表示(両想いの結末を見た人だけ。旧称: 答え合わせ) ---------------- */
+/* ---------------- 好感度表示(どんな結末でも2周遊んだ人だけ。旧称: 答え合わせ) ---------------- */
 
 // 保存するのはオン/オフだけ。「解放したか」は図鑑の記録から導けるので持たない
 const REVEAL_KEY = "sentimentalHanaeReveal";
 
-// 両想い(Perfect を含む)を一度見たら解放する(2026-09-11 本人指示)。
-// 以前は全6結末が条件だった。Perfect は難しいので、好感度を見ながら
-// 狙えるようにして、何度も遊んでもらう。全6結末のおまけは SUPER HANAE に替えた
-const REVEAL_UNLOCK_ENDINGS = ["success", "successPerfect"];
+// どんな結末でも2周遊んだら解放する(2026-09-11 本人指示)。
+// 経緯: 全6結末 → 両想い(Perfect を含む)を一度 → 2周。両想いが条件だと、丁寧に遊ぶ人は
+// 1周目で開き、Perfect の5場面はどれも「その場の最高点・同点なし」なので、
+// 2周目から点数を見て選ぶだけで Perfect が取れてしまった。全6結末のおまけは SUPER HANAE
+const REVEAL_UNLOCK_PLAYS = 2;
+
+// 結末まで遊んだ回数。記録を始める前から遊んでいる人は、見た結末の種類の数を
+// 下限にする(1種類につき最低1周はしている)
+function playCount() {
+  let n = 0;
+  try { n = parseInt(localStorage.getItem(PLAYS_KEY), 10) || 0; } catch (e) { n = 0; }
+  const kinds = loadSeenEndings().filter((k) => GAME_DATA.endingOrder.includes(k)).length;
+  return Math.max(n, kinds);
+}
+
+// 結末に着いた時に1回だけ呼ぶ。recordEnding より先に呼ぶこと ——
+// 後に呼ぶと、初めての結末の周は下限(種類の数)が先に1増えて、二重に数えられる
+function recordPlay() {
+  try {
+    localStorage.setItem(PLAYS_KEY, String(playCount() + 1));
+  } catch (e) {
+    /* 保存できなくても進行に影響させない */
+  }
+}
 
 function revealUnlocked() {
-  const seen = loadSeenEndings();
-  return REVEAL_UNLOCK_ENDINGS.some((k) => seen.includes(k));
+  return playCount() >= REVEAL_UNLOCK_PLAYS;
 }
 
 function allEndingsSeen() {
@@ -668,7 +690,8 @@ function renderUnlockNotes(unlocked) {
     p.textContent = text;
     box.appendChild(p);
   };
-  if (unlocked && unlocked.reveal) note("タイトルの「好感度表示」が使えるようになりました");
+  // タイトルと「設定」の両方から切り替えられるので、場所は書かない(2026-09-11 本人指示)
+  if (unlocked && unlocked.reveal) note("「好感度表示」が使えるようになりました");
   if (unlocked && unlocked.bonus) {
     note("全エンディング達成！");
     box.appendChild(bonusLink());
@@ -2777,6 +2800,7 @@ function resolveEnding() {
   // 試用(?ending=)は記録しないので、見た目だけ確かめたい時は &unlock=1 で両方出す
   const revealBefore = revealUnlocked();
   const allBefore = allEndingsSeen();
+  if (!testing) recordPlay();
   const isNew = testing ? true : recordEnding(endingKey);
   const unlocked = testing
     ? (/[?&]unlock=1/.test(location.search) ? { reveal: true, bonus: true } : {})
