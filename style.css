@@ -1467,6 +1467,15 @@ body.is-drawing .log-overlay { z-index: 1300; }
 .sound-mute:hover { border-color: var(--accent); color: var(--accent); }
 .sound-mute:focus-visible,
 .sound-row input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+/* 好感度表示のスイッチ(両想いを見た人だけ。2026-09-11 本人指示)。
+   .sound-mute は display:block を持つので、hidden 属性だけでは消えない。明示する
+   (.reveal-btn / .skip-btn と同じ手当て) */
+.reveal-toggle[hidden] { display: none; }
+.reveal-toggle[aria-pressed="true"] {
+  border-color: rgba(255, 214, 110, 0.7);
+  background: rgba(255, 196, 64, 0.16);
+  color: var(--gold);
+}
 
 /* ==========================================================================
    広い画面(1000px 以上): 本文窓を画面下に敷く ADV の定石配置

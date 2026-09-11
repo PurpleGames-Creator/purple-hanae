@@ -178,16 +178,25 @@ function applyRevealClass() {
 
 // タイトルの「はじめる」の右に出すボタン。解放前は出さない。
 // renderEndingGallery から呼ぶ —— 図鑑と同じくタイトルを描くたびに更新したいので
+// 設定パネルにも同じスイッチがある(プレイ中にも切り替えられるように。2026-09-11 本人指示)。
+// どちらで押しても同じ localStorage を書くので、表示はここで両方まとめて揃える
 function renderRevealButton() {
-  const btn = el("btn-reveal");
-  if (!btn) return;
   const unlocked = revealUnlocked();
-  btn.hidden = !unlocked;
-  if (!unlocked) return;
-  const on = revealOn();
-  btn.setAttribute("aria-pressed", on ? "true" : "false");
-  const st = el("reveal-state");
-  if (st) st.textContent = on ? "オン" : "オフ";
+  const on = unlocked && revealOn();
+  const btn = el("btn-reveal");
+  if (btn) {
+    btn.hidden = !unlocked;
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+    const st = el("reveal-state");
+    if (st) st.textContent = on ? "オン" : "オフ";
+  }
+  const pb = el("btn-reveal-panel");
+  if (pb) {
+    pb.hidden = !unlocked;
+    pb.setAttribute("aria-pressed", on ? "true" : "false");
+    const st = el("reveal-panel-state");
+    if (st) st.textContent = on ? "オン" : "オフ";
+  }
 }
 
 function signed(n) {
@@ -1672,6 +1681,7 @@ function isSoundPanelOpen() {
 
 function openSoundPanel() {
   renderSoundLabel();
+  renderRevealButton();
   el("sound-panel").hidden = false;
   el("vol-bgm").focus();
 }
@@ -1683,6 +1693,10 @@ function closeSoundPanel() {
 function initRevealButton() {
   const btn = el("btn-reveal");
   if (btn) btn.onclick = () => setRevealOn(!revealOn());
+  // 設定パネルの方。選択肢の札と HUD の数値は body.reveal-on だけで出し入れしているので、
+  // 選んでいる最中に切り替えてもその場で出る/消える(選択肢を作り直さない)
+  const pb = el("btn-reveal-panel");
+  if (pb) pb.onclick = () => setRevealOn(!revealOn());
 }
 
 function initSoundPanel() {
