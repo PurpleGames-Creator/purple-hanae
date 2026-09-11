@@ -2387,7 +2387,8 @@ function reactionTextFor(key, choice) {
 }
 
 function buildEventText(rawText, key) {
-  let text = rawText;
+  // 本文にも {name} を差し込む。E16B の委員「ハナエ、{name}の名札たのむわ」で使う
+  let text = withName(rawText);
   // 伏線は一度だけ差し込む。毎回付けると同じ一文が終盤まで延々繰り返され、
   // 伏線ではなく表示バグに見える
   if (!state.foreshadowShown && state.rival >= GAME_DATA.foreshadowThreshold) {
