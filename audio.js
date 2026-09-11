@@ -469,6 +469,16 @@ const AUDIO = (() => {
   // BGM も GainNode 経由になったので、止まると曲ごと無音になる
   function resume() {
     if (!unlocked) return;
+    // 画面が裏に回って止めた曲は、音量を戻してから鳴らし直す(resumeAfterLeave)。
+    // ただし止めた直後(1秒)は鳴らし直さない —— おまけの入口を押したタップの click が
+    // document 側のこの resume() にも届き、止めたばかりの曲をすぐ鳴らし直していた
+    // (2026-09-11 実測: playCalls が1回増えていた)。新しいタブが開けずに画面が
+    // そのままだった時は、1秒後のタップで鳴り直す
+    if (pausedForLeave && !document.hidden) {
+      if (performance.now() - leftAt < 1000) return;
+      resumeAfterLeave();
+      return;
+    }
     const c = ensureCtx();
     if (c && c.state !== "running") {
       kickCtx(c);
@@ -513,11 +523,61 @@ const AUDIO = (() => {
     return muted;
   }
 
+  /* ---------------- 画面が裏に回った時 ---------------- */
+
+  // おまけの SUPER HANAE を新しいタブで開くと、こちらのタブの曲が裏で鳴り続けて
+  // 向こうの曲と重なっていた(2026-09-11 本人指摘)。タブが隠れたら曲を止め、
+  // 戻ってきたら同じ曲を続きから鳴らす。
+  // 曲の切り替え(crossfade)の途中だと消えかけの前の曲も鳴っているので、
+  // 今の曲だけでなく、用意した曲をすべて止める
+  let pausedForLeave = false;
+  let leftAt = 0;
+
+  function pauseForLeave() {
+    leftAt = performance.now();
+    let any = false;
+    elements.forEach((el) => {
+      if (!el.paused) {
+        el.pause();
+        any = true;
+      }
+    });
+    if (!any) return;
+    clearFade();
+    // 消えかけだった曲は、crossfade が最後にやるはずだった状態(頭に戻す)に揃える
+    elements.forEach((el) => {
+      if (el !== currentEl) el.currentTime = 0;
+    });
+    pausedForLeave = true;
+  }
+
+  function resumeAfterLeave() {
+    if (!pausedForLeave) return;
+    pausedForLeave = false;
+    if (!currentEl || !currentKey || muted) return;
+    // フェードの途中で止めた時は音量が半端なので、その曲の本来の音量に戻してから鳴らす
+    setVolume(currentEl, targetVolume(currentKey));
+    resume();
+  }
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) pauseForLeave();
+    else resumeAfterLeave();
+  });
+  // iOS は別のアプリへ移る時などに、visibilitychange より先に pagehide が来ることがある
+  window.addEventListener("pagehide", pauseForLeave);
+  // 戻るボタンで bfcache から戻った時は、visibilitychange が来ない環境がある
+  window.addEventListener("pageshow", (ev) => {
+    if (ev.persisted) resumeAfterLeave();
+  });
+
   return {
     unlock,
     resume,
     playBgm,
     stopBgm,
+    // 別の画面(おまけの SUPER HANAE)へ移る瞬間に呼ぶ。戻ってきたら続きから鳴る
+    pauseForLeave,
     blip,
     se,
     seWhenReady,

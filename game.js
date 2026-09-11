@@ -177,7 +177,12 @@ function bonusLink() {
   a.target = "_blank";
   a.rel = "noopener";
   a.textContent = "おまけ『SUPER HANAE』で遊ぶ";
-  a.onclick = () => AUDIO.se("next");
+  // 開いた先で SUPER HANAE の曲が鳴るので、こちらの曲はその場で止める。
+  // タブが裏に回った時にも止まるが(audio.js)、開き方によってはそれが遅れるので先に止める
+  a.onclick = () => {
+    AUDIO.se("next");
+    AUDIO.pauseForLeave();
+  };
   return a;
 }
 
