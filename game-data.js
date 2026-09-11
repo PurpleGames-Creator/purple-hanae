@@ -158,7 +158,7 @@ const GAME_DATA = {
         { id:"A", label:"「どっちの言い分も分かる気がする……」", points:-1, rival:0, tag:"passive", expr:"normal", reaction:"特に何も言われず、話は先に進む。" },
         { id:"B", label:"「ハナエの言う通りだと思う」", points:1, rival:0, expr:"normal", reaction:"「せやろ」" },
         { id:"C", label:"「シンプルな方がいいと思う。去年の案内板、見づらかったし」", points:2, rival:0, expr:"joy", reaction:"「そうそう、それやねん!」" },
-        { id:"D", label:"「そこまで言わなくても」", points:-2, rival:0, tag:"pushy", expr:"angry", reaction:"「思うたことハッキリ言うて何が悪いん。それがうちの掟や」" },
+        { id:"D", label:"「そこまで言わなくても」", points:-2, rival:0, tag:"pushy", expr:"angry", reaction:"「思うたことハッキリ言うて何が悪いん。それがうちのやり方や」" },
       ],
     },
 
@@ -530,7 +530,7 @@ const GAME_DATA = {
       text: `看板を立てようとしたところで、支柱のネジが足りないことが発覚。時間も押している。\n\n「昨日、確かに数えたんやけどな……」\n\nハナエが袋の中を三回ひっくり返す。三回目で諦めた。\n\n「どうする、買いに走る?」`,
       choices: [
         { id:"A", label:"「ハナエはどう思う?」", points:0, rival:0, tag:"passive", expr:"trouble", reaction:"「またうちが決めるんか」" },
-        { id:"B", label:"結束バンドなど代用品での応急処置を提案する", points:3, rival:0, expr:"surprise", reaction:"「発想の転換やな。そういうの、ロマンあるわ」" },
+        { id:"B", label:"結束バンドなど代用品での応急処置を提案する", points:3, rival:0, expr:"surprise", reaction:"「発想の転換やな。そういうの、嫌いやないわ」" },
         { id:"C", label:"「近くの金物屋、俺知ってるから走ってくる」", points:2, rival:0, expr:"smile", reaction:"「頼りになるやん」" },
         { id:"D", label:"「まあ、なんとかなるでしょ」", points:-2, rival:0, tag:"passive", expr:"angry", reaction:"「そのままにしとったら終わらへんやろ」" },
       ],
