@@ -2138,11 +2138,10 @@ body.is-winter-title .petal > i > b {
   #app { padding-top: calc(8px + env(safe-area-inset-top, 0px)); }
   .game-title { margin: 6px 0 8px; }
   .game-logo { width: min(72%, 360px); }
-  /* ここまで低い画面では2文とも出すと図鑑の最下段が画面の外へ出る。
-     残すのは「好感度が出ない」ほう —— ジャンルはロゴの上に
-     「恋愛シミュレーションゲーム」と書いてあるので重複しない */
+  /* ここまで低い画面では2文とも出すと図鑑の最下段が画面の外へ出るので、
+     以前は「好感度が出ない」ほうだけを残していた。その文は 2026-09-11 に削除したので、
+     いまは1文(ジャンルと所要時間)しか無い。隠さずに小さく出す */
   .title-lead { font-size: 0.7rem; line-height: 1.5; margin-bottom: 8px; }
-  .title-lead span:first-child { display: none; }
   .main-btn { margin-bottom: 8px; }
 }
 
