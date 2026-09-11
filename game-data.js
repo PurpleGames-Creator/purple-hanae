@@ -545,7 +545,7 @@ const GAME_DATA = {
       text: `作業の昼休み。夏休み中でも部活組のために開いている購買の前に、短い行列ができていた。\n\n隣にハナエが並んでいた。委員会のときより、少しだけ眠そうな顔をしている。\n\n「朝練、六時からやってん。眠い」\n\n列が進む。カウンターのサンドイッチを覗き込み、ふと顔をしかめる。\n\n「うわ、これ生姜焼きサンドやん……無理やわ、生姜」`,
       choices: [
         { id:"A", label:"「じゃあ、こっちのツナサンドにしたら?」", points:3, rival:0, expr:"smile", reaction:"「気ぃ利くやん、ありがとう」" },
-        { id:"B", label:"「意外と好き嫌いあるんだ」", points:-3, rival:0, tag:"pushy", expr:"angry", reaction:"「別にええやろ、好みなんやから」" },
+        { id:"B", label:"「好き嫌いは良くないよ」", points:-3, rival:0, tag:"pushy", expr:"angry", reaction:"「別にええやろ、好みなんやから」" },
         { id:"C", label:"「え、生姜だめなんだ?意外」", points:1, rival:0, expr:"smile", reaction:"「あとらっきょうとセロリも無理やねん」" },
         { id:"D", label:"自分の分だけ選ぶ", points:-1, rival:0, tag:"passive", expr:"trouble", reaction:"「ちょい、そこ拾ってや」" },
       ],
