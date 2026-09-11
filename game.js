@@ -54,6 +54,7 @@ function freshState() {
     hanae2Shown: false,
     // 「缶ジュース」を出したか。一周に一度だけ
     hanae3Shown: false,
+    hanae4Shown: false,
     nigaoeShown: false,
     nigaoe: false,
     finished: false,
@@ -439,6 +440,8 @@ const BGM_BY_KEY = {
   E5: "quiet1",
   E15B: "quiet1",
   E20B: "quiet1",
+  // 缶ジュースの続き。同じ曲にして、翌日でも続きの場面だと音で分かるようにする
+  E20C: "quiet1",
   E8: "quiet1",
   E12: "quiet1",
   E13: "quiet1",
@@ -2700,6 +2703,16 @@ function advanceQueue() {
       state.score >= GAME_DATA.HANAE_SCENE3_SCORE) {
     showEvent("E20B", GAME_DATA.events.E20B, sceneFor("E20B"), () => advanceQueue(), () => {
       state.hanae3Shown = true;
+    });
+    return;
+  }
+
+  // 「缶ジュース」を見た人だけ、続けて最終日の昼に「もう一本」が挟まる(2026-09-12)。
+  // 点数の条件は持たない。E20B の確定後に advanceQueue が E21 へ戻ってきた所で出す。
+  // 「見た」印を確定まで遅らせるのは E15B / E16B / E20B と同じ理由
+  if (key === "E21" && state.hanae3Shown && !state.hanae4Shown && GAME_DATA.events.E20C) {
+    showEvent("E20C", GAME_DATA.events.E20C, sceneFor("E20C"), () => advanceQueue(), () => {
+      state.hanae4Shown = true;
     });
     return;
   }
