@@ -70,6 +70,14 @@ ffmpeg -y -i aligned.png -c:v libwebp -pix_fmt yuva420p -quality 88 assets/hanae
 | surprise | 0.9044 | 0.624 | +1 | 1.5px |
 | cry | 0.9024 | 0.626 | +1 | 0.0px |
 | joy | 0.9103 | 0.628 | +1 | 0.5px |
+| 冬服 shy | 0.9571 | 0.632 | +1 | 0.5px |
+| 冬服 pout | 0.9616 | 0.636 | +0 | 1.0px |
+
+冬服は第3引数に `assets/hanae_winter.webp` を渡す(基準を冬服のベースにする)。
+
+> [!warning] 画像に「冬服」などのラベルが入っている時は、透過の前に白で潰す
+> 潰さないとラベルが前景として残る(2026-09-11 の shy / pout で対処):
+> `ffmpeg -i in.png -vf "drawbox=x=0:y=0:w=200:h=130:color=white:t=fill" nolabel.png`
 
 夏服10種の一覧は `_source/expression_sheet.png`。
 プロンプト集と手順は `_source/expression_prompts.md`(ストーリー追加時はこれを見る)。

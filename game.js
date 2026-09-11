@@ -124,14 +124,39 @@ function loadGame() {
 // セーブとは別に保存する。「もう一度プレイする」で消えてはいけない
 const ENDINGS_KEY = "sentimentalHanaeEndings";
 
-/* ---------------- 答え合わせ(全6結末を見た人だけ) ---------------- */
+/* ---------------- 好感度表示(両想いの結末を見た人だけ。旧称: 答え合わせ) ---------------- */
 
 // 保存するのはオン/オフだけ。「解放したか」は図鑑の記録から導けるので持たない
 const REVEAL_KEY = "sentimentalHanaeReveal";
 
+// 両想い(Perfect を含む)を一度見たら解放する(2026-09-11 本人指示)。
+// 以前は全6結末が条件だった。Perfect は難しいので、好感度を見ながら
+// 狙えるようにして、何度も遊んでもらう。全6結末のおまけは SUPER HANAE に替えた
+const REVEAL_UNLOCK_ENDINGS = ["success", "successPerfect"];
+
 function revealUnlocked() {
+  const seen = loadSeenEndings();
+  return REVEAL_UNLOCK_ENDINGS.some((k) => seen.includes(k));
+}
+
+function allEndingsSeen() {
   const order = GAME_DATA.endingOrder;
   return loadSeenEndings().filter((k) => order.includes(k)).length >= order.length;
+}
+
+// 全6結末を見た人へのおまけ(2026-09-11 本人指示)。SUPER HANAE は HP に載せず、
+// ここからだけ入れる。repo は private のまま Vercel で配信している
+const BONUS_GAME_URL = "https://purple-superhanae.vercel.app/";
+
+function bonusLink() {
+  const a = document.createElement("a");
+  a.className = "bonus-link";
+  a.href = BONUS_GAME_URL;
+  a.target = "_blank";
+  a.rel = "noopener";
+  a.textContent = "おまけ『SUPER HANAE』で遊ぶ";
+  a.onclick = () => AUDIO.se("next");
+  return a;
 }
 
 function revealOn() {
@@ -235,6 +260,15 @@ function renderEndingGallery() {
   const head = document.createElement("p");
   head.className = "gallery-head";
   head.textContent = `エンディング ${seen.length} / ${order.length}`;
+  // 全部見たら、同じ行に「全達成！」を足す。行を分けると、下に足した
+  // おまけの入口のぶん画面が伸び、低い端末(375x553)で図鑑の下が画面の外へ出る
+  // (2026-09-11 実測。以前は「全エンディング達成！」を独立した行に出していた)
+  if (seen.length >= order.length) {
+    const done = document.createElement("span");
+    done.className = "gallery-done";
+    done.textContent = "全達成！";
+    head.appendChild(done);
+  }
   box.appendChild(head);
 
   const grid = document.createElement("div");
@@ -277,14 +311,10 @@ function renderEndingGallery() {
   box.appendChild(grid);
 
   if (seen.length >= order.length) {
-    const done = document.createElement("p");
-    done.className = "gallery-done";
-    done.textContent = "全エンディング達成！";
-    box.appendChild(done);
-    const note = document.createElement("p");
-    note.className = "gallery-reveal";
-    note.textContent = "「答え合わせモード」が使えるようになりました";
-    box.appendChild(note);
+    const bonus = document.createElement("p");
+    bonus.className = "gallery-bonus";
+    bonus.appendChild(bonusLink());
+    box.appendChild(bonus);
   }
 }
 
@@ -511,7 +541,8 @@ const BASE_EXPR = "smile";
 // 新しい差分を assets/ に置いたら、ここにも足すこと
 const SPRITE_EXPRESSIONS = {
   summer: ["normal", "soft", "trouble", "lonely", "angry", "surprise", "shy", "joy", "cry"],
-  winter: ["soft"],
+  // shy(照れ)と pout(むくれ)は Perfect の結末の「呼ぶ」で使う(2026-09-11 追加)
+  winter: ["soft", "shy", "pout"],
   // 41歳。素の1枚と、怒りが上がっていく3枚、それに素の段で謝った時の1枚。
   // 結末のおまけで押して切り替える(全部で5枚)
   adult: ["angry1", "angry2", "angry3", "sorry"],
@@ -576,6 +607,64 @@ function resetAdultPoke() {
   if (box) box.hidden = true;
   adultAnger = ADULT_START;
   document.body.classList.remove("is-demon");
+}
+
+/* ---------------- Perfect の結末のおまけ(呼ぶ) ---------------- */
+
+// 結末の最後の一文「今度は俺が呼ぼう。用もないのに、何度でも。」を、
+// 読み終えたあとにプレイヤーが実際にやれるようにする(2026-09-11 本人採用)。
+// 押すたびに GAME_DATA.perfectCall.lines を1つ進め、最後まで行ったら loopFrom へ
+// 戻る —— 何度でも呼べる。置き場所と見た目は41歳の「謝る / いじる」と同じ
+let callStep = -1;
+
+function maybeShowCallPoke() {
+  const box = el("call-poke");
+  if (!box || !GAME_DATA.perfectCall) return;
+  callStep = -1;
+  el("call-line").textContent = "";
+  box.hidden = false;
+  // 押した時に読み込みから始めると、その1回だけ表情が遅れて変わる。先に読んでおく
+  SPRITE_EXPRESSIONS.winter.forEach((e) => {
+    new Image().src = `${ASSET_DIR}hanae_winter_${e}.webp${ASSET_V}`;
+  });
+}
+
+function callHanae() {
+  const call = GAME_DATA.perfectCall;
+  callStep = callStep + 1 >= call.lines.length ? call.loopFrom : callStep + 1;
+  const line = call.lines[callStep];
+  const hint = el("call-line");
+  hint.textContent = withName(line.text);
+  // 同じ長さの一言が続くと、変わったことに気づきにくい。出し直すたびに軽く浮かせる
+  hint.classList.remove("is-pop");
+  void hint.offsetWidth;
+  hint.classList.add("is-pop");
+  setSprite("winter", line.expr || null);
+}
+
+function resetCallPoke() {
+  const box = el("call-poke");
+  if (box) box.hidden = true;
+  callStep = -1;
+}
+
+// 結末の画面で、この結末で新しく開いたものを知らせる(好感度表示 / おまけ)
+function renderUnlockNotes(unlocked) {
+  const box = el("unlock-notes");
+  if (!box) return;
+  box.innerHTML = "";
+  const note = (text) => {
+    const p = document.createElement("p");
+    p.className = "unlock-note";
+    p.textContent = text;
+    box.appendChild(p);
+  };
+  if (unlocked && unlocked.reveal) note("タイトルの「好感度表示」が使えるようになりました");
+  if (unlocked && unlocked.bonus) {
+    note("全エンディング達成！");
+    box.appendChild(bonusLink());
+  }
+  box.hidden = !box.childNodes.length;
 }
 
 function maybeShowAdultPoke() {
@@ -817,6 +906,16 @@ function setCg(name) {
     return;
   }
   const path = `${ASSET_DIR}${name}.webp${ASSET_V}`;
+  // 無いと分かった絵は取りに行かない(立ち絵の missingSprites と同じ)。
+  // 素材待ちの紙ナプキン(cg_sketch)は1回の結末で3回指定されるので、毎回404を踏んでいた
+  if (missingSprites.has(path)) {
+    markCg(cg, false);
+    return;
+  }
+  cg.onerror = () => {
+    missingSprites.add(path);
+    markCg(cg, false);
+  };
   if (cg.getAttribute("src") === path) return;
   cg.src = path;
 }
@@ -1313,6 +1412,7 @@ function preloadExpressions() {
 function initTitleScreen() {
   showScreen("screen-title");
   resetAdultPoke();
+  resetCallPoke();
   lastTelop = "";
   currentEventKey = null;
   dropPendingSprite();
@@ -1322,7 +1422,11 @@ function initTitleScreen() {
   // 広い画面だけ、タイトルにもハナエを立たせる。狭い画面の立ち絵は右上の
   // 円形アイコンになる作りなので、出すとロゴに重なってしまう
   const wide = window.matchMedia && window.matchMedia("(min-width: 1000px)").matches;
-  applyScene(sceneFor(wide ? "TITLE_WIDE" : "TITLE"));
+  // Perfect を一度見た人のタイトルは冬になる(喫茶店・冬服・雪。2026-09-11 本人採用)。
+  // 起動するたびに目に入る到達の証。見た目だけ確かめたい時は &winter=1
+  const winter = loadSeenEndings().includes("successPerfect") || /[?&]winter=1/.test(location.search);
+  document.body.classList.toggle("is-winter-title", winter);
+  applyScene(sceneFor((wide ? "TITLE_WIDE" : "TITLE") + (winter ? "_PERFECT" : "")));
   AUDIO.playBgm("title");
   gateTitleForAudio();
   // ?ending=キー が付いていたら、最初のタップでその結末へ飛ぶ(実機での確認用)
@@ -2655,8 +2759,15 @@ function resolveEnding() {
   // 見た目は「初めて見た時」と同じにしたいので NEW の帯だけは出す
   const testing = endingTestRunning;
   if (!testing) saveGame();
+  // 記録の前後で比べて、この結末で新しく開いたものを知らせる。
+  // 試用(?ending=)は記録しないので、見た目だけ確かめたい時は &unlock=1 で両方出す
+  const revealBefore = revealUnlocked();
+  const allBefore = allEndingsSeen();
   const isNew = testing ? true : recordEnding(endingKey);
-  showEnding(endingKey, isNew, false);
+  const unlocked = testing
+    ? (/[?&]unlock=1/.test(location.search) ? { reveal: true, bonus: true } : {})
+    : { reveal: !revealBefore && revealUnlocked(), bonus: !allBefore && allEndingsSeen() };
+  showEnding(endingKey, isNew, false, unlocked);
 }
 
 /* ---------------- 図鑑から結末を読み返す ---------------- */
@@ -2673,10 +2784,12 @@ function replayEnding(key) {
 }
 
 // 結末の画面を組む。判定(resolveEnding)と読み返し(replayEnding)の両方から呼ぶ
-function showEnding(endingKey, isNew, replaying) {
+function showEnding(endingKey, isNew, replaying, unlocked) {
   const ending = GAME_DATA.endings[endingKey];
-  // 前に見た結末の名残(41歳の「謝る / いじる」と悪魔化)を先に片付ける
+  // 前に見た結末の名残(41歳の「謝る / いじる」と悪魔化、Perfect の「呼ぶ」)を先に片付ける
   resetAdultPoke();
+  resetCallPoke();
+  renderUnlockNotes(null);
   showScreen("screen-ending");
   applyScene(GAME_DATA.endingScenes[endingKey]);
   AUDIO.playBgm(BGM_ENDING[endingKey], 700);
@@ -2710,6 +2823,9 @@ function showEnding(endingKey, isNew, replaying) {
       renderResultHearts(endingKey);
       if (endingKey === "nigaoe") maybeShowAdultPoke();
       else resetAdultPoke();
+      if (endingKey === "successPerfect") maybeShowCallPoke();
+      else resetCallPoke();
+      renderUnlockNotes(unlocked);
       el("ending-foot").style.display = "block";
     });
     revealEndingParts([badge, titleEl, restartBtn, el("ending-foot")]);
@@ -3095,6 +3211,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   el("btn-tease").onclick = () => { AUDIO.se("heartShrink"); setAdultAnger(adultAnger + 1); };
   el("btn-apologize").onclick = () => { AUDIO.se("choice"); setAdultAnger(adultAnger - 1); };
+  el("btn-call").onclick = () => { AUDIO.se("choice"); callHanae(); };
   el("btn-log").onclick = openLog;
   el("btn-log-close").onclick = closeLog;
   // 余白をタップしても閉じる。パネルの中のタップは拾わない

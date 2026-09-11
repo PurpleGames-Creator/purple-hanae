@@ -828,6 +828,22 @@ body.has-skip .event-reaction.has-next::after { right: 92px; }
 }
 .poke-btn:disabled { opacity: 0.3; cursor: default; }
 .poke-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+/* Perfect の「呼ぶ」。一言は押すまで出さない —— 最初から出ていると、
+   呼ぶ前に返事をしていることになる */
+.poke-hint:empty { display: none; }
+.poke-call {
+  border-color: rgba(255, 170, 200, 0.5);
+  background: rgba(255, 140, 180, 0.14);
+}
+/* 一言が変わるたびに軽く浮かせる。同じ長さの一言が続くと、変わったことに気づきにくい */
+.poke-hint.is-pop { animation: pokePop 0.28s ease-out; }
+@keyframes pokePop {
+  from { opacity: 0.2; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .poke-hint.is-pop { animation: none; }
+}
 
 /* 読み終わりに増える要素。本文の枠が滑らかに上がっていく間に、
    こちらは浮かび上がる。両方を同時に動かすと「増えた」ではなく
@@ -967,6 +983,8 @@ button.gallery-cell:active { transform: scale(0.97); }
   font-size: 0.8rem;
   margin: 12px 0 0;
 }
+/* 見出しの行に並べる版(2026-09-11)。独立した行だと画面が伸びるため */
+.gallery-head .gallery-done { margin: 0 0 0 8px; }
 /* 図鑑から結末を読み返す時の確認。画用紙と同じ作りの覆い */
 .confirm-overlay {
   position: fixed;
@@ -1990,6 +2008,16 @@ body.is-title .petals {
 .petal:nth-child(9)  { --x: 84%; --w: 9px;  --d: 15.5s; --delay: -8s; --amp: 24px; --sd: 2.7s; --rd: 4.6s; --op: .75; }
 .petal:nth-child(10) { --x: 93%; --w: 10px; --d: 14.5s; --delay: -13s; --amp: 26px; --sd: 2.2s; --rd: 5.8s; --op: .8; }
 
+/* Perfect を見た人のタイトルは冬。花びらを雪に替える(2026-09-11)。
+   落ち方(3層の動き)はそのまま使い、形と色だけ変える。雪は平板ではないので回さない */
+body.is-winter-title .petal { height: var(--w, 11px); }
+body.is-winter-title .petal > i > b {
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 35%, rgba(255, 255, 255, 0) 70%);
+  box-shadow: none;
+  animation: none;
+}
+
 /* ---------------- 一枚絵(似顔絵など) ---------------- */
 
 /* 写真を立てかけたように少し傾けて出す。立ち絵より手前、本文より奥 */
@@ -2283,7 +2311,7 @@ body.is-drawing * {
 }
 
 
-/* ---------------- 答え合わせ(全6結末を見た人だけ) ----------------
+/* ---------------- 好感度表示(両想いの結末を見た人だけ。旧称: 答え合わせ) ----------------
    札は解放済みなら常に描いておき、出す/出さないはこのクラスで切り替える。
    選択肢を作り直すと出現アニメと誤タップ防止のロックが壊れるため。 */
 
@@ -2322,11 +2350,28 @@ body.reveal-on .hud-meter {
   color: rgba(255, 255, 255, 0.72);
 }
 
-.gallery-reveal {
-  margin: 6px 0 0;
+/* 全6結末のおまけ(SUPER HANAE)への入口。タイトルの図鑑の下と、達成した結末の画面に出す */
+.gallery-bonus { margin: 8px 0 0; text-align: center; }
+.bonus-link {
+  display: inline-block;
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 214, 110, 0.6);
+  background: rgba(255, 196, 64, 0.14);
+  color: var(--gold);
+  font-size: 0.85rem;
+  font-weight: bold;
+  text-decoration: none;
+}
+.bonus-link:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+/* 結末の画面で、この結末で新しく開いたものを知らせる(好感度表示 / おまけ) */
+.unlock-notes { text-align: center; margin: 0 0 12px; }
+.unlock-notes[hidden] { display: none; }
+.unlock-note {
+  margin: 0 0 6px;
   font-size: 0.85rem;
   color: var(--accent);
-  text-align: center;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
 }
 
 /* 「はじめる」と答え合わせボタンを横に並べる。
