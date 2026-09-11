@@ -952,7 +952,7 @@ function setCg(name) {
   }
   const path = `${ASSET_DIR}${name}.webp${ASSET_V}`;
   // 無いと分かった絵は取りに行かない(立ち絵の missingSprites と同じ)。
-  // 素材待ちの紙ナプキン(cg_sketch)は1回の結末で3回指定されるので、毎回404を踏んでいた
+  // 素材待ちのペーパーナプキン(cg_sketch)は1回の結末で3回指定されるので、毎回404を踏んでいた
   if (missingSprites.has(path)) {
     markCg(cg, false);
     return;
