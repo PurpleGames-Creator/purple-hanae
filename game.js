@@ -932,6 +932,7 @@ function markCg(cg, on) {
 function setCg(name) {
   const cg = el("cg");
   if (!cg) return;
+  currentCgName = name || null;
   if (!name) {
     markCg(cg, false);
     return;
@@ -963,6 +964,60 @@ function setCg(name) {
   };
   if (cg.getAttribute("src") === path) return;
   cg.src = path;
+}
+
+/* ---------------- 一枚絵を大きく見る ---------------- */
+
+// 紙(ペーパーナプキン / あの日の似顔絵)をタップすると大きく開く(2026-09-12 本人指示)。
+// ピンチで拡大しなくても絵を見られるようにする。ペーパーナプキンは拡大用に
+// 原寸(1254px)の絵を別に持つ。似顔絵(drawing)はプレイヤーが描いた絵そのもの
+const CG_ZOOM = { cg_sketch: "cg_sketch_zoom" };
+let currentCgName = null;
+
+function isCgViewerOpen() {
+  const v = el("cg-viewer");
+  return !!v && !v.hidden;
+}
+
+function openCgViewer() {
+  const cg = el("cg");
+  const viewer = el("cg-viewer");
+  if (!cg || !viewer || !cg.classList.contains("is-shown")) return;
+  const zoom = currentCgName && CG_ZOOM[currentCgName];
+  const img = el("cg-viewer-img");
+  img.src = zoom ? `${ASSET_DIR}${zoom}.webp${ASSET_V}` : cg.getAttribute("src");
+  viewer.hidden = false;
+  AUDIO.se("choice");
+}
+
+function closeCgViewer() {
+  const viewer = el("cg-viewer");
+  if (!viewer || viewer.hidden) return;
+  viewer.hidden = true;
+  // 大きい絵を持ち続けない(拡大と同じく、メモリを空けておく)
+  el("cg-viewer-img").removeAttribute("src");
+  AUDIO.se("choice");
+}
+
+// 紙は本文の層(#app)の下にあるので、紙そのものはタップを受け取れない。
+// 文書の入口(capture)で座標を見て、紙の上なら本文を送らずに開く。
+// ボタン・リンク・開いているパネルの上と、画用紙を描いている間は除く
+function onCgTap(ev) {
+  if (isCgViewerOpen()) {
+    ev.stopPropagation();
+    ev.preventDefault();
+    closeCgViewer();
+    return;
+  }
+  const cg = el("cg");
+  if (!cg || !cg.classList.contains("is-shown")) return;
+  if (isLogOpen() || isSoundPanelOpen() || document.body.classList.contains("is-drawing")) return;
+  const t = ev.target;
+  if (t && t.closest && t.closest("button, a, input, .sound-panel, .log-overlay")) return;
+  const r = cg.getBoundingClientRect();
+  if (ev.clientX < r.left || ev.clientX > r.right || ev.clientY < r.top || ev.clientY > r.bottom) return;
+  ev.stopPropagation();
+  openCgViewer();
 }
 
 /* ---------------- 画用紙にあらかじめ入れておく落書き ---------------- */
@@ -1306,8 +1361,32 @@ function setTint(color) {
   t.classList.toggle("is-on", !!color);
 }
 
+// 雨の層は、降っている間と止んでいくフェード(0.9秒)の間だけ置く(2026-09-12)。
+// 透明にしただけで置いておくと、見えない28本の筋がどの場面でも回り続け、
+// iPhone でピンチ拡大した時にメモリが足りなくなってページが落ちていた
+let rainOffTimer = 0;
 function setWeather(kind) {
-  document.body.classList.toggle("is-rain", kind === "rain");
+  const rain = kind === "rain";
+  const layer = el("rain-layer");
+  const was = document.body.classList.contains("is-rain");
+  if (layer && rain) {
+    clearTimeout(rainOffTimer);
+    if (!layer.classList.contains("is-active")) {
+      layer.classList.add("is-active");
+      // display が none から変わった直後に is-rain を付けると、透明度が補間されずに
+      // いきなり降り出す。一度レイアウトを読んでから付ける(markDemon と同じ手当て)
+      void layer.offsetHeight;
+    }
+  }
+  document.body.classList.toggle("is-rain", rain);
+  // 止む時はフェードが終わってから外す。フェードの途中で雨の無い場面がもう一度
+  // 指定されても(結末の sceneChanges など)、ここでは外さずにタイマーに任せる
+  if (layer && !rain && was) {
+    clearTimeout(rainOffTimer);
+    rainOffTimer = setTimeout(() => {
+      if (!document.body.classList.contains("is-rain")) layer.classList.remove("is-active");
+    }, 950);
+  }
 }
 
 /* ---------------- 場面転換のテロップ ---------------- */
@@ -3334,7 +3413,10 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   document.addEventListener("keydown", (ev) => {
     if (ev.key === "Escape" && isLogOpen()) closeLog();
+    if (ev.key === "Escape" && isCgViewerOpen()) closeCgViewer();
   });
+  // 紙をタップすると大きく見られる。本文を送る(各画面の click)より先に拾う
+  document.addEventListener("click", onCgTap, true);
   el("btn-title").onclick = () => {
     clearTimeout(typeTimer);
     finishTyping = null;

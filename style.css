@@ -1608,6 +1608,14 @@ body.is-drawing .log-overlay { z-index: 1300; }
   mix-blend-mode: screen;
 }
 body.is-rain .rain-layer { opacity: 1; }
+/* 雨の層は、降っている間と止んでいくフェード(0.9秒)の間だけ置く(2026-09-12)。
+   以前は透明にしただけで置きっぱなしで、28本の筋・風・もやのアニメーションが
+   雨の無い場面でもずっと回っていた(Perfect の結末で動いている 40 個のうち 30 個が見えない雨)。
+   iPhone でピンチ拡大すると、この層と上に重なる立ち絵・枠まで高い倍率で描き直すことになり、
+   メモリが足りずにページが落ちていた(2026-09-12 本人報告)。火の粉と同じく display で切る。
+   付け外しは game.js の setWeather */
+.rain-layer { display: none; }
+.rain-layer.is-active { display: block; }
 
 /* 突風。場全体にかかるので、容器ごと横に振って濃さも脈打たせる(6) */
 .rain-wind {
@@ -2076,6 +2084,48 @@ body.is-winter-title .petal > i > b {
    同じだけ下げるとぶつかるので、下げ幅を抑える */
 /* 高さ 560px 以下の結末の一枚絵は、下の「立ち絵を縮める」指定の後ろにまとめて書いてある */
 .cg:not([src]) { display: none; }
+
+/* 一枚絵を大きく見る(2026-09-12)。紙をタップすると開き、どこをタップしても閉じる。
+   ピンチで拡大しなくても絵を見られるようにするためのもの。
+   暗幕にぼかし(backdrop-filter)は使わない —— 拡大と同じくメモリを食うので単色で敷く */
+.cg-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding-block: calc(16px + env(safe-area-inset-top, 0px)) calc(16px + env(safe-area-inset-bottom, 0px));
+  padding-inline: 16px;
+  background: rgba(8, 5, 12, 0.9);
+  animation: cgViewerIn 0.22s ease-out;
+}
+.cg-viewer[hidden] { display: none; }
+.cg-viewer-img {
+  width: auto;
+  height: auto;
+  max-width: min(100%, 900px);
+  max-height: calc(100vh - 110px);
+  max-height: calc(100dvh - 110px);
+  /* 縁は小さい紙(.cg)と同じ色。大きくしても同じ紙に見えるようにする */
+  border: 8px solid #f2ece0;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+}
+.cg-viewer-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+@keyframes cgViewerIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cg-viewer { animation: none; }
+}
 /* 狭い画面。ここは横幅が足りないので、絵をそのまま出すと立ち絵に重なって
    ハナエの顔を隠してしまう(390px 幅で実測 165px の重なり)。
    一枚絵が出ている間だけ立ち絵を縮めて右端へ寄せ、絵を左に置いて左右に分ける。

@@ -18,7 +18,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <!-- ホーム画面に追加した時のアイコン。無いと iOS がタイトルの1文字目(「セ」)で代用する。
      絵はタイトルロゴの円形マーク(_source/build_icon.py で切り出し) -->
-<link rel="apple-touch-icon" href="assets/icon-180.png?v=263">
+<link rel="apple-touch-icon" href="assets/icon-180.png?v=264">
 <!-- ホーム画面のアイコン下に出る名前。iOS は11〜12文字ほどで打ち切るので短くする
      (2026-09-06 に「センチメンタル・ハナエ」を試して省略されるため戻した) -->
 <meta name="apple-mobile-web-app-title" content="ハナエ">
@@ -27,10 +27,10 @@
 <!-- 半透明(black-translucent)にすると本文が時計の下へ潜る。上部の余白を安全域ぶん取っていないので、不透明の黒にする -->
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="theme-color" content="#2b1f3d">
-<link rel="manifest" href="site.webmanifest?v=263">
+<link rel="manifest" href="site.webmanifest?v=264">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💗</text></svg>">
-<link rel="preload" as="image" href="assets/logo_title.webp?v=263">
-<link rel="stylesheet" href="style.css?v=263">
+<link rel="preload" as="image" href="assets/logo_title.webp?v=264">
+<link rel="stylesheet" href="style.css?v=264">
 </head>
 <body>
 
@@ -41,6 +41,10 @@
 <img id="sprite-b" class="sprite" alt="" aria-hidden="true">
 <!-- 一枚絵(似顔絵など)。scenes の cg で指定。ファイルが無ければ出ない -->
 <img id="cg" class="cg" alt="">
+<div id="cg-viewer" class="cg-viewer" role="dialog" aria-modal="true" aria-label="絵を大きく見る" hidden>
+  <img id="cg-viewer-img" class="cg-viewer-img" alt="">
+  <p class="cg-viewer-hint">タップで閉じる</p>
+</div>
 <div id="bg-tint"></div>
 <div id="ember-layer" class="ember-layer" aria-hidden="true">
   <span class="ember"><i><b></b></i></span><span class="ember"><i><b></b></i></span><span class="ember"><i><b></b></i></span><span class="ember"><i><b></b></i></span><span class="ember"><i><b></b></i></span><span class="ember"><i><b></b></i></span><span class="ember"><i><b></b></i></span><span class="ember"><i><b></b></i></span><span class="ember"><i><b></b></i></span><span class="ember"><i><b></b></i></span><span class="ember"><i><b></b></i></span><span class="ember"><i><b></b></i></span><span class="ember"><i><b></b></i></span><span class="ember"><i><b></b></i></span><span class="ember"><i><b></b></i></span><span class="ember"><i><b></b></i></span><span class="ember"><i><b></b></i></span><span class="ember"><i><b></b></i></span><span class="ember"><i><b></b></i></span><span class="ember"><i><b></b></i></span><span class="ember"><i><b></b></i></span><span class="ember"><i><b></b></i></span><span class="ember"><i><b></b></i></span><span class="ember"><i><b></b></i></span><span class="ember"><i><b></b></i></span><span class="ember"><i><b></b></i></span><span class="ember"><i><b></b></i></span><span class="ember"><i><b></b></i></span>
@@ -79,7 +83,7 @@
 
   <section id="screen-title" class="screen active">
     <h1 class="game-title">
-      <img class="game-logo" src="assets/logo_title.webp?v=263" width="960" height="463"
+      <img class="game-logo" src="assets/logo_title.webp?v=264" width="960" height="463"
            alt="センチメンタル・ハナエ" fetchpriority="high" decoding="async">
     </h1>
     <p id="tap-hint" class="tap-hint">画面をタップ</p>
@@ -270,8 +274,8 @@
   </div>
 </div>
 
-<script src="game-data.js?v=263"></script>
-<script src="audio.js?v=263"></script>
-<script src="game.js?v=263"></script>
+<script src="game-data.js?v=264"></script>
+<script src="audio.js?v=264"></script>
+<script src="game.js?v=264"></script>
 </body>
 </html>
