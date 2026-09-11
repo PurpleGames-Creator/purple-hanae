@@ -2554,6 +2554,10 @@ function showReaction(key, choice, scene, points, onChoice) {
       actions.classList.remove("is-shown");
       // 横向きの携帯だけ、反応を出している間は本文を畳む(CSS 側で判定)
       el("screen-event").classList.add("is-reacting");
+      // 反応の途中で表情を変える(choice.reactionExprs: [{ marker, expr }])。
+      // その枠の先頭が marker で始まった時に切り替える(結末の sceneChanges と同じ考え方)。
+      // 例: E12 の「パフェのアイス溶けるよ」は、黙ったまま → 「ふっと笑った」で微笑む(2026-09-11)
+      const exprChanges = choice.reactionExprs || [];
       playLoggedBlocks("r", reactionEl, reactionTextFor(key, choice), "r:" + key + ":" + choice.id, () => {
         const nextBtn = document.createElement("button");
         nextBtn.className = "next-btn";
@@ -2564,6 +2568,11 @@ function showReaction(key, choice, scene, points, onChoice) {
         };
         actions.appendChild(nextBtn);
         actions.classList.add("is-shown");
+      }, (i, block) => {
+        if (!outfit) return;
+        exprChanges.forEach((c) => {
+          if (block.text.indexOf(c.marker) === 0) setSprite(outfit, c.expr);
+        });
       });
 }
 

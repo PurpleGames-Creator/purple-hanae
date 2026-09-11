@@ -259,7 +259,11 @@ const GAME_DATA = {
       choices: [
         { id:"A", label:"「えー、なになに?」", points:-2, rival:0, tag:"pushy", expr:"trouble", reaction:"「……そんな食いつくとこちゃうって」" },
         { id:"B", label:"「まぁいろいろあるよね」", points:2, rival:0, expr:"soft", reaction:"「……せやな。いろいろあるわ」" },
-        { id:"C", label:"「そっか。あ、パフェのアイス溶けるよ」", points:3, rival:0, expr:"soft", reaction:"「……あんた、ほんま聞かへんな」\n\nそう言って、ハナエはスプーンを取った。溶けかけのアイスを、ちゃんと最後まで食べた。" },
+        { id:"C", label:"「そっか。あ、パフェのアイス溶けるよ」", points:3, rival:0, expr:"lonely",
+          // 黙ったまま一拍 → ふっと笑う(2026-09-11 本人指示)。黙っている間は場面の入りと同じ lonely、
+          // 笑う枠で soft に切り替える。冬のエピローグの「おかしくて、ふっと軽なったわ」に繋がる
+          reactionExprs: [{ marker: "ハナエは少しだけ黙って", expr: "soft" }],
+          reaction:"「……」\n\nハナエは少しだけ黙って、それから、ふっと笑った。\n\n「あんた、ほんま聞かへんな」\n\nそう言って、ハナエはスプーンを取った。溶けかけのアイスを、ちゃんと最後まで食べた。" },
         { id:"D", label:"「何かあった?」", points:-1, rival:0, tag:"pushy", expr:"angry", reaction:"「なんでもないって言うてるやん」" },
       ],
     },
@@ -410,8 +414,8 @@ const GAME_DATA = {
       choices: [
         { id:"A", label:"片付けを黙々と続ける", points:0, rival:0, tag:"passive", expr:"normal", reaction:"そのまま片付けが終わる。" },
         { id:"B", label:"「終わってほしくないな」", points:4, rival:0, expr:"shy", reaction:"「……うちも、ちょっとそう思うわ」\n\n窓の外の暗さに、ハナエの声が溶けていった。" },
-        { id:"C", label:"「お疲れさま、また明日な!」", points:-2, rival:0, tag:"passive", expr:"lonely", reaction:"「……そっか」" },
-        { id:"D", label:"「明日なにかおもしろいこと起こるかな」", points:-1, rival:0, tag:"pushy", expr:"normal", reaction:"「さあ、知らんけど」" },
+        { id:"C", label:"「お疲れさま、また明日な!」", points:-1, rival:0, tag:"passive", expr:"lonely", reaction:"「……お疲れ……」" },
+        { id:"D", label:"「明日なにかおもしろいこと起こるかな」", points:-2, rival:0, tag:"pushy", expr:"normal", reaction:"「さあ、知らんけど」" },
       ],
     },
 
