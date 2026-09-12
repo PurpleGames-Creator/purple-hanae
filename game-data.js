@@ -424,7 +424,7 @@ const GAME_DATA = {
         { id:"A", label:"「どうしよう、間に合わない!」", points:-3, rival:0, tag:"pushy", expr:"trouble", reaction:"「あんたが慌ててどうすんの」" },
         { id:"B", label:"黙って自分の判断で作業を始める", points:1, rival:0, tag:"passive", expr:"normal", reaction:"ハナエは一瞬こちらを見て、すぐ自分の作業に戻った。" },
         { id:"C", label:"「大丈夫、なんとかなるよ」", points:-2, rival:0, tag:"pushy", expr:"angry", reaction:"「そんな軽く言わんといて、マジでヤバいねん」" },
-        { id:"D", label:"「手分けしてやろう、指示出して」", points:3, rival:0, expr:"normal", reaction:"「せやな、頼むわ。宴の前に吹き飛ばされてたまるか」" },
+        { id:"D", label:"「手分けしてやろう、指示出すね」", points:3, rival:0, expr:"normal", reaction:"「せやな、頼むわ。宴の前に吹き飛ばされてたまるか」" },
       ],
     },
 
