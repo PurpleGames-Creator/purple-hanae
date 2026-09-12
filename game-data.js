@@ -7,7 +7,7 @@
 const GAME_DATA = {
 
   // セーブ互換バージョン。イベント追加・点数調整をしたら必ず上げる(古いセーブは破棄される)
-  SAVE_VERSION: 14,
+  SAVE_VERSION: 15,
 
   // 開始値
   START_SCORE: 50,
@@ -555,6 +555,15 @@ const GAME_DATA = {
   },
 
   // 自由行動プール(Act2中盤、6つから3つだけ選ぶ)
+  //
+  // **6つの配点は「最高 +3 / 最低 −2」で揃える**(2026-09-12 本人指摘)。
+  // どれを引くかは初見では運なので、当たり外れが点数に出ると理不尽になる。
+  // 中間の2つは場面ごとに変えてよい(反応の重さが違うのは自然)が、
+  // 無作為に選んだ時の平均が +0.5〜+0.75 の帯から出ないようにする。
+  // 例外は F5_urakawa —— 好感度の最低が −1 なのは、選ばないと浦川のライバル度が
+  // +SKIP_F5_RIVAL_PENALTY される別の罰があるため(二重罰にしない)。
+  // 30,000回×3モデルの再計測(ライン95): ふつう 両想い以上 11.8% → 12.6%、
+  // 丁寧 85.9% → 86.9%。どちらも誤差の範囲でラインは据え置き
   freePool: {
     F1_neji: {
       title: "共同作業のハプニング",
@@ -602,8 +611,8 @@ const GAME_DATA = {
       text: `作業の昼休み。夏休み中でも部活組のために開いている購買の前に、短い行列ができていた。\n\n隣にハナエが並んでいた。委員会のときより、少しだけ眠そうな顔をしている。\n\n「朝練、六時からやってん。眠い」\n\n列が進む。カウンターのサンドイッチを覗き込み、ふと顔をしかめる。\n\n「うわ、これ生姜焼きサンドやん……無理やわ、生姜」`,
       choices: [
         { id:"A", label:"「じゃあ、こっちのツナサンドにしたら?」", points:3, rival:0, expr:"smile", reaction:"「気ぃ利くやん、ありがとう」" },
-        { id:"B", label:"「好き嫌いは良くないよ」", points:-3, rival:0, tag:"pushy", expr:"angry", reaction:"「別にええやろ、好みなんやから」" },
-        { id:"C", label:"「え、生姜だめなんだ?意外」", points:1, rival:0, expr:"smile", reaction:"「あとらっきょうとセロリも無理やねん」" },
+        { id:"B", label:"「好き嫌いは良くないよ」", points:-2, rival:0, tag:"pushy", expr:"angry", reaction:"「別にええやろ、好みなんやから」" },
+        { id:"C", label:"「え、生姜だめなんだ?意外」", points:2, rival:0, expr:"smile", reaction:"「あとらっきょうとセロリも無理やねん」" },
         { id:"D", label:"自分の分だけ選ぶ", points:-1, rival:0, tag:"passive", expr:"trouble", reaction:"「ちょい、そこ拾ってや」" },
       ],
     },
@@ -630,7 +639,7 @@ const GAME_DATA = {
       choices: [
         { id:"A", label:"「あの子、声かけてもらえて嬉しかったと思うよ」", points:2, rival:0, expr:"soft", reaction:"「……そうかな。そうやったらええな」\n\nラケットバッグを抱え直して、ハナエは少しだけ笑った。" },
         { id:"B", label:"何も言わず、自販機で買った水を差し出して隣に座る", points:3, rival:0, expr:"soft", reaction:"「お、気ぃ利くやん」" },
-        { id:"C", label:"「無理して明るくしなくてもいいのに」", points:-3, rival:0, tag:"pushy", expr:"smile", reaction:"「無理て。うち、元々こういう性格やけど?」\n\n笑っていた。さっきまでの笑い方と、同じだった。" },
+        { id:"C", label:"「無理して明るくしなくてもいいのに」", points:-2, rival:0, tag:"pushy", expr:"smile", reaction:"「無理て。うち、元々こういう性格やけど?」\n\n笑っていた。さっきまでの笑い方と、同じだった。" },
         { id:"D", label:"「ハナエって面倒見いいよね」", points:-1, rival:0, expr:"normal", reaction:"「まあ、キャプテンやしな」" },
       ],
     },
