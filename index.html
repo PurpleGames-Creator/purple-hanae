@@ -18,7 +18,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <!-- ホーム画面に追加した時のアイコン。無いと iOS がタイトルの1文字目(「セ」)で代用する。
      絵はタイトルロゴの円形マーク(_source/build_icon.py で切り出し) -->
-<link rel="apple-touch-icon" href="assets/icon-180.png?v=284">
+<link rel="apple-touch-icon" href="assets/icon-180.png?v=285">
 <!-- ホーム画面のアイコン下に出る名前。iOS は11〜12文字ほどで打ち切るので短くする
      (2026-09-06 に「センチメンタル・ハナエ」を試して省略されるため戻した) -->
 <meta name="apple-mobile-web-app-title" content="ハナエ">
@@ -27,10 +27,10 @@
 <!-- 半透明(black-translucent)にすると本文が時計の下へ潜る。上部の余白を安全域ぶん取っていないので、不透明の黒にする -->
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="theme-color" content="#2b1f3d">
-<link rel="manifest" href="site.webmanifest?v=284">
+<link rel="manifest" href="site.webmanifest?v=285">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💗</text></svg>">
-<link rel="preload" as="image" href="assets/logo_title.webp?v=284">
-<link rel="stylesheet" href="style.css?v=284">
+<link rel="preload" as="image" href="assets/logo_title.webp?v=285">
+<link rel="stylesheet" href="style.css?v=285">
 </head>
 <body>
 
@@ -83,7 +83,7 @@
 
   <section id="screen-title" class="screen active">
     <h1 class="game-title">
-      <img class="game-logo" src="assets/logo_title.webp?v=284" width="960" height="463"
+      <img class="game-logo" src="assets/logo_title.webp?v=285" width="960" height="463"
            alt="センチメンタル・ハナエ" fetchpriority="high" decoding="async">
     </h1>
     <p id="tap-hint" class="tap-hint">画面をタップ</p>
@@ -146,8 +146,19 @@
   <section id="screen-free" class="screen">
     <h2 class="event-title">準備期間中、まとまった時間が取れる日</h2>
     <p id="free-remaining" class="free-remaining"></p>
-    <p class="free-hint">選ばなかった行動は、今回は起こりません。</p>
+    <p id="free-hint" class="free-hint">選ばなかった行動は、今回は起こりません。</p>
+    <!-- 学校の地図から選ぶ(2026-09-12 本人案)。画面の向きで絵とピンの位置を差し替える。
+         一覧(#free-list)は残してあり、下のボタンで行き来できる -->
+    <div id="free-map" class="free-map" hidden>
+      <div class="free-map-inner">
+        <img id="free-map-img" class="free-map-img" alt="学校の地図" decoding="async">
+        <div id="free-pins" class="free-pins"></div>
+      </div>
+    </div>
     <div id="free-list" class="free-list"></div>
+    <p class="free-view-row">
+      <button id="btn-free-view" class="link-btn" type="button">一覧で選ぶ</button>
+    </p>
   </section>
 
   <section id="screen-confession" class="screen">
@@ -266,6 +277,21 @@
   </div>
 </div>
 
+<!-- 地図のピンを押した時に出る札。場所・何が起きる日か・決めるボタン。
+     #app の外に置く(中に入れるとタップが本文側へ抜ける) -->
+<div id="free-panel" class="free-panel" role="dialog" aria-modal="true"
+     aria-labelledby="free-panel-title" hidden>
+  <div class="free-panel-box">
+    <p id="free-panel-place" class="free-panel-place"></p>
+    <h3 id="free-panel-title" class="free-panel-title"></h3>
+    <p id="free-panel-blurb" class="free-panel-blurb"></p>
+    <div class="free-panel-btns">
+      <button id="btn-free-go" class="confirm-btn is-yes" type="button">ここに行く</button>
+      <button id="btn-free-cancel" class="confirm-btn is-no" type="button">やめる</button>
+    </div>
+  </div>
+</div>
+
 <!-- 図鑑から結末を読み返す時の確認。ブラウザの confirm() は使わない ——
      出している間ページ全体が止まるうえ、見た目もゲームから浮く -->
 <div id="confirm-overlay" class="confirm-overlay" role="dialog" aria-modal="true"
@@ -279,8 +305,8 @@
   </div>
 </div>
 
-<script src="game-data.js?v=284"></script>
-<script src="audio.js?v=284"></script>
-<script src="game.js?v=284"></script>
+<script src="game-data.js?v=285"></script>
+<script src="audio.js?v=285"></script>
+<script src="game.js?v=285"></script>
 </body>
 </html>

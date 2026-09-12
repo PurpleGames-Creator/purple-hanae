@@ -1561,6 +1561,9 @@ function preloadAssets() {
   Object.keys(SPRITE_EXPRESSIONS).forEach((o) => { new Image().src = `${ASSET_DIR}hanae_${o}.webp${ASSET_V}`; });
   // 画用紙の吹き出し。開いた瞬間に出ていてほしいので、ここで読んでおく
   loadDrawBubble();
+  // 自由行動の地図。入った瞬間に真っ白だと何を押すのか分からないので先に読む。
+  // 要る向きの1枚だけにする(2枚読むと、スマホでは使わない方も通信してしまう)
+  new Image().src = ASSET_DIR + FREE_MAP[freeMapVariant()].src + ASSET_V;
 }
 
 // 表情差分は枚数が多く、まとめて起動時に読むとタイトルの表示が遅れる。
@@ -2730,19 +2733,252 @@ function showReaction(key, choice, scene, points, onChoice) {
 
 /* ---------------- 自由行動フェーズ ---------------- */
 
+/* ---------------- 自由行動: 学校の地図 ---------------- */
+
+// 一覧ではなく学校の俯瞰図から選ぶ(2026-09-12 本人案)。「どこで起きる話か」が
+// 絵で分かるようにするのが狙い。絵は画面の向きで2枚を使い分け、ピンの位置も
+// 絵ごとに違う(同じ場所でも構図が違うため)。座標は絵の左上からの %。
+// 絵を差し替えたら、ここの座標も必ず測り直すこと
+const FREE_MAP = {
+  landscape: {
+    src: "bg_campus.webp",
+    pins: {
+      F2_chusai:   [26, 29],
+      F1_neji:     [81, 30],
+      F5_urakawa:  [93, 42],
+      F4_baiten:   [11, 45],
+      F6_kouhai:   [78, 63],
+      F3_kaidashi: [46, 83],
+    },
+  },
+  portrait: {
+    src: "bg_campus_portrait.webp",
+    pins: {
+      F2_chusai:   [29, 21],
+      F1_neji:     [81, 25],
+      F5_urakawa:  [92, 36],
+      F4_baiten:   [17, 35],
+      F6_kouhai:   [82, 56],
+      F3_kaidashi: [46, 83],
+    },
+  },
+};
+
+// ピンに添える場所の名前。イベント名より先に「どこの話か」を見せる
+const FREE_PLACES = {
+  F1_neji: "体育館",
+  F2_chusai: "校舎",
+  F3_kaidashi: "校門",
+  F4_baiten: "購買",
+  F5_urakawa: "体育館裏",
+  F6_kouhai: "テニスコート",
+};
+
+// 地図と一覧のどちらで選ぶか。既定は地図。迷った人が一覧へ逃げられるようにし、
+// 選んだ方を覚えておく(毎回切り替え直さなくて済む)
+const FREE_VIEW_KEY = "sentimentalHanaeFreeView";
+
+function freeViewIsMap() {
+  try { return localStorage.getItem(FREE_VIEW_KEY) !== "list"; } catch (e) { return true; }
+}
+
+function setFreeView(map) {
+  try { localStorage.setItem(FREE_VIEW_KEY, map ? "map" : "list"); } catch (e) { /* 続行 */ }
+  renderFreeView();
+}
+
+function freeMapVariant() {
+  // 画面が縦長なら縦の絵。パソコンの細いウィンドウでも同じ判断でよい
+  return window.matchMedia("(orientation: portrait)").matches ? "portrait" : "landscape";
+}
+
+// 地図のピンを組み直す。選び終えた場所は消さずに残す —— 何を選んだか思い出せるように
+function renderFreePins() {
+  const box = el("free-pins");
+  const img = el("free-map-img");
+  if (!box || !img) return;
+  const variant = FREE_MAP[freeMapVariant()];
+  const src = ASSET_DIR + variant.src + ASSET_V;
+  if (img.getAttribute("src") !== src) {
+    img.classList.remove("is-ready");
+    img.onload = () => img.classList.add("is-ready");
+    img.src = src;
+    if (img.complete) img.classList.add("is-ready");
+  } else {
+    img.classList.add("is-ready");
+  }
+
+  box.innerHTML = "";
+  const keys = Object.keys(GAME_DATA.freePool);
+  keys.forEach((key, i) => {
+    const at = variant.pins[key];
+    if (!at) return;
+    const data = GAME_DATA.freePool[key];
+    const done = state.freeChosen.includes(key);
+    const pin = document.createElement("button");
+    pin.type = "button";
+    pin.className = "free-pin" + (done ? " is-done" : "");
+    pin.style.left = at[0] + "%";
+    pin.style.top = at[1] + "%";
+    pin.style.animationDelay = (i * CHOICE_STAGGER_MS) / 1000 + "s";
+    pin.setAttribute("aria-label",
+      FREE_PLACES[key] + "・" + data.title + (done ? "(えらび済み)" : ""));
+    const dot = document.createElement("span");
+    dot.className = "free-pin-dot";
+    // 数字は入れない —— 「この順に選ぶもの」と読めてしまう(実際は順不同)。
+    // 選び終えた場所だけ ✓ を出す
+    dot.textContent = done ? "✓" : "";
+    const label = document.createElement("span");
+    label.className = "free-pin-label";
+    label.textContent = FREE_PLACES[key];
+    pin.appendChild(dot);
+    pin.appendChild(label);
+    if (done) {
+      pin.disabled = true;
+    } else {
+      pin.onclick = () => {
+        if (box.classList.contains("is-locked")) return;
+        AUDIO.se("choice");
+        openFreePanel(key);
+      };
+    }
+    box.appendChild(pin);
+  });
+
+  // ラベルが絵の外へはみ出す位置のピンがある(端の場所)。座標を動かすと丸の位置が
+  // 嘘になるので、丸はそのままでラベルだけ内側へ寄せる。絵の大きさは画面によって
+  // 変わるので、決め打ちではなく描いた後に実測する
+  const fit = () => {
+    const area = img.getBoundingClientRect();
+    if (!area.width) return;
+    box.querySelectorAll(".free-pin-label").forEach((label) => {
+      label.style.transform = "";
+      const r = label.getBoundingClientRect();
+      const over = r.right - area.right;
+      const under = area.left - r.left;
+      if (over > 0) label.style.transform = `translateX(${-(over + 4)}px)`;
+      else if (under > 0) label.style.transform = `translateX(${under + 4}px)`;
+    });
+  };
+  // requestAnimationFrame は「描かれていないタブ」では呼ばれない(実際に踏んだ)。
+  // その場で測り、絵が後から届いた時だけ測り直す
+  fit();
+  if (!img.complete) img.addEventListener("load", fit, { once: true });
+}
+
+// 地図と一覧の出し分け。案内の一行もそれぞれに合わせて書き換える
+function renderFreeView() {
+  const map = freeViewIsMap();
+  const mapBox = el("free-map");
+  const list = el("free-list");
+  const btn = el("btn-free-view");
+  const hint = el("free-hint");
+  if (mapBox) mapBox.hidden = !map;
+  if (list) list.hidden = map;
+  if (btn) btn.textContent = map ? "一覧で選ぶ" : "地図で選ぶ";
+  if (hint) {
+    hint.textContent = map
+      ? "行き先を押すと、その日の話が出ます。選ばなかった行動は今回は起こりません。"
+      : "選ばなかった行動は、今回は起こりません。";
+  }
+  // 横向きの時のレイアウト切り替えに使う(地図の時だけ2段組みにする)
+  el("screen-free").classList.toggle("is-map", map);
+  if (map) renderFreePins();
+}
+
+function isFreePanelOpen() {
+  const box = el("free-panel");
+  return !!box && !box.hidden;
+}
+
+function closeFreePanel() {
+  const box = el("free-panel");
+  if (box) box.hidden = true;
+}
+
+// ピンを押した時の札。ここで初めてイベント名と一行の説明を見せ、
+// 「ここに行く」でようやく確定する(押し間違いで場面が始まらないように)
+function openFreePanel(key) {
+  const data = GAME_DATA.freePool[key];
+  const box = el("free-panel");
+  if (!box || !data) return;
+  el("free-panel-place").textContent = FREE_PLACES[key] || "";
+  el("free-panel-title").textContent = data.title;
+  el("free-panel-blurb").textContent = data.blurb || "";
+  box.hidden = false;
+  const go = el("btn-free-go");
+  const cancel = el("btn-free-cancel");
+  const close = () => {
+    closeFreePanel();
+    go.onclick = null;
+    cancel.onclick = null;
+    box.onclick = null;
+    document.removeEventListener("keydown", onKey);
+  };
+  const onKey = (e) => { if (e.key === "Escape") { AUDIO.se("choice"); close(); } };
+  go.onclick = () => { AUDIO.se("next"); close(); pickFreeEvent(key); };
+  cancel.onclick = () => { AUDIO.se("choice"); close(); };
+  box.onclick = (e) => { if (e.target === box) { AUDIO.se("choice"); close(); } };
+  document.addEventListener("keydown", onKey);
+  go.focus();
+}
+
+function initFreeView() {
+  const btn = el("btn-free-view");
+  if (btn) btn.onclick = () => { AUDIO.se("choice"); setFreeView(!freeViewIsMap()); };
+  // 画面を回した時は絵もピンも入れ替える。自由行動の画面を見ている時だけでよい
+  const mq = window.matchMedia("(orientation: portrait)");
+  const onChange = () => {
+    if (el("screen-free").classList.contains("active") && freeViewIsMap()) renderFreePins();
+  };
+  if (mq.addEventListener) mq.addEventListener("change", onChange);
+  else if (mq.addListener) mq.addListener(onChange);
+}
+
+// 行き先を1つ決めた時。地図のピンからも一覧のカードからもここへ来る
+function pickFreeEvent(key) {
+  const data = GAME_DATA.freePool[key];
+  if (!data || state.freeChosen.includes(key)) return;
+  state.freeChosen.push(key);
+  state.freeRemaining = state.freeRemaining.filter((k) => k !== key);
+  state.freePicksLeft--;
+  showEvent(
+    key,
+    data,
+    sceneFor(key),
+    () => {
+      if (state.freePicksLeft > 0) showFreeSelect();
+      else advanceQueue();
+    },
+    () => {
+      if (state.freePicksLeft > 0) return;
+      // 3つ選び終えた。浦川の場面を避けたぶんはここでライバル度に乗せる
+      if (!state.freeChosen.includes("F5_urakawa")) {
+        state.rival = Math.max(0, state.rival + GAME_DATA.SKIP_F5_RIVAL_PENALTY);
+      }
+      state.queueIndex++;
+    }
+  );
+}
+
 function showFreeSelect() {
   currentEventKey = null;
+  // 場面から戻ってきた時に、前の札が開いたままにならないように
+  closeFreePanel();
   showScreen("screen-free");
   applyScene(sceneFor("FREE"));
   AUDIO.playBgm(bgmForKey("FREE"));
   el("free-remaining").textContent = `あと${state.freePicksLeft}つ選べます`;
   const list = el("free-list");
+  const pins = el("free-pins");
   list.innerHTML = "";
-  // 選択肢と同じ理由で、描画直後は受け付けない
+  // 選択肢と同じ理由で、描画直後は受け付けない(地図のピンも同じ)
   list.classList.add("is-locked");
+  if (pins) pins.classList.add("is-locked");
   clearTimeout(showFreeSelect._unlockTimer);
   showFreeSelect._unlockTimer = setTimeout(() => {
     list.classList.remove("is-locked");
+    if (pins) pins.classList.remove("is-locked");
   }, CHOICE_LOCK_MS + state.freeRemaining.length * CHOICE_STAGGER_MS);
 
   state.freeRemaining.forEach((key, i) => {
@@ -2763,29 +2999,13 @@ function showFreeSelect() {
     card.onclick = () => {
       if (list.classList.contains("is-locked")) return;
       AUDIO.se("choice");
-      state.freeChosen.push(key);
-      state.freeRemaining = state.freeRemaining.filter((k) => k !== key);
-      state.freePicksLeft--;
-      showEvent(
-        key,
-        data,
-        sceneFor(key),
-        () => {
-          if (state.freePicksLeft > 0) showFreeSelect();
-          else advanceQueue();
-        },
-        () => {
-          if (state.freePicksLeft > 0) return;
-          // 3つ選び終えた。浦川の場面を避けたぶんはここでライバル度に乗せる
-          if (!state.freeChosen.includes("F5_urakawa")) {
-            state.rival = Math.max(0, state.rival + GAME_DATA.SKIP_F5_RIVAL_PENALTY);
-          }
-          state.queueIndex++;
-        }
-      );
+      pickFreeEvent(key);
     };
     list.appendChild(card);
   });
+
+  // 地図か一覧か。ピンは「選び済み」を残すので、ここで毎回組み直す
+  renderFreeView();
 }
 
 /* ---------------- 進行 ---------------- */
@@ -3433,6 +3653,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // 進行はセーブ済みなので、タイトルに戻っても「つづきから」で復帰できる
   initSoundPanel();
   initRevealButton();
+  initFreeView();
   initSkip();
   renderSoundLabel();
   // iOS も Chrome も、最初のタップより前は音を出せない。

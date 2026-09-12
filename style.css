@@ -717,6 +717,9 @@ body.has-skip .event-reaction.has-next::after { right: 92px; }
   flex-direction: column;
   gap: 12px;
 }
+/* display を持たせているので、hidden 属性だけでは消えない。UA の [hidden]{display:none}
+   よりこちらが強いため明示する(.reveal-btn / .skip-btn と同じ手当て) */
+.free-list[hidden] { display: none; }
 .free-list.is-locked { pointer-events: none; }
 .free-card {
   animation: choiceIn 0.32s ease-out both;
@@ -743,6 +746,204 @@ body.has-skip .event-reaction.has-next::after { right: 92px; }
   border-color: var(--accent);
   background: rgba(255, 143, 177, 0.2);
 }
+
+/* ---------------- 自由行動: 学校の地図 ---------------- */
+
+/* 一覧を地図に置き換えた(2026-09-12 本人案)。狙いは「どこで起きる話なのか」を
+   絵で分からせること。一覧(.free-list)は残してあり、#btn-free-view で行き来できる。
+   絵は画面の向きで2枚を使い分ける(横 bg_campus / 縦 bg_campus_portrait)。
+   ピンの位置は絵ごとに違うので、座標は game.js の FREE_MAP が持つ */
+
+/* flex: none —— 縦に入りきらない時、flex に縮められると下限(260px)を割って
+   ピンが重なる。縮めずにスクロールさせる */
+.free-map { margin: 0 auto 10px; width: 100%; text-align: center; flex: none; }
+.free-map[hidden] { display: none; }
+/* 絵と同じ比率の箱。ピンは % で置くので、箱と絵がずれると位置も全部ずれる。
+   「幅は 100%、高さは画面の◯%まで」と両方から縛ると大きさが決まらなくなる
+   (実際に横向きで 293px まで縮んだ)ので、**高さの上限から幅を逆算**して決める */
+.free-map-inner {
+  position: relative;
+  display: block;
+  margin: 0 auto;
+}
+/* 縦画面。絵は 2:3。見出し・案内・下のボタンのぶんを引いた残りが高さの上限 */
+@media (orientation: portrait) {
+  /* 260px は「ピン同士が指で押し分けられる」下限。これ以上は縮めない ——
+     縮めるとピンが重なって選べなくなる(実測で 155px まで縮んで破綻した) */
+  .free-map-inner { aspect-ratio: 2 / 3; width: min(100%, max(260px, calc(min(58vh, 520px) * 2 / 3))); }
+}
+/* 背の低い縦画面(iPhone SE など)。58% のままだと下にはみ出してスクロールが出る */
+@media (orientation: portrait) and (max-height: 700px) {
+  .free-map-inner { width: min(100%, max(260px, calc(52vh * 2 / 3))); }
+}
+/* 背の低い画面では、地図を縮める代わりに周りの文字を削る。
+   日付は HUD に出ているので、長い見出しは無くても迷わない */
+@media (max-height: 640px) {
+  #screen-free.is-map .event-title { display: none; }
+  #screen-free.is-map .free-hint { font-size: 0.78rem; margin-bottom: 10px; }
+  #screen-free.is-map .free-remaining { margin-bottom: 2px; }
+}
+/* 横画面。絵は 3:2 */
+@media (orientation: landscape) {
+  .free-map-inner { aspect-ratio: 3 / 2; width: min(100%, 720px); }
+}
+.free-map-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  /* 読み込みが済むまでは白い箱が出ないように、薄く沈めておく */
+  background: rgba(18, 12, 26, 0.6);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+.free-map-img.is-ready { opacity: 1; }
+
+/* ピンの層。ラベルが絵の端から少しはみ出すので、切り取らない */
+.free-pins { position: absolute; inset: 0; }
+.free-pins.is-locked { pointer-events: none; }
+
+.free-pin {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  animation: choiceIn 0.32s ease-out both;
+}
+/* 指で押せる大きさ(44px)を、見た目を太らせずに確保する */
+.free-pin::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 14px;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
+}
+.free-pin-dot {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #fff;
+  background: linear-gradient(160deg, #ff8fb1, #c86bd8);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.55);
+}
+/* 押せることに気づいてもらうための、ゆっくりした脈。動きを減らす設定では止める */
+.free-pin:not(.is-done) .free-pin-dot { animation: pinPulse 2.4s ease-in-out infinite; }
+@keyframes pinPulse {
+  0%, 100% { box-shadow: 0 3px 10px rgba(0, 0, 0, 0.55), 0 0 0 0 rgba(255, 143, 177, 0.55); }
+  50%      { box-shadow: 0 3px 10px rgba(0, 0, 0, 0.55), 0 0 0 9px rgba(255, 143, 177, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .free-pin { animation: none; }
+  .free-pin:not(.is-done) .free-pin-dot { animation: none; }
+}
+/* 明るい地図の上に置くので、字は必ず暗い下地に載せる */
+.free-pin-label {
+  font-size: 0.72rem;
+  line-height: 1.4;
+  white-space: nowrap;
+  color: #fff;
+  background: rgba(14, 9, 20, 0.82);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+.free-pin:hover .free-pin-dot,
+.free-pin:focus-visible .free-pin-dot { transform: scale(1.12); }
+.free-pin:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; border-radius: 8px; }
+
+/* 選び終えた場所。消すのではなく残す —— 何を選んだか思い出せるように */
+.free-pin.is-done { cursor: default; }
+.free-pin.is-done .free-pin-dot {
+  background: rgba(90, 84, 100, 0.9);
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: none;
+}
+.free-pin.is-done .free-pin-label { opacity: 0.65; }
+
+/* 一覧と地図の行き来 */
+.free-view-row { text-align: center; margin: 6px 0 0; }
+
+/* 横向き(高さ 560px 以下)。縦に積むと地図が 220px ほどにしかならず、どこに何があるか
+   読めない。本文の画面と同じ考え方で、左に文字・右に地図の2段組みにする */
+@media (orientation: landscape) and (max-height: 560px) {
+  #screen-free.is-map {
+    display: grid;
+    /* auto にすると、絵の元の幅(1536px)ぶんの列を取ろうとして文字の列が潰れる。
+       割合で決め打ちする */
+    grid-template-columns: minmax(0, 1fr) minmax(0, 62%);
+    grid-template-rows: auto auto auto auto;
+    column-gap: 18px;
+    align-content: center;
+  }
+  #screen-free.is-map .event-title,
+  #screen-free.is-map .free-remaining,
+  #screen-free.is-map .free-hint,
+  #screen-free.is-map .free-view-row { grid-column: 1; margin-bottom: 6px; }
+  #screen-free.is-map .free-map {
+    grid-column: 2;
+    grid-row: 1 / -1;
+    align-self: center;
+    margin: 0;
+  }
+  /* 2段組みの右側。高さいっぱいを使えるので、幅はそこから逆算する */
+  #screen-free.is-map .free-map-inner { width: min(100%, calc(82vh * 3 / 2)); }
+}
+
+/* ピンを押した時の札。狭い画面では下から、広い画面では中央に出す */
+.free-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(10, 6, 16, 0.62);
+}
+.free-panel[hidden] { display: none; }
+.free-panel-box {
+  width: min(420px, 100%);
+  padding: 16px 18px 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 143, 177, 0.4);
+  background: rgba(24, 16, 32, 0.97);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+  animation: endingAppear 0.24s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) { .free-panel-box { animation: none; } }
+@media (min-height: 620px) { .free-panel { align-items: center; } }
+.free-panel-place {
+  margin: 0 0 2px;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+}
+.free-panel-title {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+  line-height: 1.5;
+}
+.free-panel-blurb {
+  margin: 0 0 16px;
+  font-size: 0.88rem;
+  line-height: 1.7;
+  color: var(--text-dim);
+}
+.free-panel-btns { display: flex; gap: 10px; justify-content: center; }
 
 /* ---------------- エンディング ---------------- */
 
