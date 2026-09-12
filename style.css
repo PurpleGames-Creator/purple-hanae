@@ -980,7 +980,7 @@ button.gallery-cell:active { transform: scale(0.97); }
   flex: 1 1 auto;
   text-align: right;
 }
-/* 未到達のヒント(吉沢)。到達済みの名前より弱く出して、
+/* 未到達のヒント(浦川)。到達済みの名前より弱く出して、
    「まだ見ていない」ことが見た目で分かるようにする */
 .gallery-name.is-hint {
   opacity: 0.5;
