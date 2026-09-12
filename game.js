@@ -123,6 +123,27 @@ function loadGame() {
   return Object.assign(freshState(), saved);
 }
 
+/* ---------------- 旧キーの移行 ---------------- */
+
+// ライバルの内部キーを nishino → urakawa に変えた(2026-09-12)。既に保存されている
+// 記録の中の文字列はそのままでは読めなくなるので、起動時に一度だけ書き換える。
+// 結末図鑑を消すと「全6結末」の特典(SUPER HANAE)の入口まで閉じてしまうため、
+// 捨てずに移行する。SAVE_VERSION は上げない —— 進行の噛み合いは変わっていない
+function migrateKeys() {
+  try {
+    const raw = localStorage.getItem(ENDINGS_KEY);
+    if (raw && raw.includes("nishino")) {
+      localStorage.setItem(ENDINGS_KEY, raw.split("nishino").join("urakawa"));
+    }
+  } catch (e) { /* 読めない環境では何もしない */ }
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (raw && raw.includes("F5_nishino")) {
+      localStorage.setItem(SAVE_KEY, raw.split("F5_nishino").join("F5_urakawa"));
+    }
+  } catch (e) { /* 同上 */ }
+}
+
 /* ---------------- エンディング図鑑 ---------------- */
 
 // セーブとは別に保存する。「もう一度プレイする」で消えてはいけない
@@ -491,7 +512,7 @@ const BGM_BY_KEY = {
   E16: "tension",
   E17: "tension",
   E18: "tension",
-  F5_nishino: "tension",
+  F5_urakawa: "tension",
   RIVAL: "tension",
 };
 
@@ -504,7 +525,7 @@ const BGM_ENDING = {
   // 後夜祭の後の告白は無音なので、この結末に入ったところで quiet2 が鳴り始める。
   // 6つの結末で唯一、音が切り替わらない —— 何も起きなかったことが音でも分かる
   soretigai: "quiet2",
-  nishino: "end_rival",
+  urakawa: "end_rival",
   // 書き忘れていると playBgm が何もせず、告白の曲が鳴り続けてしまう
   // (キーが無ければ即 return する作り)。2026-09-06 の点検で発覚
   nigaoe: "end_false",
@@ -1904,10 +1925,10 @@ const TYPE_MS_READ = { narration: 8, line: 16 };
 const SPEAKERS = {
   hanae:     { name: () => "ハナエ", voice: 1 },
   hero:      { name: () => state.name || "俺", voice: 3 },
-  // キーが nishino なのは初代の名前「西野」の名残。表示名は 西野 → 吉沢 → 浦川 と
-  // 2度変えたが、**キーは変えない** —— 結末図鑑(sentimentalHanaeEndings)が
-  // "nishino" という文字列で保存されているので、変えると既に見た人の記録が消える
-  nishino:   { name: () => "浦川", voice: 2 },
+  // 表示名は 西野 → 吉沢 → 浦川 と2度変えた。キーは長らく初代の nishino のままだったが、
+  // 公開前で記録があるのは作者の端末だけなので 2026-09-12 に urakawa へ揃えた。
+  // 古い記録(結末図鑑の "nishino"、途中セーブの "F5_nishino")は migrateKeys() が書き換える
+  urakawa:   { name: () => "浦川", voice: 2 },
   touma:     { name: () => "トウマ", voice: 2 },
   komori:    { name: () => "山崎", voice: 2 },
   iin:       { name: () => "委員", voice: 2 },
@@ -1928,10 +1949,10 @@ const SPEAKER_BY_LINE = new Map([
   ["「ハナエ、差し入れ。みんなでどうぞ」", "touma"],
   ["「昔から、コイツ試合負けた日は決まってコレなんですわ」", "touma"],
   ["「そういえば、浦川が『ハナエに告白しよかな』とか言うてたで」", "iin"],
-  ["「手伝うわ」", "nishino"],
-  ["「せやろ、こう見えて器用やねん」", "nishino"],
-  ["「ハナエさん、今度みんなでカラオケ行くらしいで、来る?」", "nishino"],
-  ["「重そうやな、持とか?」", "nishino"],
+  ["「手伝うわ」", "urakawa"],
+  ["「せやろ、こう見えて器用やねん」", "urakawa"],
+  ["「ハナエさん、今度みんなでカラオケ行くらしいで、来る?」", "urakawa"],
+  ["「重そうやな、持とか?」", "urakawa"],
   // 浦川に礼を言っているのはハナエ。地の文に浦川しか出てこないので推測が外れる
   ["「あ……うん、ありがと」", "hanae"],
   ["「え、今から?」", "hero"],
@@ -1944,7 +1965,7 @@ const SPEAKER_BY_LINE = new Map([
 // 頻繁にするので、彼女のセリフを別人と誤判定する
 const OTHER_SPEAKERS = [
   { word: "トウマ", key: "touma" },
-  { word: "浦川", key: "nishino" },
+  { word: "浦川", key: "urakawa" },
   { word: "山崎", key: "komori" },
 ];
 
@@ -1965,7 +1986,7 @@ function speakerKeyFor(quote, raw, open, close) {
 const NAME_SPEAKERS = {
   "俺": "hero",
   "ハナエ": "hanae",
-  "浦川": "nishino",
+  "浦川": "urakawa",
   "トウマ": "touma",
   "山崎": "komori",
   "委員": "iin",
@@ -2756,7 +2777,7 @@ function showFreeSelect() {
         () => {
           if (state.freePicksLeft > 0) return;
           // 3つ選び終えた。浦川の場面を避けたぶんはここでライバル度に乗せる
-          if (!state.freeChosen.includes("F5_nishino")) {
+          if (!state.freeChosen.includes("F5_urakawa")) {
             state.rival = Math.max(0, state.rival + GAME_DATA.SKIP_F5_RIVAL_PENALTY);
           }
           state.queueIndex++;
@@ -2940,7 +2961,7 @@ function startConfession() {
 function resolveEnding() {
   let endingKey;
   if (!state.senshu && state.rival >= GAME_DATA.RIVAL_FAIL_THRESHOLD) {
-    endingKey = "nishino";
+    endingKey = "urakawa";
   } else if (state.score >= GAME_DATA.SUCCESS_THRESHOLD) {
     const allPerfect = Object.keys(GAME_DATA.perfectRoute).every((k) => state.perfect[k]);
     endingKey = allPerfect ? "successPerfect" : "success";
@@ -3088,7 +3109,7 @@ const ENDING_TEST = {
   success:   (s) => { s.score = GAME_DATA.SUCCESS_THRESHOLD + 14; },
   friend:    (s) => { s.score = GAME_DATA.FRIEND_THRESHOLD + 8; },
   soretigai: (s) => { s.score = GAME_DATA.FRIEND_THRESHOLD - 20; },
-  nishino:   (s) => { s.score = GAME_DATA.FRIEND_THRESHOLD + 8; s.rival = GAME_DATA.RIVAL_FAIL_THRESHOLD; },
+  urakawa:   (s) => { s.score = GAME_DATA.FRIEND_THRESHOLD + 8; s.rival = GAME_DATA.RIVAL_FAIL_THRESHOLD; },
   nigaoe:    (s) => { s.score = GAME_DATA.FRIEND_THRESHOLD - 40; s.nigaoe = true; },
 };
 
@@ -3398,6 +3419,8 @@ function renderResultHearts(endingKey) {
 /* ---------------- 起動 ---------------- */
 
 document.addEventListener("DOMContentLoaded", () => {
+  // 保存された記録を読む前に、旧キーを書き換えておく
+  migrateKeys();
   preloadAssets();
   preloadExpressions();
   // ロゴは復号が済んでから浮かび上がらせる。読み込み中に空白の場所へ

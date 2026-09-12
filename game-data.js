@@ -55,7 +55,7 @@ const GAME_DATA = {
     success: 5,
     friend: 4,
     soretigai: 3,
-    nishino: 2,
+    urakawa: 2,
     nigaoe: 1,
   },
   // 「用のない一日」(E15B)が挟まる点数。E16 の直前で見る。
@@ -607,7 +607,7 @@ const GAME_DATA = {
         { id:"D", label:"自分の分だけ選ぶ", points:-1, rival:0, tag:"passive", expr:"trouble", reaction:"「ちょい、そこ拾ってや」" },
       ],
     },
-    F5_nishino: {
+    F5_urakawa: {
       title: "浦川の申し出",
       blurb: "荷物運びの途中、他のクラスの男子が声をかけてくる",
       text: `体育館裏の通路。模擬店の資材を、二人で少しずつ運んでいるところだった。\n\nハナエが抱えた箱は、どう見ても彼女の体には大きすぎる。\n\nそこへ、隣のクラスの浦川が通りかかった。\n\n浦川「重そうやな、持とか?」\n\n爽やかな笑顔で、ハナエに手を差し出す。\n\nハナエは一瞬、箱を抱え直した。断る理由も、頼む理由も無い。\n\nただ、こちらをちらりと見た。`,
@@ -730,7 +730,7 @@ const GAME_DATA = {
     F2_chusai:   { bg: "bg_classroom", sprite: "summer" },
     F3_kaidashi: { bg: "bg_gym",       sprite: "summer" },
     F4_baiten:   { bg: "bg_classroom", sprite: "summer" },
-    F5_nishino:  { bg: "bg_gym",       sprite: "summer" },
+    F5_urakawa:  { bg: "bg_gym",       sprite: "summer" },
     F6_kouhai:   { bg: "bg_tennis",    sprite: "summer" },
 
     TITLE:       { bg: "bg_gym_night",    sprite: null },
@@ -753,7 +753,7 @@ const GAME_DATA = {
     success:        { bg: "bg_ground_night", sprite: "summer", expr: "shy" },
     friend:         { bg: "bg_ground_night", sprite: "summer", expr: "trouble" },
     soretigai:      { bg: "bg_ground_night", sprite: "summer", expr: "trouble" },
-    nishino:        { bg: "bg_ground_night", sprite: "summer", expr: "trouble" },
+    urakawa:        { bg: "bg_ground_night", sprite: "summer", expr: "trouble" },
     nigaoe:         { bg: "bg_ground_night", sprite: "summer", expr: "lonely" },
   },
 
@@ -766,7 +766,7 @@ const GAME_DATA = {
   // 次は上を目指すのか、あえて下を狙うのかが一目で分かるようにするため。
   // 浦川エンドだけは点数と無関係(ライバル度が閾値を超えると点数に関係なく落ちる)なので、
   // 点数で並ぶ結末の下、最下位の手前に置いている
-  endingOrder: ["successPerfect", "success", "friend", "soretigai", "nishino", "nigaoe"],
+  endingOrder: ["successPerfect", "success", "friend", "soretigai", "urakawa", "nigaoe"],
   // 図鑑に出す短い名前。結末画面の見出し(endings.*.title)とは別物 ——
   // あちらは体験の締めなので文学的なまま、こちらは索引なので「◯◯エンド」で揃える
   // 図鑑のラベル。結末画面の見出しにもそのまま使う(game.js の showEnding)。
@@ -775,7 +775,7 @@ const GAME_DATA = {
   // 好感度が非公開な上にライバル度は存在すら知らされないので、
   // 浦川エンドだけは気づきようがない(2026-09-09 本人指示)
   endingHints: {
-    nishino: "※ライバルの影…",
+    urakawa: "※ライバルの影…",
   },
   // Perfect の結末を読み終えた後の「呼ぶ」(2026-09-11)。押すたびに1つ進み、
   // 最後まで行ったら loopFrom に戻る(何度でも呼べる)。expr は冬服の差分
@@ -799,7 +799,7 @@ const GAME_DATA = {
     successPerfect: "Perfectエンド",
     friend: "友達エンド",
     soretigai: "すれ違いエンド",
-    nishino: "浦川エンド",
+    urakawa: "浦川エンド",
     nigaoe: "あの日の似顔絵",
   },
 
@@ -840,7 +840,7 @@ const GAME_DATA = {
     soretigai: {
       text: `ハナエは少し困ったように視線を彷徨わせる。\n\n「あんたが何考えてるか、いまいちわからんかったな……」\n\n「なんか、ごめん」\n\n言葉を選んでいるのが分かった。彼女は、人を傷つけないための言い方を、いつも真剣に探す。\n\n「うちな、あんたのこと、ええ人やと思ってたで。ほんまに」\n\n「でも、ええ人やなって思ってるだけやった。……それ以上、進みようがなかってん」\n\n俺は頷くことしかできなかった。\n\n彼女の言葉が本気なのか冗談なのか、俺の未熟さ故に最後まで汲み取りきれなかった夏だった。\n\n――たぶん、俺だけが、ずっと黙っていたのだ。`,
     },
-    nishino: {
+    urakawa: {
       text: `ハナエは驚かなかった。少し目を伏せて、言いにくそうに口を開く。\n\n「ごめん……実はな、浦川くんから告白されてて、まだ返事保留にしてるっていうか……」\n\n「タイミング悪くてごめん」\n\n返事を保留にしている、ということは、まだ決めていないということだ。そう思った瞬間、自分の情けなさに気づいた。\n\n「……なんで、今なん?」\n\n責める声ではなかった。ただ、俺が何を言うかを待っていた。\n\nこの夏のどこかで言えたはずの言葉を、俺はひとつも持っていなかった。\n\n「そっか」\n\nハナエは小さく笑って、校庭の向こうへ歩いていった。浦川が、待っていた。\n\n――この夏、彼女の隣にいた時間は、たぶん誰よりも長かった。それだけだった。`,
     },
     // 最下位。序盤の似顔絵(E8B)を経て点数も低い時だけ。24年後の段落から、
