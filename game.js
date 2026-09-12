@@ -2929,8 +2929,10 @@ function openFreePanel(key, done) {
   if (!box || !data) return;
   el("free-panel-place").textContent = FREE_PLACES[key] || "";
   el("free-panel-title").textContent = data.title;
+  // 画面に出ている「あと◯つ選べます」と同じ言葉で受ける(2026-09-12 本人指示。
+  // 「この日はもう行きました」は何を指すか分からない、との指摘)
   el("free-panel-blurb").textContent = done
-    ? "この日はもう行きました。"
+    ? "この場所はもう選びました。"
     : (data.blurb || "");
   box.hidden = false;
   const go = el("btn-free-go");
