@@ -210,7 +210,7 @@ function toggleReveal() {
   askConfirm(
     "ネタバレ表示",
     "をオンにすると、選択肢に「+3」のような点数と、好感度・吉沢の数値が出ます。" +
-    "どれを選べば良いか分かってしまう状態です。オンにしますか？",
+    "どれを選べば良いか分かってしまう状態です。\nオンにしますか？",
     () => setRevealOn(true)
   );
 }
@@ -397,7 +397,12 @@ function askConfirm(title, message, onYes) {
     t.textContent = "「" + title + "」";
     text.appendChild(t);
   }
-  text.appendChild(document.createTextNode(message));
+  // message の \n はそこで行を変える。長い説明の最後の問い(「オンにしますか？」)を
+  // 単独の行にして、説明と問いを読み分けられるようにするため(2026-09-12 本人指示)
+  message.split("\n").forEach((part, i) => {
+    if (i) text.appendChild(document.createElement("br"));
+    text.appendChild(document.createTextNode(part));
+  });
 
   const close = () => {
     box.hidden = true;
