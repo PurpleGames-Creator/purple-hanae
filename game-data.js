@@ -717,10 +717,13 @@ const GAME_DATA = {
     E17: { bg: "bg_classroom",    sprite: "summer" },
     E18: { bg: "bg_ground_night", sprite: "summer", expr: "normal", tint: "rgba(30, 50, 80, 0.3)", weather: "rain" },
     E19: { bg: "bg_gym_night",    sprite: "summer", expr: "normal" },
-    // 本番初日は展示のある体育館。最終日の撤収は夜の校庭(E18 と同じ場所だが嵐は無い)
+    // 本番初日は展示のある体育館。最終日の撤収は夜の校庭(E18 と同じ場所だが嵐は無い)。
+    // 9/5 → 9/6 は体育館が3場面続いて日付が変わったと分からなかった(2026-09-12 本人指摘)。
+    // 初日の夜(E20B)は本文どおり照明を落とした青に沈め、最終日の昼(E20C)は
+    // 別の持ち場=教室へ移した。テロップの場所名も「体育館」→「教室」に変わる
     E20: { bg: "bg_gym",          sprite: "summer", expr: "normal" },
-    E20B:{ bg: "bg_gym",          sprite: "summer", expr: "smile" },
-    E20C:{ bg: "bg_gym",          sprite: "summer", expr: "shy" },
+    E20B:{ bg: "bg_gym",          sprite: "summer", expr: "smile", tint: "rgba(24, 34, 68, 0.34)" },
+    E20C:{ bg: "bg_classroom",    sprite: "summer", expr: "shy" },
     E21: { bg: "bg_ground_night", sprite: "summer", expr: "lonely" },
 
     F1_neji:     { bg: "bg_gym",       sprite: "summer" },
