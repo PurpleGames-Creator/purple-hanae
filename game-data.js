@@ -173,7 +173,7 @@ const GAME_DATA = {
         { id:"A", label:"「これプロ並みじゃん!」", points:1, rival:0, expr:"smile", reaction:"「プロ見たことあんの?」" },
         { id:"B", label:"黙って手元を覗き込む", points:-1, rival:0, tag:"passive", expr:"trouble", reaction:"「見んといて。まだ途中や」" },
         { id:"C", label:"「こういうの、美術部に頼めばいいのに」", points:-2, rival:0, tag:"pushy", expr:"angry", reaction:"「うちがやりたいからやってんの」" },
-        { id:"D", label:"「え、めっちゃ上手い!これ欲しい」", points:2, rival:0, expr:"shy", reaction:"「え? ……欲しいて、こんな絵を?」\n\nそう言いながら、ハナエは段ボールを隠さなかった。" },
+        { id:"D", label:"「え、めっちゃ上手い! これ欲しい」", points:2, rival:0, expr:"shy", reaction:"「え? ……欲しいて、こんな絵を?」\n\nそう言いながら、ハナエは段ボールを隠さなかった。" },
       ],
     },
 
@@ -215,9 +215,9 @@ const GAME_DATA = {
       text: `作業の休憩中、ふと表情が曇るハナエ。「うち、中学の時な、部長やってて……大事な大会の前に怪我して、みんなの足引っ張ってもうたことあんねん」\n\nそこまで言って、少し黙る。「せやから今は、その分ちゃんとやらなあかんって、いつも思ててな」\n\n明るく笑ってはいるが、その笑顔の奥に何かが見える。`,
       choices: [
         { id:"A", label:"「もっと聞かせてよ」", points:-1, rival:0, tag:"pushy", expr:"lonely", reaction:"「……いや、ええわ、こんな話」" },
-        { id:"B", label:"「そっか…」と、隣に座って話を聞く", points:3, rival:0, expr:"soft", reaction:"「……なんか、こうやって黙って聞いてくれる人、久しぶりやわ」\n\nそれきり、ハナエは何も言わなかった。二人ぶんの汗が床に落ちて乾くまで、そのままでいた。" },
+        { id:"B", label:"「そっか……」と、隣に座って話を聞く", points:3, rival:0, expr:"soft", reaction:"「……なんか、こうやって黙って聞いてくれる人、久しぶりやわ」\n\nそれきり、ハナエは何も言わなかった。二人ぶんの汗が床に落ちて乾くまで、そのままでいた。" },
         { id:"C", label:"「誰のせいでもないよ」", points:0, rival:0, expr:"trouble", reaction:"「そんなんわかってるって……」" },
-        { id:"D", label:"「それだけ責任を感じてるんだね…」", points:1, rival:0, expr:"soft", reaction:"「……うん。なんか、しんみりさせてもうたな」" },
+        { id:"D", label:"「それだけ責任を感じてるんだね……」", points:1, rival:0, expr:"soft", reaction:"「……うん。なんか、しんみりさせてもうたな」" },
       ],
     },
 
@@ -238,12 +238,12 @@ const GAME_DATA = {
 
     E9: {
       title: "朝練を覗きに行く",
-      text: `委員会の鍵を借りるため、いつもより一時間早く学校に来た。\n\nテニスコートの前を通ると、フェンスの向こうでハナエが誰よりも大きな声を出していた。\n\n「山崎、もう一本!足止まってんで!」\n\nハナエ「新入りが一番声出さんでどうすんの」\n\n怒鳴られた一年生が、慌ててラケットを構え直す。委員会で見せる仕切りとは、まただいぶ違う。キャプテンの顔だ。\n\n汗だくで、髪も乱れていて、こちらにはまるで気づいていない。`,
+      text: `委員会の鍵を借りるため、いつもより一時間早く学校に来た。\n\nテニスコートの前を通ると、フェンスの向こうでハナエが誰よりも大きな声を出していた。\n\n「山崎、もう一本! 足止まってんで!」\n\nハナエ「新入りが一番声出さんでどうすんの」\n\n怒鳴られた一年生が、慌ててラケットを構え直す。委員会で見せる仕切りとは、まただいぶ違う。キャプテンの顔だ。\n\n汗だくで、髪も乱れていて、こちらにはまるで気づいていない。`,
       choices: [
         { id:"A", label:"フェンス越しに名前を呼んで手を振る", points:-3, rival:0, tag:"pushy", expr:"angry", reaction:"部員全員がこちらを向く。「あんた、後で覚えとけよ」" },
         { id:"B", label:"買っておいたスポーツドリンクをベンチに置き、委員会へ向かう", points:3, rival:0, expr:"soft", reaction:"その日の昼、委員会の部屋で声をかけられた。「……あれ、あんたやろ。ありがと」" },
         { id:"C", label:"邪魔しないよう、黙って引き返す", points:0, rival:0, tag:"passive", expr:"normal", reaction:"誰にも気づかれないまま、朝の校舎に戻る。" },
-        { id:"D", label:"練習が終わってから声をかける", points:2, rival:0, expr:"shy", reaction:"「え、いつからおったん?……見んといてや、こんなグチャグチャの時に」" },
+        { id:"D", label:"練習が終わってから声をかける", points:2, rival:0, expr:"shy", reaction:"「え、いつからおったん? ……見んといてや、こんなグチャグチャの時に」" },
       ],
     },
 
@@ -612,7 +612,7 @@ const GAME_DATA = {
       choices: [
         { id:"A", label:"「じゃあ、こっちのツナサンドにしたら?」", points:3, rival:0, expr:"smile", reaction:"「気ぃ利くやん、ありがとう」" },
         { id:"B", label:"「好き嫌いは良くないよ」", points:-2, rival:0, tag:"pushy", expr:"angry", reaction:"「別にええやろ、好みなんやから」" },
-        { id:"C", label:"「え、生姜だめなんだ?意外」", points:2, rival:0, expr:"smile", reaction:"「あとらっきょうとセロリも無理やねん」" },
+        { id:"C", label:"「え、生姜だめなんだ? 意外」", points:2, rival:0, expr:"smile", reaction:"「あとらっきょうとセロリも無理やねん」" },
         { id:"D", label:"自分の分だけ選ぶ", points:-1, rival:0, tag:"passive", expr:"trouble", reaction:"「ちょい、そこ拾ってや」" },
       ],
     },
@@ -784,7 +784,7 @@ const GAME_DATA = {
   // 好感度が非公開な上にライバル度は存在すら知らされないので、
   // 浦川エンドだけは気づきようがない(2026-09-09 本人指示)
   endingHints: {
-    urakawa: "※ライバルの影…",
+    urakawa: "※ライバルの影……",
   },
   // Perfect の結末を読み終えた後の「呼ぶ」(2026-09-11)。押すたびに1つ進み、
   // 最後まで行ったら loopFrom に戻る(何度でも呼べる)。expr は冬服の差分

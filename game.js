@@ -123,6 +123,28 @@ function loadGame() {
   return Object.assign(freshState(), saved);
 }
 
+/* ---------------- 拡大している間は重い演出を止める ---------------- */
+
+// iPhone で拡大するとページごと落ちる/カクつく件(2026-09-12 本人報告・2度目)。
+// Safari は拡大すると画面を「その倍率」で描き直すので、必要なメモリは倍率の2乗で増える。
+// 特に重いのは、拡大後の大きさで作り直しになるもの ——
+//   ・立ち絵の drop-shadow(大きな絵の輪郭に沿った影)
+//   ・本文枠・パネルの backdrop-filter(後ろの絵をぼかして持ち直す)
+//   ・雨 / 火の粉 / 花びらの層(動き続けるので毎フレーム作り直す)
+// 拡大している間だけこれらを切る。指を離して元の倍率に戻れば、そのまま元通りになる。
+// visualViewport が無いブラウザでは何もしない(パソコンは拡大しても余裕がある)
+function initZoomGuard() {
+  const vv = window.visualViewport;
+  if (!vv) return;
+  const update = () => {
+    // 1.05 は指の震えで倍率がわずかに動くぶんの遊び
+    document.body.classList.toggle("is-zoomed", vv.scale > 1.05);
+  };
+  vv.addEventListener("resize", update);
+  vv.addEventListener("scroll", update);
+  update();
+}
+
 /* ---------------- 旧キーの移行 ---------------- */
 
 // ライバルの内部キーを nishino → urakawa に変えた(2026-09-12)。既に保存されている
@@ -1959,8 +1981,6 @@ const SPEAKER_BY_LINE = new Map([
   // 浦川に礼を言っているのはハナエ。地の文に浦川しか出てこないので推測が外れる
   ["「あ……うん、ありがと」", "hanae"],
   ["「え、今から?」", "hero"],
-  ["「よろしく」", "hero"],
-  ["「ハナエ、付き合ってほしい」", "hero"],
 ]);
 
 // リストに無い新しいセリフ用の保険。地の文にハナエの名前が無く、他の登場人物の
@@ -2833,15 +2853,13 @@ function renderFreePins() {
     label.textContent = FREE_PLACES[key];
     pin.appendChild(dot);
     pin.appendChild(label);
-    if (done) {
-      pin.disabled = true;
-    } else {
-      pin.onclick = () => {
-        if (box.classList.contains("is-locked")) return;
-        AUDIO.se("choice");
-        openFreePanel(key);
-      };
-    }
+    // 選び済みでも押せるようにする —— 押して無反応だと壊れているように見える。
+    // 札は出すが、決めるボタンは出さない
+    pin.onclick = () => {
+      if (box.classList.contains("is-locked")) return;
+      AUDIO.se("choice");
+      openFreePanel(key, done);
+    };
     box.appendChild(pin);
   });
 
@@ -2905,16 +2923,21 @@ function closeFreePanel() {
 
 // ピンを押した時の札。ここで初めてイベント名と一行の説明を見せ、
 // 「ここに行く」でようやく確定する(押し間違いで場面が始まらないように)
-function openFreePanel(key) {
+function openFreePanel(key, done) {
   const data = GAME_DATA.freePool[key];
   const box = el("free-panel");
   if (!box || !data) return;
   el("free-panel-place").textContent = FREE_PLACES[key] || "";
   el("free-panel-title").textContent = data.title;
-  el("free-panel-blurb").textContent = data.blurb || "";
+  el("free-panel-blurb").textContent = done
+    ? "この日はもう行きました。"
+    : (data.blurb || "");
   box.hidden = false;
   const go = el("btn-free-go");
   const cancel = el("btn-free-cancel");
+  // 行った場所は読み返すだけ。閉じるボタン1つにする
+  go.hidden = !!done;
+  cancel.textContent = done ? "閉じる" : "やめる";
   const close = () => {
     closeFreePanel();
     go.onclick = null;
@@ -2924,10 +2947,11 @@ function openFreePanel(key) {
   };
   const onKey = (e) => { if (e.key === "Escape") { AUDIO.se("choice"); close(); } };
   go.onclick = () => { AUDIO.se("next"); close(); pickFreeEvent(key); };
+  // 決めるボタンが無い時は、閉じるボタンに焦点を置く
   cancel.onclick = () => { AUDIO.se("choice"); close(); };
   box.onclick = (e) => { if (e.target === box) { AUDIO.se("choice"); close(); } };
   document.addEventListener("keydown", onKey);
-  go.focus();
+  (done ? cancel : go).focus();
 }
 
 function initFreeView() {
@@ -3648,6 +3672,7 @@ function renderResultHearts(endingKey) {
 document.addEventListener("DOMContentLoaded", () => {
   // 保存された記録を読む前に、旧キーを書き換えておく
   migrateKeys();
+  initZoomGuard();
   preloadAssets();
   preloadExpressions();
   // ロゴは復号が済んでから浮かび上がらせる。読み込み中に空白の場所へ

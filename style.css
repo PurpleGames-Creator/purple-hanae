@@ -885,7 +885,7 @@ body.has-skip .event-reaction.has-next::after { right: 92px; }
 .free-pin:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; border-radius: 8px; }
 
 /* 選び終えた場所。消すのではなく残す —— 何を選んだか思い出せるように */
-.free-pin.is-done { cursor: default; }
+.free-pin.is-done { cursor: pointer; }   /* 押すと「もう行った」と分かる札が出る */
 .free-pin.is-done .free-pin-dot {
   background: rgba(90, 84, 100, 0.9);
   border-color: rgba(255, 255, 255, 0.5);
@@ -1290,6 +1290,49 @@ button.gallery-cell:active { transform: scale(0.97); }
   outline: 3px solid var(--accent);
   outline-offset: 2px;
 }
+
+/* ---------------- 拡大している間(body.is-zoomed) ----------------
+
+   iPhone で拡大するとメモリが足りずにページが落ちる/カクつくため、
+   拡大中だけ「拡大倍率で作り直しになるもの」を切る(game.js の initZoomGuard)。
+   見た目は変わるが、指を離せば元に戻る。**新しい演出を足す時は、ここにも足すこと** */
+
+/* 立ち絵とロゴの影。大きな絵の輪郭に沿った影は、拡大時に一番重い */
+body.is-zoomed .sprite,
+body.is-zoomed .game-logo { filter: none !important; }
+
+/* 後ろの絵をぼかして持ち直す枠。本文枠は遊んでいる間ずっと出ている */
+body.is-zoomed .textbox,
+body.is-zoomed .poke-hint,
+body.is-zoomed .sound-panel,
+body.is-zoomed .confirm-overlay,
+body.is-zoomed .log-overlay,
+body.is-zoomed .draw-overlay {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* 動き続ける層。止めるだけでは拡大後の絵を持ち続けるので、置くのをやめる */
+body.is-zoomed .rain-layer,
+body.is-zoomed .ember-layer,
+body.is-zoomed .petal { display: none !important; }
+
+/* 小さく光り続けるもの。止めるだけでよい(層としては軽い) */
+body.is-zoomed .free-pin-dot::after,
+body.is-zoomed .reveal-btn,
+body.is-zoomed .tap-hint,
+body.is-zoomed .sprite { animation-play-state: paused !important; }
+
+/* 出現アニメ(fill-mode: both)を「止める」と、拡大した瞬間に出てきたものが
+   透明のまま固まってしまう。こちらは止めずに無くす —— 拡大中は演出なしで即座に出る */
+body.is-zoomed .choice-btn,
+body.is-zoomed .free-card,
+body.is-zoomed .free-pin {
+  animation: none !important;
+  opacity: 1 !important;
+}
+/* .free-pin は位置合わせを transform に頼っているので、アニメを外しても消えないようにする */
+body.is-zoomed .free-pin { transform: translate(-50%, -50%) !important; }
 
 /* ---------------- ハート演出 ---------------- */
 
