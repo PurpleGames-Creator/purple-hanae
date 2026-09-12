@@ -1482,7 +1482,10 @@ const TAP_GUARD_MS = 400;
 let tapGuardUntil = 0;
 let lastTelop = "";
 
+// 場所の名前。場面が自分で名乗っていれば(scenes の place)それを、無ければ背景から引く。
+// 地図のピンもここを通すので、ピンとテロップの名前は必ず一致する(2026-09-12 本人指摘)
 function placeFor(scene) {
+  if (scene && scene.place) return scene.place;
   const bg = scene && scene.bg;
   return (bg && GAME_DATA.placeLabels && GAME_DATA.placeLabels[bg]) || "";
 }
@@ -2784,16 +2787,6 @@ const FREE_MAP = {
   },
 };
 
-// ピンに添える場所の名前。イベント名より先に「どこの話か」を見せる
-const FREE_PLACES = {
-  F1_neji: "体育館",
-  F2_chusai: "校舎",
-  F3_kaidashi: "校門",
-  F4_baiten: "購買",
-  F5_urakawa: "体育館裏",
-  F6_kouhai: "テニスコート",
-};
-
 // 地図と一覧のどちらで選ぶか。既定は地図。迷った人が一覧へ逃げられるようにし、
 // 選んだ方を覚えておく(毎回切り替え直さなくて済む)
 const FREE_VIEW_KEY = "sentimentalHanaeFreeView";
@@ -2805,6 +2798,11 @@ function freeViewIsMap() {
 function setFreeView(map) {
   try { localStorage.setItem(FREE_VIEW_KEY, map ? "map" : "list"); } catch (e) { /* 続行 */ }
   renderFreeView();
+}
+
+// ピンに添える場所の名前。テロップと同じところから引く(食い違わせない)
+function freePlace(key) {
+  return placeFor(sceneFor(key));
 }
 
 function freeMapVariant() {
@@ -2842,7 +2840,7 @@ function renderFreePins() {
     pin.style.top = at[1] + "%";
     pin.style.animationDelay = (i * CHOICE_STAGGER_MS) / 1000 + "s";
     pin.setAttribute("aria-label",
-      FREE_PLACES[key] + "・" + data.title + (done ? "(えらび済み)" : ""));
+      freePlace(key) + "・" + data.title + (done ? "(えらび済み)" : ""));
     const dot = document.createElement("span");
     dot.className = "free-pin-dot";
     // 数字は入れない —— 「この順に選ぶもの」と読めてしまう(実際は順不同)。
@@ -2850,7 +2848,7 @@ function renderFreePins() {
     dot.textContent = done ? "✓" : "";
     const label = document.createElement("span");
     label.className = "free-pin-label";
-    label.textContent = FREE_PLACES[key];
+    label.textContent = freePlace(key);
     pin.appendChild(dot);
     pin.appendChild(label);
     // 選び済みでも押せるようにする —— 押して無反応だと壊れているように見える。
@@ -2927,7 +2925,7 @@ function openFreePanel(key, done) {
   const data = GAME_DATA.freePool[key];
   const box = el("free-panel");
   if (!box || !data) return;
-  el("free-panel-place").textContent = FREE_PLACES[key] || "";
+  el("free-panel-place").textContent = freePlace(key);
   el("free-panel-title").textContent = data.title;
   // 画面に出ている「あと◯つ選べます」と同じ言葉で受ける(2026-09-12 本人指示。
   // 「この日はもう行きました」は何を指すか分からない、との指摘)

@@ -742,11 +742,14 @@ const GAME_DATA = {
     E20C:{ bg: "bg_classroom",    sprite: "summer", expr: "shy" },
     E21: { bg: "bg_ground_night", sprite: "summer", expr: "lonely" },
 
+    // place: 場所の名前。書かない時は背景(placeLabels)から引く。
+    // **自由行動の地図のピンも、暗転のテロップも、この名前を使う**(2026-09-12 本人指摘。
+    // ピンは「校門」なのにテロップは「体育館」と出ていた)。片方だけ直さないこと
     F1_neji:     { bg: "bg_gym",       sprite: "summer" },
     F2_chusai:   { bg: "bg_classroom", sprite: "summer" },
-    F3_kaidashi: { bg: "bg_gym",       sprite: "summer" },
-    F4_baiten:   { bg: "bg_classroom", sprite: "summer" },
-    F5_urakawa:  { bg: "bg_gym",       sprite: "summer" },
+    F3_kaidashi: { bg: "bg_gym",       sprite: "summer", place: "校門" },
+    F4_baiten:   { bg: "bg_classroom", sprite: "summer", place: "購買" },
+    F5_urakawa:  { bg: "bg_gym",       sprite: "summer", place: "体育館裏" },
     F6_kouhai:   { bg: "bg_tennis",    sprite: "summer" },
 
     TITLE:       { bg: "bg_gym_night",    sprite: null },
