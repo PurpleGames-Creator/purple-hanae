@@ -770,11 +770,11 @@ body.has-skip .event-reaction.has-next::after { right: 92px; }
 @media (orientation: portrait) {
   /* 260px は「ピン同士が指で押し分けられる」下限。これ以上は縮めない ——
      縮めるとピンが重なって選べなくなる(実測で 155px まで縮んで破綻した) */
-  .free-map-inner { aspect-ratio: 2 / 3; width: min(100%, max(260px, calc(min(58vh, 520px) * 2 / 3))); }
+  .free-map-inner { aspect-ratio: 2 / 3; width: min(100%, max(260px, calc(min(70vh, 620px) * 2 / 3))); }
 }
-/* 背の低い縦画面(iPhone SE など)。58% のままだと下にはみ出してスクロールが出る */
+/* 背の低い縦画面(iPhone SE など)。同じ割合だと下にはみ出してスクロールが出る */
 @media (orientation: portrait) and (max-height: 700px) {
-  .free-map-inner { width: min(100%, max(260px, calc(52vh * 2 / 3))); }
+  .free-map-inner { width: min(100%, max(260px, calc(62vh * 2 / 3))); }
 }
 /* 背の低い画面では、地図を縮める代わりに周りの文字を削る。
    日付は HUD に出ているので、長い見出しは無くても迷わない */
@@ -804,6 +804,14 @@ body.has-skip .event-reaction.has-next::after { right: 92px; }
 .free-pins { position: absolute; inset: 0; }
 .free-pins.is-locked { pointer-events: none; }
 
+/* 出現アニメは位置合わせの translate を含んだ専用のものを使う。
+   choiceIn(transform を translateY だけに書き換える)を当てると、
+   fill-mode: both のせいで translate(-50%,-50%) が消え、**全ピンが半個ぶんずれる**。
+   2026-09-12 に実際に踏んだ —— 座標の方をいじって辻褄を合わせないこと */
+@keyframes pinIn {
+  from { opacity: 0; transform: translate(-50%, calc(-50% + 6px)); }
+  to   { opacity: 1; transform: translate(-50%, -50%); }
+}
 .free-pin {
   position: absolute;
   transform: translate(-50%, -50%);
@@ -815,18 +823,11 @@ body.has-skip .event-reaction.has-next::after { right: 92px; }
   border: 0;
   background: none;
   cursor: pointer;
-  animation: choiceIn 0.32s ease-out both;
+  animation: pinIn 0.32s ease-out both;
 }
-/* 指で押せる大きさ(44px)を、見た目を太らせずに確保する */
-.free-pin::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 14px;
-  width: 44px;
-  height: 44px;
-  transform: translate(-50%, -50%);
-}
+/* 絵の下端に近い場所は、名前を丸の上に出す(下にはみ出さないように) */
+.free-pin.is-up { flex-direction: column-reverse; }
+
 .free-pin-dot {
   position: relative;
   width: 28px;

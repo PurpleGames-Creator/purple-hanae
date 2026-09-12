@@ -2744,10 +2744,10 @@ const FREE_MAP = {
     src: "bg_campus.webp",
     pins: {
       F2_chusai:   [26, 29],
-      F1_neji:     [81, 30],
-      F5_urakawa:  [93, 42],
+      F1_neji:     [70, 30],
+      F5_urakawa:  [91, 35],
       F4_baiten:   [11, 45],
-      F6_kouhai:   [78, 63],
+      F6_kouhai:   [75, 62],
       F3_kaidashi: [46, 83],
     },
   },
@@ -2755,10 +2755,10 @@ const FREE_MAP = {
     src: "bg_campus_portrait.webp",
     pins: {
       F2_chusai:   [29, 21],
-      F1_neji:     [81, 25],
-      F5_urakawa:  [92, 36],
+      F1_neji:     [67, 27],
+      F5_urakawa:  [93, 30],
       F4_baiten:   [17, 35],
-      F6_kouhai:   [82, 56],
+      F6_kouhai:   [76, 55],
       F3_kaidashi: [46, 83],
     },
   },
@@ -2851,13 +2851,19 @@ function renderFreePins() {
   const fit = () => {
     const area = img.getBoundingClientRect();
     if (!area.width) return;
-    box.querySelectorAll(".free-pin-label").forEach((label) => {
+    box.querySelectorAll(".free-pin").forEach((pin) => {
+      const label = pin.querySelector(".free-pin-label");
+      if (!label) return;
+      pin.classList.remove("is-up");
       label.style.transform = "";
+      // 下にはみ出す場所(校門など)は、名前を丸の上に出す
+      if (pin.getBoundingClientRect().bottom > area.bottom - 2) pin.classList.add("is-up");
+      // 左右にはみ出す場所(体育館裏・テニスコート)は、名前だけ内側へ寄せる
       const r = label.getBoundingClientRect();
       const over = r.right - area.right;
       const under = area.left - r.left;
-      if (over > 0) label.style.transform = `translateX(${-(over + 4)}px)`;
-      else if (under > 0) label.style.transform = `translateX(${under + 4}px)`;
+      if (over > 0) label.style.transform = `translateX(${-(over + 6)}px)`;
+      else if (under > 0) label.style.transform = `translateX(${under + 6}px)`;
     });
   };
   // requestAnimationFrame は「描かれていないタブ」では呼ばれない(実際に踏んだ)。
@@ -2876,10 +2882,11 @@ function renderFreeView() {
   if (mapBox) mapBox.hidden = !map;
   if (list) list.hidden = map;
   if (btn) btn.textContent = map ? "一覧で選ぶ" : "地図で選ぶ";
+  // 地図の時は案内の一行を出さない(本人指示)。そのぶん地図を大きく見せる。
+  // 一覧の時だけ、これまでどおりの一行を出す
   if (hint) {
-    hint.textContent = map
-      ? "行き先を押すと、その日の話が出ます。選ばなかった行動は今回は起こりません。"
-      : "選ばなかった行動は、今回は起こりません。";
+    hint.hidden = map;
+    hint.textContent = "選ばなかった行動は、今回は起こりません。";
   }
   // 横向きの時のレイアウト切り替えに使う(地図の時だけ2段組みにする)
   el("screen-free").classList.toggle("is-map", map);
