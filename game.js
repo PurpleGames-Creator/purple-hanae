@@ -50,6 +50,8 @@ function freshState() {
     rudeEarly: 0,
     // 「用のない一日」を出したか。一周に一度だけ
     hanaeShown: false,
+    // 「校門」を出したか。一周に一度だけ(「用のない一日」を見た人にだけ続けて出る)
+    hanae5Shown: false,
     // 「名札」を出したか。一周に一度だけ
     hanae2Shown: false,
     // 「缶ジュース」を出したか。一周に一度だけ
@@ -518,6 +520,8 @@ const BGM_BY_KEY = {
   // E19 は quiet1 に戻す —— 最後の夜だけ最初の静けさが返ってくる
   E5: "quiet1",
   E15B: "quiet1",
+  // 「校門」は「用のない一日」の続き。同じ静けさのまま渡す
+  E15C: "quiet1",
   E20B: "quiet1",
   E8: "quiet1",
   E12: "quiet1",
@@ -3082,6 +3086,15 @@ function advanceQueue() {
       state.score >= GAME_DATA.HANAE_SCENE_SCORE) {
     showEvent("E15B", GAME_DATA.events.E15B, sceneFor("E15B"), () => advanceQueue(), () => {
       state.hanaeShown = true;
+    });
+    return;
+  }
+
+  // 「用のない一日」を見た人だけ、続けて「校門」が挟まる(2026-09-12)。
+  // 点数の条件は持たない。E15B の確定後に advanceQueue が E16 へ戻ってきた所で出す
+  if (key === "E16" && state.hanaeShown && !state.hanae5Shown && GAME_DATA.events.E15C) {
+    showEvent("E15C", GAME_DATA.events.E15C, sceneFor("E15C"), () => advanceQueue(), () => {
+      state.hanae5Shown = true;
     });
     return;
   }
