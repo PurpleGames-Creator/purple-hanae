@@ -830,8 +830,8 @@ body.has-skip .event-reaction.has-next::after { right: 92px; }
 
 .free-pin-dot {
   position: relative;
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   display: grid;
   place-items: center;
@@ -839,18 +839,36 @@ body.has-skip .event-reaction.has-next::after { right: 92px; }
   font-weight: bold;
   color: #fff;
   background: linear-gradient(160deg, #ff8fb1, #c86bd8);
-  border: 2px solid rgba(255, 255, 255, 0.9);
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.55);
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  /* 夕方の明るい地図の上に置くので、白い縁の外に暗い線を1本入れて輪郭を立てる。
+     さらに常時ほんのり光らせる —— 脈だけだと、消えている間は地図に埋もれる */
+  box-shadow:
+    0 0 0 1px rgba(20, 10, 30, 0.45),
+    0 3px 10px rgba(0, 0, 0, 0.6),
+    0 0 14px 3px rgba(255, 143, 177, 0.65);
 }
-/* 押せることに気づいてもらうための、ゆっくりした脈。動きを減らす設定では止める */
-.free-pin:not(.is-done) .free-pin-dot { animation: pinPulse 2.4s ease-in-out infinite; }
-@keyframes pinPulse {
-  0%, 100% { box-shadow: 0 3px 10px rgba(0, 0, 0, 0.55), 0 0 0 0 rgba(255, 143, 177, 0.55); }
-  50%      { box-shadow: 0 3px 10px rgba(0, 0, 0, 0.55), 0 0 0 9px rgba(255, 143, 177, 0); }
+/* 外へ広がる輪。丸そのものではなく擬似要素を動かす —— 丸の transform を
+   アニメで書き換えると、位置合わせや hover の拡大を消してしまう(pinIn の件と同じ罠) */
+.free-pin:not(.is-done) .free-pin-dot::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 214, 233, 0.95);
+  box-shadow: 0 0 14px 4px rgba(255, 143, 177, 0.8);
+  animation: pinRing 2s ease-out infinite;
+  pointer-events: none;
 }
+@keyframes pinRing {
+  0%   { transform: scale(0.72); opacity: 0; }
+  25%  { opacity: 1; }
+  75%  { transform: scale(1.55); opacity: 0; }
+  100% { transform: scale(1.55); opacity: 0; }
+}
+/* 動きを減らす設定では輪を止める。常時のにじみは残るので、押せることは伝わる */
 @media (prefers-reduced-motion: reduce) {
   .free-pin { animation: none; }
-  .free-pin:not(.is-done) .free-pin-dot { animation: none; }
+  .free-pin:not(.is-done) .free-pin-dot::after { animation: none; opacity: 0.85; }
 }
 /* 明るい地図の上に置くので、字は必ず暗い下地に載せる */
 .free-pin-label {
@@ -871,7 +889,7 @@ body.has-skip .event-reaction.has-next::after { right: 92px; }
 .free-pin.is-done .free-pin-dot {
   background: rgba(90, 84, 100, 0.9);
   border-color: rgba(255, 255, 255, 0.5);
-  box-shadow: none;
+  box-shadow: 0 0 0 1px rgba(20, 10, 30, 0.4), 0 2px 6px rgba(0, 0, 0, 0.45);
 }
 .free-pin.is-done .free-pin-label { opacity: 0.65; }
 
