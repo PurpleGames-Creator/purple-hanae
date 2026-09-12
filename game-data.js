@@ -699,6 +699,11 @@ const GAME_DATA = {
     bg_tennis: "テニスコート",
     bg_cafe: "喫茶店",
     bg_rain: "渡り廊下",
+    // 自由行動の3場面用に 2026-09-12 追加。縦長(941x1672)の1枚で縦横どちらも賄う ——
+    // 背景は background-size: cover なので、横画面では中央の帯が切り出される
+    bg_gate: "校門",
+    bg_shop: "購買",
+    bg_gymback: "体育館裏",
   },
 
   // 各シーンの背景と立ち絵(演出データ。テキスト側とは分離して管理する)
@@ -747,9 +752,11 @@ const GAME_DATA = {
     // ピンは「校門」なのにテロップは「体育館」と出ていた)。片方だけ直さないこと
     F1_neji:     { bg: "bg_gym",       sprite: "summer" },
     F2_chusai:   { bg: "bg_classroom", sprite: "summer" },
-    F3_kaidashi: { bg: "bg_gym",       sprite: "summer", place: "校門" },
-    F4_baiten:   { bg: "bg_classroom", sprite: "summer", place: "購買" },
-    F5_urakawa:  { bg: "bg_gym",       sprite: "summer", place: "体育館裏" },
+    // 場所と絵が食い違っていたので、専用の背景を足した(2026-09-12)。
+    // 名前は placeLabels から引くので、place の上書きは要らなくなった
+    F3_kaidashi: { bg: "bg_gate",      sprite: "summer" },
+    F4_baiten:   { bg: "bg_shop",      sprite: "summer" },
+    F5_urakawa:  { bg: "bg_gymback",   sprite: "summer" },
     F6_kouhai:   { bg: "bg_tennis",    sprite: "summer" },
 
     TITLE:       { bg: "bg_gym_night",    sprite: null },
