@@ -6,7 +6,7 @@ const SAVE_KEY = "sentimentalHanaeSave";
 // 最後に遊んだ名前。セーブは結末に着いた時点で消えるが、
 // 図鑑から結末を読み返す時に {name} を埋める必要があるので別に取っておく
 const NAME_KEY = "sentimentalHanaeName";
-// 結末まで遊んだ回数。好感度表示は「どんな結末でも2周」で解放する(2026-09-11 本人指示)。
+// 結末まで遊んだ回数。ネタバレ表示は「どんな結末でも2周」で解放する(2026-09-11 本人指示)。
 // 図鑑(ENDINGS_KEY)は結末の種類しか持たないので、同じ結末を2回見た人を数えられない
 const PLAYS_KEY = "sentimentalHanaePlays";
 const ASSET_DIR = "assets/";
@@ -128,7 +128,12 @@ function loadGame() {
 // セーブとは別に保存する。「もう一度プレイする」で消えてはいけない
 const ENDINGS_KEY = "sentimentalHanaeEndings";
 
-/* ---------------- 好感度表示(どんな結末でも2周遊んだ人だけ。旧称: 答え合わせ) ---------------- */
+/* ---------------- ネタバレ表示(どんな結末でも2周遊んだ人だけ。旧称: 答え合わせ → 好感度表示) ----------------
+
+   名前は 2026-09-12 に「好感度表示」から変えた(本人指示)。「好感度表示」だと
+   HUD に合計が出るだけだと読めてしまい、実際に出るもの —— 選択肢の「+3」の札 ——
+   を見た人が「カンニングじゃないか」と驚く。名前・設定パネルの一行・初回オン時の
+   確認の3点で、オンにする前に何が出るのかを伝える。 */
 
 // 保存するのはオン/オフだけ。「解放したか」は図鑑の記録から導けるので持たない
 const REVEAL_KEY = "sentimentalHanaeReveal";
@@ -192,6 +197,24 @@ function revealOn() {
   try { return localStorage.getItem(REVEAL_KEY) === "1"; } catch (e) { return false; }
 }
 
+// 一度でもオン/オフを押していれば "1"/"0" が入っている。null = まだ一度も押していない
+// (キャンセルした人も null のまま。決めていないので次も説明を出す)
+function revealEverToggled() {
+  try { return localStorage.getItem(REVEAL_KEY) !== null; } catch (e) { return true; }
+}
+
+// 初めてオンにする時だけ、何が出るのかを確かめてもらう(2026-09-12 本人指示)
+function toggleReveal() {
+  if (revealOn()) { setRevealOn(false); return; }
+  if (revealEverToggled()) { setRevealOn(true); return; }
+  askConfirm(
+    "ネタバレ表示",
+    "をオンにすると、選択肢に「+3」のような点数と、好感度・吉沢の数値が出ます。" +
+    "どれを選べば良いか分かってしまう状態です。オンにしますか？",
+    () => setRevealOn(true)
+  );
+}
+
 function setRevealOn(on) {
   try { localStorage.setItem(REVEAL_KEY, on ? "1" : "0"); } catch (e) { /* 保存できなくても続行 */ }
   applyRevealClass();
@@ -225,6 +248,9 @@ function renderRevealButton() {
     const st = el("reveal-panel-state");
     if (st) st.textContent = on ? "オン" : "オフ";
   }
+  // 「何が出るのか」の一行。スイッチと一緒に出し入れする
+  const nt = el("reveal-panel-note");
+  if (nt) nt.hidden = !unlocked;
 }
 
 function signed(n) {
@@ -692,19 +718,23 @@ function resetCallPoke() {
   callStep = -1;
 }
 
-// 結末の画面で、この結末で新しく開いたものを知らせる(好感度表示 / おまけ)
+// 結末の画面で、この結末で新しく開いたものを知らせる(ネタバレ表示 / おまけ)
 function renderUnlockNotes(unlocked) {
   const box = el("unlock-notes");
   if (!box) return;
   box.innerHTML = "";
-  const note = (text) => {
+  const note = (text, sub) => {
     const p = document.createElement("p");
-    p.className = "unlock-note";
+    p.className = "unlock-note" + (sub ? " is-sub" : "");
     p.textContent = text;
     box.appendChild(p);
   };
-  // タイトルと「設定」の両方から切り替えられるので、場所は書かない(2026-09-11 本人指示)
-  if (unlocked && unlocked.reveal) note("「好感度表示」が使えるようになりました");
+  // タイトルと「設定」の両方から切り替えられるので、場所は書かない(2026-09-11 本人指示)。
+  // 何が出るのかは2行目で言う —— 名前だけだと合計が出るだけだと読まれる(2026-09-12)
+  if (unlocked && unlocked.reveal) {
+    note("「ネタバレ表示」が使えるようになりました");
+    note("オンにすると、選択肢の点数まで見えます", true);
+  }
   if (unlocked && unlocked.bonus) {
     note("全エンディング達成！");
     box.appendChild(bonusLink());
@@ -1807,11 +1837,13 @@ function closeSoundPanel() {
 
 function initRevealButton() {
   const btn = el("btn-reveal");
-  if (btn) btn.onclick = () => setRevealOn(!revealOn());
+  if (btn) btn.onclick = toggleReveal;
   // 設定パネルの方。選択肢の札と HUD の数値は body.reveal-on だけで出し入れしているので、
-  // 選んでいる最中に切り替えてもその場で出る/消える(選択肢を作り直さない)
+  // 選んでいる最中に切り替えてもその場で出る/消える(選択肢を作り直さない)。
+  // 確認のポップアップ(z-index 1300)は設定パネル(1001)より前に出るので、
+  // プレイ中にここから押しても隠れない
   const pb = el("btn-reveal-panel");
-  if (pb) pb.onclick = () => setRevealOn(!revealOn());
+  if (pb) pb.onclick = toggleReveal;
 }
 
 function initSoundPanel() {

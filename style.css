@@ -1479,7 +1479,7 @@ body.is-drawing .log-overlay { z-index: 1300; }
 .sound-mute:hover { border-color: var(--accent); color: var(--accent); }
 .sound-mute:focus-visible,
 .sound-row input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-/* 好感度表示のスイッチ(2周遊んだ人だけ。2026-09-11 本人指示)。
+/* ネタバレ表示のスイッチ(2周遊んだ人だけ。2026-09-11 本人指示)。
    .sound-mute は display:block を持つので、hidden 属性だけでは消えない。明示する
    (.reveal-btn / .skip-btn と同じ手当て) */
 .reveal-toggle[hidden] { display: none; }
@@ -1488,6 +1488,15 @@ body.is-drawing .log-overlay { z-index: 1300; }
   background: rgba(255, 196, 64, 0.16);
   color: var(--gold);
 }
+/* スイッチの下に添える「何が出るのか」の一行(2026-09-12)。
+   スイッチと同じく hidden 属性で出し入れするので、display を明示する */
+.reveal-note {
+  margin: 5px 2px 0;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--text-dim);
+}
+.reveal-note[hidden] { display: none; }
 
 /* ==========================================================================
    広い画面(1000px 以上): 本文窓を画面下に敷く ADV の定石配置
@@ -2401,7 +2410,7 @@ body.is-drawing * {
 }
 
 
-/* ---------------- 好感度表示(どんな結末でも2周遊んだ人だけ。旧称: 答え合わせ) ----------------
+/* ---------------- ネタバレ表示(どんな結末でも2周遊んだ人だけ。旧称: 答え合わせ → 好感度表示) ----------------
    札は解放済みなら常に描いておき、出す/出さないはこのクラスで切り替える。
    選択肢を作り直すと出現アニメと誤タップ防止のロックが壊れるため。 */
 
@@ -2454,7 +2463,7 @@ body.reveal-on .hud-meter {
   text-decoration: none;
 }
 .bonus-link:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-/* 結末の画面で、この結末で新しく開いたものを知らせる(好感度表示 / おまけ) */
+/* 結末の画面で、この結末で新しく開いたものを知らせる(ネタバレ表示 / おまけ) */
 .unlock-notes { text-align: center; margin: 0 0 12px; }
 .unlock-notes[hidden] { display: none; }
 .unlock-note {
@@ -2462,6 +2471,12 @@ body.reveal-on .hud-meter {
   font-size: 0.85rem;
   color: var(--accent);
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+}
+/* 解放の見出しに続ける説明の行。主役は上の行なので、小さく暗く落とす(2026-09-12) */
+.unlock-note.is-sub {
+  margin-top: -3px;
+  font-size: 0.76rem;
+  color: var(--text-dim);
 }
 
 /* 「はじめる」と答え合わせボタンを横に並べる。

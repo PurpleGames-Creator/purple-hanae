@@ -18,7 +18,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <!-- ホーム画面に追加した時のアイコン。無いと iOS がタイトルの1文字目(「セ」)で代用する。
      絵はタイトルロゴの円形マーク(_source/build_icon.py で切り出し) -->
-<link rel="apple-touch-icon" href="assets/icon-180.png?v=267">
+<link rel="apple-touch-icon" href="assets/icon-180.png?v=268">
 <!-- ホーム画面のアイコン下に出る名前。iOS は11〜12文字ほどで打ち切るので短くする
      (2026-09-06 に「センチメンタル・ハナエ」を試して省略されるため戻した) -->
 <meta name="apple-mobile-web-app-title" content="ハナエ">
@@ -27,10 +27,10 @@
 <!-- 半透明(black-translucent)にすると本文が時計の下へ潜る。上部の余白を安全域ぶん取っていないので、不透明の黒にする -->
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="theme-color" content="#2b1f3d">
-<link rel="manifest" href="site.webmanifest?v=267">
+<link rel="manifest" href="site.webmanifest?v=268">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💗</text></svg>">
-<link rel="preload" as="image" href="assets/logo_title.webp?v=267">
-<link rel="stylesheet" href="style.css?v=267">
+<link rel="preload" as="image" href="assets/logo_title.webp?v=268">
+<link rel="stylesheet" href="style.css?v=268">
 </head>
 <body>
 
@@ -83,7 +83,7 @@
 
   <section id="screen-title" class="screen active">
     <h1 class="game-title">
-      <img class="game-logo" src="assets/logo_title.webp?v=267" width="960" height="463"
+      <img class="game-logo" src="assets/logo_title.webp?v=268" width="960" height="463"
            alt="センチメンタル・ハナエ" fetchpriority="high" decoding="async">
     </h1>
     <p id="tap-hint" class="tap-hint">画面をタップ</p>
@@ -93,7 +93,7 @@
       <p class="title-lead">
         <span>ひと夏の恋愛アドベンチャー。所要 15〜20分。</span>
         <!-- 「好感度は表示されません。彼女の反応だけが手がかりです。」は 2026-09-11 に削除
-             (本人指示)。周回すると好感度表示をオンにできるようになり、事実と合わなくなったため -->
+             (本人指示)。周回すると「ネタバレ表示」をオンにできるようになり、事実と合わなくなったため -->
       </p>
       <div class="name-form">
         <!-- 見出しは置かない(2026-09-07 本人指示)。必須であることは薄字の方に寄せる。
@@ -104,9 +104,11 @@
       </div>
       <div class="start-row">
         <button id="btn-start" class="main-btn">はじめる</button>
-        <!-- どんな結末でも2周遊んだ人だけ出る。押すたびにオン/オフが入れ替わる -->
+        <!-- どんな結末でも2周遊んだ人だけ出る。押すたびにオン/オフが入れ替わる。
+             名前は「好感度表示」から改名(2026-09-12 本人指示) —— 出るのは HUD の合計だけだと
+             読まれてしまうが、実際は選択肢に「+3」の札まで出る。初めてオンにする時は説明を挟む -->
         <button id="btn-reveal" class="reveal-btn" type="button" aria-pressed="false" hidden>
-          <span class="reveal-label">好感度表示</span><span id="reveal-state" class="reveal-state">オフ</span>
+          <span class="reveal-label">ネタバレ表示</span><span id="reveal-state" class="reveal-state">オフ</span>
         </button>
       </div>
       <button id="btn-continue" class="main-btn secondary">つづきから</button>
@@ -225,11 +227,14 @@
     <output id="vol-se-out" for="vol-se">100</output>
   </label>
   <button id="btn-mute" class="sound-mute" type="button">音を消す</button>
-  <!-- 好感度表示。どんな結末でも2周遊んだ人だけ出る。タイトルの「好感度表示」と
-       同じ設定で、プレイ中にも切り替えられるようにここにも置く(2026-09-11 本人指示) -->
+  <!-- ネタバレ表示。どんな結末でも2周遊んだ人だけ出る。タイトルの「ネタバレ表示」と
+       同じ設定で、プレイ中にも切り替えられるようにここにも置く(2026-09-11 本人指示)。
+       タイトルのボタンは「はじめる」の右に収める都合で幅が無いので、
+       何が出るのかの一行はここにだけ添える(2026-09-12) -->
   <button id="btn-reveal-panel" class="sound-mute reveal-toggle" type="button" aria-pressed="false" hidden>
-    好感度表示 <span id="reveal-panel-state">オフ</span>
+    ネタバレ表示 <span id="reveal-panel-state">オフ</span>
   </button>
+  <p id="reveal-panel-note" class="reveal-note" hidden>選択肢に「+3」のような点数まで出ます</p>
 </div>
 
 <!-- 似顔絵を描く画用紙。#app の外に置く(中に入れると本文の送りタップを拾う) -->
@@ -274,8 +279,8 @@
   </div>
 </div>
 
-<script src="game-data.js?v=267"></script>
-<script src="audio.js?v=267"></script>
-<script src="game.js?v=267"></script>
+<script src="game-data.js?v=268"></script>
+<script src="audio.js?v=268"></script>
+<script src="game.js?v=268"></script>
 </body>
 </html>
