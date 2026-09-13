@@ -1641,6 +1641,21 @@ body.is-drawing .log-overlay { z-index: 1300; }
   .free-hint { margin-bottom: 10px; }
   .event-title { margin-bottom: 8px; }
 }
+/* 縦持ちで背の低い画面(iPhone SE の Safari 375x553、360x640 級の Chrome 360x560 など)も上の横並びの組みに
+   入る(下の body.is-ending .cg のコメントのとおり意図)。ただ本文の列を 62vw のままにすると 375px 幅で
+   232px しかなく、3行の枠に長いブロックが入りきらずに1〜2行が枠の下へ隠れていた(2026-09-13 実測:
+   1周で60〜64枠。スクロールバーを出さない作りなので、隠れていることにも気づけない)。
+   縦持ちの時だけ、本文・告白・自由行動の列を画面幅いっぱいに戻す。立ち絵は右寄せで背が高く、
+   顔は画面の上の方にあるので、下に敷く枠が広がっても顔には掛からない。
+   結末だけは 62vw のまま —— 紙を右下(立ち絵の前)に置く組みとぶつかるため。
+   告白 → 結末は暗転を挟むので、枠の幅が変わる瞬間は見えない */
+@media (max-width: 999px) and (max-height: 560px) and (orientation: portrait) {
+  #screen-event,
+  #screen-confession,
+  #screen-free {
+    width: auto;
+  }
+}
 
 /* スクロールバーを幅ごと消す(WebKit)。出入りのたびに枠が左右に動くのを防ぐ */
 .event-text::-webkit-scrollbar,
@@ -2519,6 +2534,22 @@ body.is-winter-title .petal > i > b {
   #player-name-input { padding: 10px 14px; }
   .main-btn { padding: 12px 36px; margin-bottom: 10px; }
   .ending-gallery { margin-top: 10px; }
+}
+
+/* パソコンの低い画面(1366x768 のノートでブラウザを開くと表示 625px ほど)。図鑑の下半分が画面の外へ出て、
+   スクロールしないと見えなかった(2026-09-13 実測: 図鑑の下端 720px)。携帯の低い画面と同じく
+   図鑑を2列に落とし、ロゴを一回り小さくする */
+@media (min-width: 1000px) and (max-height: 760px) {
+  .gallery-grid { grid-template-columns: repeat(2, 1fr); }
+  .gallery-cell {
+    flex-direction: column;
+    gap: 1px;
+    padding: 4px 6px;
+  }
+  .gallery-name { text-align: center; }
+  .gallery-hearts { font-size: 0.56rem; }
+  .game-title { margin: 8px 0 10px; }
+  .game-logo { width: min(80%, 380px); }
 }
 
 /* ---------------- 似顔絵を描く画用紙 ---------------- */
