@@ -509,16 +509,21 @@ const AUDIO = (() => {
     } catch (e) {
       /* 保存できなくても再生には影響させない */
     }
-    if (currentEl) {
+    if (muted) {
       clearFade();
-      if (muted) {
-        setVolume(currentEl, 0);
-        currentEl.pause();
-      } else {
-        const p = currentEl.play();
-        if (p && p.catch) p.catch(() => {});
-        crossfade(currentEl, currentKey, 300);
-      }
+      // 曲の切り替え(crossfade)の途中だと、消えかけの前の曲もまだ鳴っている。今の曲だけ止めると、
+      // 前の曲がフェード途中の音量のまま鳴り続け、以後ずっと重なっていた(2026-09-13 実測)。
+      // 用意した曲はすべて止め、前の曲は crossfade の最後と同じく頭に戻す
+      elements.forEach((e) => {
+        if (!e.paused) e.pause();
+        if (e !== currentEl) e.currentTime = 0;
+      });
+      if (currentEl) setVolume(currentEl, 0);
+    } else if (currentEl) {
+      clearFade();
+      const p = currentEl.play();
+      if (p && p.catch) p.catch(() => {});
+      crossfade(currentEl, currentKey, 300);
     }
     return muted;
   }

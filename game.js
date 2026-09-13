@@ -75,7 +75,9 @@ const el = (id) => document.getElementById(id);
 
 function saveGame() {
   if (state.finished) {
-    localStorage.removeItem(SAVE_KEY);
+    // ここも try の中に置く。Cookie を全ブロックしている環境などでは localStorage に触れた瞬間に
+    // SecurityError が出て、告白の後の暗転から結末へ進めなくなっていた(2026-09-13 実測)
+    try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* 保存できない環境でも結末へ進む */ }
     return;
   }
   try {
@@ -304,7 +306,7 @@ function signed(n) {
   return "±0";
 }
 
-// 選択肢に付ける点数の札。ライバル度は動く肢(134中11)にだけ出す
+// 選択肢に付ける点数の札。ライバル度は動く肢(140中10)にだけ出す
 function choiceScoreBadge(choice) {
   const p = choice.points || 0;
   const r = choice.rival || 0;
@@ -618,8 +620,9 @@ function dateLabel(screenId) {
   // 自由行動の選択画面は、これから選ぶ日
   if (screenId === "screen-free") return free[done] || "";
   const key = currentEventKey || QUEUE[state.queueIndex];
-  // 自由行動の各イベントは、選んだ日
-  if (GAME_DATA.freePool[key]) return free[done - 1] || "";
+  // 自由行動の各イベントは、その場面の日。「選んだ」印は選択を確定した時に付くので、
+  // 確定する前(本文を読んでいる間)はまだ数に入っていない
+  if (GAME_DATA.freePool[key]) return free[state.freeChosen.includes(key) ? done - 1 : done] || "";
   if (key === "E19" || key === "RIVAL") return L.eve || D.E19 || "";
   return D[key] || "";
 }
@@ -971,7 +974,7 @@ async function crossfadeSprite(wanted, base, ms) {
 }
 
 // 場面の入りで立ち絵を出すと、まだ彼女が出てきていない地の文の間も
-// 立っていることになる(E1 の「高校三年、最後の文化祭。」など)。
+// 立っていることになる(E1 の放送や、その後の地の文など)。
 // ハナエが最初に口を開くブロックまで待たせて、そこでふわっと出す
 let pendingSprite = null;
 
@@ -1671,7 +1674,7 @@ function initTitleScreen() {
   // (2026-09-08 本人指示)。消して別の名前にするのは自由
   if (!nameInput.value) nameInput.value = savedName();
   const syncStart = () => {
-    const ok = nameInput.value.trim().length > 0;
+    const ok = cleanName(nameInput.value).length > 0;
     startBtn.classList.toggle("is-off", !ok);
     if (ok) {
       nameInput.classList.remove("invalid", "shake");
@@ -1680,12 +1683,18 @@ function initTitleScreen() {
   };
   nameInput.oninput = syncStart;
   // Enter でも始められるように(スマホの「完了」もここに来る)
+  // 変換を確定する Enter では始めない(isComposing / keyCode 229。Safari は確定の後に
+  // isComposing が false のまま 229 の keydown を送ることがあるので、両方を見る)
   nameInput.onkeydown = (e) => {
-    if (e.key === "Enter") { e.preventDefault(); startBtn.click(); }
+    if (e.key !== "Enter" || e.isComposing || e.keyCode === 229) return;
+    e.preventDefault();
+    startBtn.click();
   };
   syncStart();
   startBtn.onclick = () => {
-    const name = nameInput.value.trim();
+    // 「」『』はセリフの区切りとして読まれるので名前からは外す
+    // (入れるとプロローグの「俺は{name}。」が割れていた。2026-09-13 実測)
+    const name = cleanName(nameInput.value);
     if (!name) {
       AUDIO.se("heartShrink");
       nameError.textContent = "名前を入力してください";
@@ -1742,6 +1751,11 @@ function gateTitleForAudio() {
 }
 
 /* ---------------- プロローグ ---------------- */
+
+// 名前に使えない記号を外す。「」『』は本文でセリフの区切り、\ は枠内改行(\n)の書き方に使う
+function cleanName(raw) {
+  return String(raw || "").replace(/[「」『』\\]/g, "").trim();
+}
 
 // game-data.js に埋めた {name} をプレイヤー名に差し替える。
 // 名前に $& のような置換記号が入っても壊れないよう、置換値は関数で返す
@@ -2710,6 +2724,12 @@ function renderChoices(key, eventData, scene, choicesEl, onChoice, onCommit) {
     };
     choicesEl.appendChild(btn);
   });
+  // 背の低い画面では、選択肢の最後が画面の下に隠れることがある(320x568 で最大 24px。
+  // 2026-09-13 実測)。出した時点で、最後の選択肢が見える所まで送る
+  const lastChoice = choicesEl.lastElementChild;
+  if (lastChoice && lastChoice.getBoundingClientRect().bottom > window.innerHeight) {
+    lastChoice.scrollIntoView({ block: "end", behavior: reducedMotion() ? "auto" : "smooth" });
+  }
 }
 
 function showReaction(key, choice, scene, points, onChoice) {
@@ -2974,9 +2994,11 @@ function initFreeView() {
 function pickFreeEvent(key) {
   const data = GAME_DATA.freePool[key];
   if (!data || state.freeChosen.includes(key)) return;
-  state.freeChosen.push(key);
-  state.freeRemaining = state.freeRemaining.filter((k) => k !== key);
-  state.freePicksLeft--;
+  // 同じ行き先を続けて押された時(カードの2度押しなど)は、2回目を捨てる
+  if (currentEventKey === key && el("screen-event").classList.contains("active")) return;
+  // 「選んだ」印(freeChosen / freePicksLeft)は、場面の選択を確定した時に付ける(E8B / E15B と同じ)。
+  // 場面に入った時点で付けていたため、選ぶ前に「タイトルへ」で抜けると印ごと保存されて
+  // その場面が消え、3つ目なら浦川を避けたぶんのライバル度も乗らなかった(2026-09-13 実測)
   showEvent(
     key,
     data,
@@ -2986,6 +3008,9 @@ function pickFreeEvent(key) {
       else advanceQueue();
     },
     () => {
+      state.freeChosen.push(key);
+      state.freeRemaining = state.freeRemaining.filter((k) => k !== key);
+      state.freePicksLeft--;
       if (state.freePicksLeft > 0) return;
       // 3つ選び終えた。浦川の場面を避けたぶんはここでライバル度に乗せる
       if (!state.freeChosen.includes("F5_urakawa")) {
@@ -3135,10 +3160,11 @@ function advanceQueue() {
     state.act3DriftApplied = true;
   }
 
-  // E19直前、ライバル度が閾値以上なら割り込みイベント
+  // E19直前、ライバル度が閾値以上なら割り込みイベント。
+  // 「見た」印は選択を確定した時に付ける(E8B / E15B と同じ)。場面を出した時点で付けて保存していたため、
+  // 噂の途中でリロード/「タイトルへ」すると噂が二度と出ず、先手を打てないまま浦川エンドが決まっていた
+  // (2026-09-13 実測)
   if (key === "E19" && state.rival >= GAME_DATA.RIVAL_FAIL_THRESHOLD && !state.rivalInsertShown) {
-    state.rivalInsertShown = true;
-    saveGame();
     showEvent(
       "RIVAL",
       GAME_DATA.rivalInsert,
@@ -3148,6 +3174,7 @@ function advanceQueue() {
         else advanceEventThenNext(key);
       },
       (choice) => {
+        state.rivalInsertShown = true;
         // 先手を打つ: 浦川エンドは回避できるが、最後の一日(E19)を捨てることになる
         if (choice.flag !== "senshu") return;
         state.senshu = true;
@@ -3775,6 +3802,25 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       if (pagerNext) pagerNext();
     });
+  });
+  // PC のキーボード(Enter / Space)でも読み進められるようにする(2026-09-13)。クリックと同じ処理を通し、
+  // 送り先が無い時は、画面に1つだけ出ている「次へ」系のボタン(つづける / 似顔絵を描く / 気持ちを伝える)を押す。
+  // 選択肢は押さない(選ぶのは本人)。ボタンや入力欄に焦点がある時は、その要素の既定の動きに任せる
+  document.addEventListener("keydown", (ev) => {
+    if ((ev.key !== "Enter" && ev.key !== " ") || ev.repeat || ev.isComposing) return;
+    if (ev.target && ev.target.closest && ev.target.closest("button, a, input, textarea, select")) return;
+    if (isLogOpen() || isSoundPanelOpen() || isCgViewerOpen() || isFreePanelOpen()) return;
+    if (document.body.classList.contains("is-drawing") || !el("confirm-overlay").hidden) return;
+    const active = document.querySelector(".screen.active");
+    if (!active || !["screen-event", "screen-confession", "screen-prologue", "screen-ending"].includes(active.id)) return;
+    ev.preventDefault();
+    if (Date.now() < tapGuardUntil) return;
+    if (finishTyping) { skipTyping(); return; }
+    if (pagerNext) { pagerNext(); return; }
+    const next = ["#reaction-actions .next-btn", "#btn-draw-start", "#btn-confess"]
+      .map((s) => document.querySelector(s))
+      .find((b) => b && b.offsetParent !== null && !b.disabled);
+    if (next) next.click();
   });
   initTitleScreen();
 });
