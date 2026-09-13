@@ -477,7 +477,7 @@ const BGM_BY_KEY = {
   TITLE: "title",
   PROLOGUE: "title",
 
-  // 出会い
+  // 出逢い
   E1: "daily1",
   E2: "daily1",
   E3: "daily1",
