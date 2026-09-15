@@ -3299,12 +3299,60 @@ function replayEnding(key) {
   });
 }
 
+/* ---------------- 結末の最後の一文を1行に収める ---------------- */
+
+// Perfect の締め「――今度は俺が呼ぼう。用もないのに、何度でも。」は23字あり、
+// 標準サイズの iPhone(幅390前後)の枠に数 px 入り切らない。Safari は
+// word-break: auto-phrase を持たないので「何度で/も。」と語の途中で折れていた
+// (2026-09-15 本人指摘・「1行に収める」を採用)。
+// 入り切らない時だけ字間を詰める。詰め幅が ONE_LINE_MAX_TIGHTEN を超える狭い画面
+// (SE など)では詰めずに keep-all にして、句読点の後(「、」)でだけ折る。
+// 字間は打ち出す前に決める —— 打っている途中で折り返しが跳ねないように
+const ONE_LINE_LAST = ["successPerfect"];
+const ONE_LINE_MAX_TIGHTEN = 0.05; // em。これより詰めると字が潰れて見える
+let oneLineFit = null; // 表示中の対象 { elm, text }。画面の向きが変わったら測り直す
+
+function clearOneLine(elm) {
+  if (elm) {
+    elm.style.letterSpacing = "";
+    elm.style.wordBreak = "";
+  }
+  oneLineFit = null;
+}
+
+function fitOneLine(elm, text) {
+  clearOneLine(elm);
+  oneLineFit = { elm, text };
+  const cs = getComputedStyle(elm);
+  const room = elm.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  const probe = document.createElement("span");
+  probe.style.cssText = "position:absolute;left:0;top:0;visibility:hidden;white-space:nowrap";
+  probe.textContent = text;
+  elm.appendChild(probe);
+  const width = probe.getBoundingClientRect().width;
+  probe.remove();
+  // 端数の丸めで最後の1字だけ落ちないよう、1.5px 余らせる
+  const over = width - room + 1.5;
+  if (over <= 0) return;
+  // letter-spacing は最後の字の後ろにも付くので、字数でそのまま割る
+  const per = over / text.length;
+  if (per <= parseFloat(cs.fontSize) * ONE_LINE_MAX_TIGHTEN) elm.style.letterSpacing = `-${per.toFixed(2)}px`;
+  else elm.style.wordBreak = "keep-all";
+}
+
+window.addEventListener("resize", () => {
+  // 結末の画面を離れた後は測らない(隠れた枠は幅 0 で、詰め方を誤る)
+  if (oneLineFit && oneLineFit.elm.offsetParent) fitOneLine(oneLineFit.elm, oneLineFit.text);
+});
+
 // 結末の画面を組む。判定(resolveEnding)と読み返し(replayEnding)の両方から呼ぶ
 function showEnding(endingKey, isNew, replaying, unlocked) {
   const ending = GAME_DATA.endings[endingKey];
-  // 前に見た結末の名残(41歳の「謝る / いじる」と悪魔化、Perfect の「呼ぶ」)を先に片付ける
+  // 前に見た結末の名残(41歳の「謝る / いじる」と悪魔化、Perfect の「呼ぶ」、
+  // 最後の一文の字間)を先に片付ける
   resetAdultPoke();
   resetCallPoke();
+  clearOneLine(el("ending-text"));
   renderUnlockNotes(null);
   showScreen("screen-ending");
   applyScene(GAME_DATA.endingScenes[endingKey]);
@@ -3331,6 +3379,8 @@ function showEnding(endingKey, isNew, replaying, unlocked) {
   fitEndingTextHeight(endingText);
   // 途中で場面が変わる結末(パーフェクトの冬、似顔絵の24年後)は、その枠に来た時に切り替える
   const changes = ending.sceneChanges || [];
+  // 1行に収める結末は、最後の枠の番号を先に知っておく(字間は打ち出す前に決める)
+  const oneLineIndex = ONE_LINE_LAST.includes(endingKey) ? splitBlocks(endingText).length - 1 : -1;
   playBlocks(el("ending-text"), endingText, "end:" + endingKey, () => {
     slideEndingBox(() => {
       restartBtn.style.display = "block";
@@ -3349,6 +3399,9 @@ function showEnding(endingKey, isNew, replaying, unlocked) {
     changes.forEach((c) => {
       if (block.text.indexOf(c.marker) === 0) applyScene(c.scene);
     });
+    const textEl = el("ending-text");
+    if (i === oneLineIndex) fitOneLine(textEl, block.body !== undefined ? block.body : block.text);
+    else clearOneLine(textEl);
   });
   window.scrollTo(0, 0);
   // 読み返している時は遊び始めない。読み終わったら図鑑へ戻す
