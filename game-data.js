@@ -644,7 +644,7 @@ const GAME_DATA = {
       choices: [
         { id:"A", label:"「俺のてりやきチーズと交換しよう」", points:3, rival:0, expr:"joy", reaction:"「え、ええの? ……ほな、もう返さへんで」\n\nてりやきチーズを両手で受け取って、ハナエはすぐに包みを開けた。" },
         { id:"B", label:"「子どもみたいだね」", points:-2, rival:0, tag:"pushy", expr:"angry", reaction:"「子どもで結構や。無理なもんは無理なんや」" },
-        { id:"C", label:"「ほかにも苦手なものってあるの?」", points:2, rival:0, expr:"smile", reaction:"「あるで。セロリと、らっきょと、生姜。……クセ強いやつは全部あかんねん」" },
+        { id:"C", label:"「意外! 他にも苦手なものある?」", points:2, rival:0, expr:"smile", reaction:"「あるで。セロリと、らっきょと、生姜。……クセ強いやつは全部あかんねん」" },
         { id:"D", label:"「残ってないなら、しょうがないね」", points:-1, rival:0, tag:"passive", expr:"trouble", reaction:"「しょうがないで済んだら、お腹すかへんわ」" },
       ],
     },
