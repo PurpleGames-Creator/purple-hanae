@@ -189,7 +189,7 @@ const GAME_DATA = {
         { id:"A", label:"「いや、ここは俺が払うよ」", points:-2, rival:0, tag:"pushy", expr:"trouble", reaction:"「そんなんええって、意地張らんでも」" },
         { id:"B", label:"「じゃあ、半分ずつで」", points:3, rival:0, expr:"smile", reaction:"「そういう対等な感じ、嫌いちゃうで」" },
         { id:"C", label:"あたふたする", points:-1, rival:0, tag:"passive", expr:"trouble", reaction:"「なにしてんねん」" },
-        { id:"D", label:"「じゃあ、ごちそうになります」", points:0, rival:0, expr:"normal", reaction:"「まあええけど」" },
+        { id:"D", label:"「じゃあ、ごちそうになります」", points:0, rival:0, expr:"normal", reaction:"「うん、ええよー」" },
       ],
     },
 
