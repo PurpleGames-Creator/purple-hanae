@@ -153,7 +153,7 @@ const GAME_DATA = {
       choices: [
         { id:"A", label:"「へえ、大変だね」", points:-1, rival:0, expr:"trouble", reaction:"「そっけないなあ」" },
         { id:"B", label:"「大丈夫? 無理しすぎじゃない?」", points:1, rival:0, expr:"shy", reaction:"「そんな心配せんでもええのに」" },
-        { id:"C", label:"「じゃあその分、今日の作業は俺が多めにやるよ」", points:2, rival:0, expr:"shy", reaction:"「……そういうとこ、ずるいわ」" },
+        { id:"C", label:"「じゃあその分、今日の作業は俺が多めにやるよ」", points:2, rival:0, expr:"joy", reaction:"「めっちゃ助かるわー!」" },
         { id:"D", label:"「そこまでして両方やる意味ある?」", points:-2, rival:0, tag:"pushy", expr:"angry", reaction:"「キツいに決まってるやん」" },
       ],
     },
