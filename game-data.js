@@ -146,7 +146,7 @@ const GAME_DATA = {
         { id:"A", label:"「はいはーい」", points:1, rival:0, expr:"smile", reaction:"「素直でよろしい!」" },
         { id:"B", label:"「班長でもないのに仕切るんだね」", points:-2, rival:0, tag:"pushy", expr:"angry", reaction:"「文句あるなら手ぇ動かしてくれる?」" },
         { id:"C", label:"周りの様子を見て動く", points:0, rival:0, tag:"passive", expr:"trouble", reaction:"「あんた、覇気ないなあ」" },
-        { id:"D", label:"すぐに動き、他の仕事も進んで片づける", points:2, rival:0, expr:"surprise", reaction:"「言われる前に動くとか、ええ子やん」" },
+        { id:"D", label:"言われた箱を運び、次の仕事も取り掛かる", points:2, rival:0, expr:"surprise", reaction:"「次まで動くとか、ええ子やん」" },
       ],
     },
 
@@ -742,7 +742,7 @@ const GAME_DATA = {
   //   反応だけは必ず顔を見せる
   scenes: {
     E1:  { bg: "bg_classroom",    sprite: "summer" },
-    E2:  { bg: "bg_gym",          sprite: "summer" },
+    E2:  { bg: "bg_gym",          sprite: "summer", expr: "normal" },
     E3:  { bg: "bg_gym",          sprite: "summer" },
     E4:  { bg: "bg_classroom",    sprite: "summer", expr: "normal" },
     E4B: { bg: "bg_gym",          sprite: "summer", expr: "normal" },
