@@ -784,7 +784,7 @@ const GAME_DATA = {
     // 場所と絵が食い違っていたので、専用の背景を足した(2026-09-12)。
     // 名前は placeLabels から引くので、place の上書きは要らなくなった
     F3_kaidashi: { bg: "bg_gate",      sprite: "summer" },
-    F4_baiten:   { bg: "bg_shop",      sprite: "summer" },
+    F4_baiten:   { bg: "bg_shop",      sprite: "summer", expr: "trouble" },
     F5_urakawa:  { bg: "bg_gymback",   sprite: "summer" },
     F6_kouhai:   { bg: "bg_tennis",    sprite: "summer" },
 
