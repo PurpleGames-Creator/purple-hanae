@@ -146,7 +146,7 @@ const GAME_DATA = {
         { id:"A", label:"「はいはーい」", points:1, rival:0, expr:"smile", reaction:"「素直でよろしい!」" },
         { id:"B", label:"「班長でもないのに仕切るんだね」", points:-2, rival:0, tag:"pushy", expr:"angry", reaction:"「文句あるなら手ぇ動かしてくれる?」" },
         { id:"C", label:"周りの様子を見て動く", points:0, rival:0, tag:"passive", expr:"trouble", reaction:"「あんた、覇気ないなあ」" },
-        { id:"D", label:"言われた箱を運び、次の仕事も取り掛かる", points:2, rival:0, expr:"surprise", reaction:"「次まで動くとか、ええ子やん」" },
+        { id:"D", label:"言われた箱を運び、次の仕事にも取り掛かる", points:2, rival:0, expr:"surprise", reaction:"「次まで動くとか、ええ子やん」" },
       ],
     },
 
