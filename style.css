@@ -1289,15 +1289,18 @@ button.gallery-cell:active { transform: scale(0.97); }
 }
 /* 見出しの行に並べる版(2026-09-11)。独立した行だと画面が伸びるため */
 .gallery-head .gallery-done { margin: 0 0 0 8px; }
-/* 図鑑のマスが押せることに気づかない人がいたので、見出しに小さく添える(2026-09-21)。
-   見出しを太く大きくしているぶん、こちらは細く小さくして主張を抑える */
+/* 図鑑のマスが押せることに気づかない人がいたので、見出しの真下に添える(2026-09-21)。
+   見出しを太く大きくしているぶん、こちらは細く小さくして主張を抑える。
+   1行ぶん背が伸びるので、下の @media でボタンと図鑑の余白から取り戻している
+   (低い端末で図鑑の最下段が画面の外へ出ないようにするため) */
 .gallery-tip {
-  margin-left: 8px;
-  font-size: 0.68rem;
+  display: block;
+  margin: 2px 0 0;
+  font-size: 0.66rem;
   font-weight: normal;
+  line-height: 1.3;
   color: var(--text-dim);
   letter-spacing: 0;
-  white-space: nowrap;
 }
 /* 図鑑から結末を読み返す時の確認。画用紙と同じ作りの覆い */
 .confirm-overlay {
@@ -2603,6 +2606,9 @@ body.is-winter-title .petal > i > b {
      いまは1文(ジャンルと所要時間)しか無い。隠さずに小さく出す */
   .title-lead { font-size: 0.7rem; line-height: 1.5; margin-bottom: 8px; }
   .main-btn { margin-bottom: 8px; }
+  .ending-gallery { margin-top: 8px; }
+  .gallery-tip { font-size: 0.62rem; margin-top: 1px; }
+  .gallery-head { margin-bottom: 4px; }
 }
 
 /* タイトルの上半分。図鑑を1列7段で見せたいので、ロゴから「はじめる」までを詰める。
@@ -2613,6 +2619,10 @@ body.is-winter-title .petal > i > b {
   .game-logo { width: min(82%, 420px); }
   .title-lead { font-size: 0.74rem; line-height: 1.6; margin-bottom: 10px; }
   .name-form { gap: 6px; margin: 0 auto 12px; }
+  /* 「タップで読み返せます」を見出しの下の行に出したぶん(約14px)を、
+     ボタン2つと図鑑の上の余白から取り戻す(2026-09-21) */
+  .main-btn { margin-bottom: 10px; }
+  .ending-gallery { margin-top: 10px; }
   #player-name-input { padding: 10px 14px; }
   .main-btn { padding: 12px 36px; margin-bottom: 10px; }
   .ending-gallery { margin-top: 10px; }
