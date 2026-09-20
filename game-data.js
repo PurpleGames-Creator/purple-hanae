@@ -209,12 +209,12 @@ const GAME_DATA = {
 
     E7: {
       title: "兄・トウマが差し入れに来る",
-      text: `委員会の作業中、体育館の入り口にひょっこり顔を出す人影があった。がっしりとした体格の男の人――大学生らしい私服姿だ。\n\n「ハナエ、差し入れ。みんなでどうぞ」\n\nハナエが顔を上げ、途端に表情が緩む。\n\n「あ、兄ちゃん!」\n\n紙袋の中には、みたらし団子がぎっしり詰まっていた。\n\n「昔から、コイツ試合負けた日は決まってコレなんですわ」\n\nトウマが笑いながら言う。\n\n「兄ちゃん、それ今言わんでええし」\n\nハナエは少し照れくさそうに、肘で小突いた。\n\n昨日の大会で負けたことを、ハナエは委員会で一度も口にしていなかった。\n\n「うちら家族、そろって和菓子好きでな。ちっちゃい頃から親に連れられて、休みのたびに和菓子屋ばっかり回っとってん」`,
+      text: `委員会の作業中、体育館の入り口にひょっこり顔を出す人影があった。がっしりとした体格の男の人――大学生らしい私服姿だ。\n\nトウマ「ハナエ、差し入れ。みんなでどうぞ」\n\nハナエが顔を上げ、途端に表情が緩む。\n\nハナエ「あ、兄ちゃん!」\n\n紙袋の中には、みたらし団子がぎっしり詰まっていた。\n\nトウマ「昔から、コイツ試合負けた日は決まってコレなんですわ」\n\nハナエ「兄ちゃん、それ今言わんでええし」\n\n笑うトウマの脇腹を、ハナエが照れくさそうに肘で小突いた。\n\n昨日の大会で負けたことを、ハナエは委員会で一度も口にしていなかった。\n\nトウマ「うちら家族、そろって和菓子好きでな。ちっちゃい頃から親に連れられて、休みのたびに和菓子屋ばっかり回っとってん」`,
       choices: [
-        { id:"A", label:"微笑ましく見守る", points:1, rival:0, tag:"passive", expr:"normal", reaction:"会話の輪には入らなかった。" },
-        { id:"B", label:"「へえ、そうなんですね」", points:2, rival:0, expr:"smile", reaction:"「まあ、そうやねん。昔からのお守りみたいなもんや」" },
-        { id:"C", label:"作業に戻る", points:-2, rival:0, tag:"passive", expr:"lonely", reaction:"ハナエがこちらを見たのは分かったが、振り返らなかった。" },
-        { id:"D", label:"「兄弟、仲いいんですね」", points:3, rival:0, expr:"joy", reaction:"「まあ、喧嘩もようしたけどな。今はこんな感じや」" },
+        { id:"A", label:"「兄弟、仲いいんですね」", points:1, rival:0, expr:"joy", reaction:"トウマ「まあ、喧嘩もようしたけどな。今はこんな感じや」\n\nハナエ「なんか、恥ずかしいねんけど」" },
+        { id:"B", label:"輪には入らず、団子をひとつもらっておく", points:0, rival:0, tag:"passive", expr:"normal", reaction:"「食べんの遅いって。なくなるで」" },
+        { id:"C", label:"「昨日、試合だったんですね」", points:-2, rival:0, tag:"pushy", expr:"trouble", reaction:"「……ああ、うん。その話はええって」\n\n紙袋に伸ばしかけた手が、一瞬止まった。" },
+        { id:"D", label:"兄が帰ってから、団子がうまかったとだけ言う", points:3, rival:0, expr:"soft", reaction:"「……なんも聞かへんねんな」\n\nそう言って、少しだけ笑った。負けたことには、どちらも触れなかった。" },
       ],
     },
 
@@ -749,7 +749,7 @@ const GAME_DATA = {
     E5:  { bg: "bg_cafe",         sprite: "summer" },
     // 大会当日でハナエは会場にいる。反応(翌日 / 返信)では顔を出す
     E6:  { bg: "bg_classroom",    sprite: null, reactionSprite: "summer" },
-    E7:  { bg: "bg_gym",          sprite: "summer" },
+    E7:  { bg: "bg_gym",          sprite: "summer", expr: "smile" },
     E8:  { bg: "bg_gym",          sprite: "summer", expr: "normal" },
     E8B: { bg: "bg_classroom",    sprite: "summer", expr: "normal" },
     E9:  { bg: "bg_tennis",       sprite: "summer", expr: "normal" },
