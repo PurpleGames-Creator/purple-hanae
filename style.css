@@ -1243,6 +1243,16 @@ button.gallery-cell:active { transform: scale(0.97); }
 }
 /* 見出しの行に並べる版(2026-09-11)。独立した行だと画面が伸びるため */
 .gallery-head .gallery-done { margin: 0 0 0 8px; }
+/* 図鑑のマスが押せることに気づかない人がいたので、見出しに小さく添える(2026-09-21)。
+   見出しを太く大きくしているぶん、こちらは細く小さくして主張を抑える */
+.gallery-tip {
+  margin-left: 8px;
+  font-size: 0.68rem;
+  font-weight: normal;
+  color: var(--text-dim);
+  letter-spacing: 0;
+  white-space: nowrap;
+}
 /* 図鑑から結末を読み返す時の確認。画用紙と同じ作りの覆い */
 .confirm-overlay {
   position: fixed;

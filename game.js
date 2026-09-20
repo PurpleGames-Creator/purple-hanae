@@ -379,6 +379,16 @@ function renderEndingGallery() {
     done.textContent = "全達成！";
     head.appendChild(done);
   }
+  // マスを押すと読み返せることに気づかない人がいる(2026-09-21 本人指摘)。
+  // 見出しと同じ行に小さく添える —— 行を分けると、下のおまけの入口のぶん画面が伸びて
+  // 低い端末で図鑑の下が切れる(「全達成！」を同じ行に入れているのと同じ理由)。
+  // 1つも達成していない間は押せるマスが無いので出さない
+  if (seen.length > 0) {
+    const tip = document.createElement("span");
+    tip.className = "gallery-tip";
+    tip.textContent = "タップで読み返せます";
+    head.appendChild(tip);
+  }
   box.appendChild(head);
 
   const grid = document.createElement("div");
