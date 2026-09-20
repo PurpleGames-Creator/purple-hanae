@@ -167,7 +167,7 @@ const GAME_DATA = {
       choices: [
         { id:"A", label:"「両方作って、貼って比べてみようよ」", points:2, rival:0, expr:"soft", reaction:"「確かに! ほな、うちシンプルの方描くわ」\n\n張り詰めていた空気が、それで緩んだ。" },
         { id:"B", label:"「ハナエが正しいと思う」", points:1, rival:0, expr:"soft", reaction:"「うんうん、せやろ!」" },
-        { id:"C", label:"「どっちの言い分も分かる気がする……」", points:-1, rival:0, tag:"passive", expr:"normal", reaction:"「……どっちでもええってこと?」\n\nそれ以上は聞かれなかった。" },
+        { id:"C", label:"「どっちの言い分も分かる気がする……」", points:-1, rival:0, tag:"passive", expr:"normal", reaction:"「でもどっちかに決めなあかんやん」\n\nそれ以上は言われなかった。" },
         { id:"D", label:"「そこまで言わなくても」", points:-2, rival:0, tag:"pushy", expr:"angry", reaction:"「思うたこと言うて、何が悪いん」" },
       ],
     },
