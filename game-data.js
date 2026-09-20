@@ -633,7 +633,7 @@ const GAME_DATA = {
       text: `買い出しから戻ったところで、校門から体育館まで荷物を運ぶことになった。両手の袋がずっしり重い。\n\nそこまでは緩い上り坂で、いつもの倍は長く感じる。\n\n「ちょい、それ何入ってんの」\n\n俺「たぶん、ペンキと……水」\n\n「なんで水」\n\n笑いながら、ハナエは自分の袋を軽々と持ち直した。\n\n「うち、意外と力持ちやから、そっちの重いのも持つで?」`,
       choices: [
         { id:"A", label:"素直に半分渡す", points:3, rival:0, expr:"smile", reaction:"「持ちつ持たれつ、これでええねん」" },
-        { id:"B", label:"「大丈夫、俺が持つよ」", points:1, rival:0, expr:"trouble", reaction:"「ちょっと悔しいな」" },
+        { id:"B", label:"「平気平気、このくらい」", points:1, rival:0, expr:"trouble", reaction:"「ちょっと悔しいな」" },
         { id:"C", label:"「じゃあ、一番重いのお願い」", points:2, rival:0, expr:"shy", reaction:"「おいおい調子ええな」" },
         { id:"D", label:"「女の子に持たせるわけにはいかないよ」", points:-2, rival:0, tag:"pushy", expr:"trouble", reaction:"「そういう変な気遣い、いらんのやけどな」" },
       ],
