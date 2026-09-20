@@ -606,7 +606,7 @@ const GAME_DATA = {
         { id:"A", label:"「ハナエはどう思う?」", points:0, rival:0, tag:"passive", expr:"trouble", reaction:"「またうちが決めるんか」" },
         { id:"B", label:"結束バンドなど代用品での応急処置を提案する", points:3, rival:0, expr:"surprise", reaction:"「発想の転換やな。そういうの、嫌いやないわ」" },
         { id:"C", label:"「近くの金物屋、俺知ってるから走ってくる」", points:2, rival:0, expr:"smile", reaction:"「頼りになるやん」" },
-        { id:"D", label:"「まあ、なんとかなるでしょ」", points:-2, rival:0, tag:"passive", expr:"angry", reaction:"「そのままにしとったら終わらへんやろ」" },
+        { id:"D", label:"「まあ、なんとかなるでしょ」", points:-2, rival:0, tag:"pushy", expr:"angry", reaction:"「そのままにしとったら終わらへんやろ」" },
       ],
     },
     F2_chusai: {
@@ -779,7 +779,7 @@ const GAME_DATA = {
     // place: 場所の名前。書かない時は背景(placeLabels)から引く。
     // **自由行動の地図のピンも、暗転のテロップも、この名前を使う**(2026-09-12 本人指摘。
     // ピンは「校門」なのにテロップは「体育館」と出ていた)。片方だけ直さないこと
-    F1_neji:     { bg: "bg_gym",       sprite: "summer" },
+    F1_neji:     { bg: "bg_gym",       sprite: "summer", expr: "trouble" },
     F2_chusai:   { bg: "bg_classroom", sprite: "summer" },
     // 場所と絵が食い違っていたので、専用の背景を足した(2026-09-12)。
     // 名前は placeLabels から引くので、place の上書きは要らなくなった
