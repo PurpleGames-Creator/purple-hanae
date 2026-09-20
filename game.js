@@ -171,7 +171,7 @@ function migrateKeys() {
 
 /* ---------------- エンディング図鑑 ---------------- */
 
-// セーブとは別に保存する。「もう一度プレイする」で消えてはいけない
+// セーブとは別に保存する。「タイトルにもどる」で消えてはいけない
 const ENDINGS_KEY = "sentimentalHanaeEndings";
 
 /* ---------------- ネタバレ表示(どんな結末でも2周遊んだ人だけ。旧称: 答え合わせ → 好感度表示) ----------------
@@ -3297,7 +3297,7 @@ function resolveEnding() {
   const unlocked = testing
     ? (/[?&]unlock=1/.test(location.search) ? { reveal: true, bonus: true } : {})
     : { reveal: !revealBefore && revealUnlocked(), bonus: !allBefore && allEndingsSeen() };
-  showEnding(endingKey, isNew, false, unlocked);
+  showEnding(endingKey, isNew, unlocked);
 }
 
 /* ---------------- 図鑑から結末を読み返す ---------------- */
@@ -3308,7 +3308,7 @@ function replayEnding(key) {
   state = freshState();
   state.name = lastPlayerName();
   fadeTo(true, 400).then(() => {
-    showEnding(key, false, true);
+    showEnding(key, false);
     return fadeTo(false, 500);
   });
 }
@@ -3360,7 +3360,7 @@ window.addEventListener("resize", () => {
 });
 
 // 結末の画面を組む。判定(resolveEnding)と読み返し(replayEnding)の両方から呼ぶ
-function showEnding(endingKey, isNew, replaying, unlocked) {
+function showEnding(endingKey, isNew, unlocked) {
   const ending = GAME_DATA.endings[endingKey];
   // 前に見た結末の名残(41歳の「謝る / いじる」と悪魔化、Perfect の「呼ぶ」、
   // 最後の一文の字間)を先に片付ける
@@ -3374,7 +3374,7 @@ function showEnding(endingKey, isNew, replaying, unlocked) {
   if (isNew) setTimeout(() => AUDIO.se("ending"), 250);
   // 見出しと NEW の帯は、読み終わってから出す(2026-09-06 本人指示)。
   // 読んでいる最中に結末の名前が出ていると、これから読む話の答えが先に見える。
-  // 出すのは「もう一度プレイする」と同じ瞬間
+  // 出すのは「タイトルにもどる」と同じ瞬間
   const badge = el("ending-new");
   badge.style.display = "none";
   // 到達の難しさで文言を変えていたが、他と同じにする(2026-09-06 本人指示)
@@ -3418,9 +3418,10 @@ function showEnding(endingKey, isNew, replaying, unlocked) {
     else clearOneLine(textEl);
   });
   window.scrollTo(0, 0);
-  // 読み返している時は遊び始めない。読み終わったら図鑑へ戻す
-  // 「図鑑」は開発側の呼び方で、画面には出てこない言葉。戻る先の名前で言う
-  restartBtn.textContent = replaying ? "タイトルにもどる" : "もう一度プレイする";
+  // 押した先はどの結末でもタイトル画面。読み返し(図鑑)から来た時だけ文言を
+  // 変えていたが、行き先が同じなのに呼び名が二つあると迷うので統一した
+  // (2026-09-21 本人指示)
+  restartBtn.textContent = "タイトルにもどる";
   restartBtn.onclick = () => {
     AUDIO.se("next");
     fadeTo(true, 500).then(() => {
