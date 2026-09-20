@@ -165,8 +165,8 @@ const GAME_DATA = {
       title: "意見がぶつかる",
       text: `看板のデザイン案を巡って意見が割れた。派手な色使いを推す委員に対し、ハナエは首を横に振る。\n\n「これやと目立つだけで、内容が全然頭に入ってこーへん。もっとシンプルにせな」\n「目立つんと、伝わるんは別問題やろ」\n\nきっぱりと言い切るハナエに、場の空気が少し張り詰める。`,
       choices: [
-        { id:"A", label:"「両方作って、貼って比べてみようよ」", points:2, rival:0, expr:"surprise", reaction:"「ほな、うちシンプルの方描くわ」\n\n張り詰めていた空気が、それで緩んだ。" },
-        { id:"B", label:"「ハナエが言うことは絶対でしょ」", points:1, rival:0, expr:"normal", reaction:"「王様みたいに言わんといて。でもシンプルがええと思う!」" },
+        { id:"A", label:"「両方作って、貼って比べてみようよ」", points:2, rival:0, expr:"surprise", reaction:"「確かに! ほな、うちシンプルの方描くわ」\n\n張り詰めていた空気が、それで緩んだ。" },
+        { id:"B", label:"「ハナエが正しいと思う」", points:1, rival:0, expr:"smile", reaction:"「うんうん、せやろ!」" },
         { id:"C", label:"「どっちの言い分も分かる気がする……」", points:-1, rival:0, tag:"passive", expr:"normal", reaction:"「……どっちでもええってこと?」\n\nそれ以上は聞かれなかった。" },
         { id:"D", label:"「そこまで言わなくても」", points:-2, rival:0, tag:"pushy", expr:"angry", reaction:"「思うたこと言うて、何が悪いん」" },
       ],
