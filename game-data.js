@@ -224,8 +224,8 @@ const GAME_DATA = {
       choices: [
         { id:"A", label:"「もっと聞かせてよ」", points:-1, rival:0, tag:"pushy", expr:"lonely", reaction:"「……いや、ええわ、こんな話」" },
         { id:"B", label:"「そっか……」と、隣に座って話を聞く", points:3, rival:0, expr:"soft", reaction:"「……なんか、こうやって黙って聞いてくれる人、久しぶりやわ」\n\nそれきり、ハナエは何も言わなかった。二人ぶんの汗が床に落ちて乾くまで、そのままでいた。" },
-        { id:"C", label:"「誰のせいでもないよ」", points:0, rival:0, expr:"trouble", reaction:"「そんなんわかってるって……」" },
-        { id:"D", label:"「それだけ責任を感じてるんだね……」", points:1, rival:0, expr:"soft", reaction:"「……うん。なんか、しんみりさせてもうたな」" },
+        { id:"C", label:"気まずくなって、話題を変える", points:-2, rival:0, tag:"passive", expr:"lonely", reaction:"「……せやな。そろそろ休憩終わろか」\n\n立ち上がるまでの間、こちらを見なかった。" },
+        { id:"D", label:"「それだけ責任を感じてるんだね……」", points:1, rival:0, expr:"shy", reaction:"「……うん。なんか、しんみりさせてもうたな」" },
       ],
     },
 
@@ -750,7 +750,7 @@ const GAME_DATA = {
     // 大会当日でハナエは会場にいる。反応(翌日 / 返信)では顔を出す
     E6:  { bg: "bg_classroom",    sprite: null, reactionSprite: "summer" },
     E7:  { bg: "bg_gym",          sprite: "summer", expr: "smile" },
-    E8:  { bg: "bg_gym",          sprite: "summer", expr: "normal" },
+    E8:  { bg: "bg_gym",          sprite: "summer", expr: "trouble" },
     E8B: { bg: "bg_classroom",    sprite: "summer", expr: "normal" },
     E9:  { bg: "bg_tennis",       sprite: "summer", expr: "normal" },
     E10: { bg: "bg_classroom",    sprite: "summer", tint: "rgba(255, 138, 64, 0.16)" },
