@@ -200,7 +200,7 @@ const GAME_DATA = {
       title: "大会当日、ハナエ不在の作業をどうするか",
       text: `今日はハナエがいない。テニスの大会本番だ。\n\n教室に来てみると、机の上に付箋だらけの進行表が置いてあった。彼女の字で、今日やることが番号つきで並んでいる。\n\n委員「これ、どこまでやっとけばええんやろな」\n\n他のメンバーが、俺を見て言った。ハナエがいないだけで、全員の手が止まっている。`,
       choices: [
-        { id:"A", label:"応援のメッセージだけ送る", points:1, rival:0, expr:"normal", reaction:"「ありがとな」" },
+        { id:"A", label:"応援のメッセージを送る", points:1, rival:0, expr:"normal", reaction:"「ありがとな!」" },
         { id:"B", label:"戻ってから一緒にやろうと、手をつけずに待つ", points:-2, rival:0, tag:"passive", expr:"trouble", reaction:"「なんで進めといてくれへんかったん」" },
         { id:"C", label:"ハナエに連絡して「作業どうする?」とメールで指示を仰ぐ", points:-1, rival:0, tag:"pushy", expr:"trouble", reaction:"「今それどころちゃうねんけど」" },
         { id:"D", label:"「ハナエは大会に集中してもらって、こっちで進めよう」", points:3, rival:0, expr:"surprise", reaction:"「うちのぶんまでやってくれたん……ありがとう、ほんまに」\n\n翌日、進行表の付箋が一枚増えていた。俺の名前が書いてあった。" },
