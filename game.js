@@ -2585,8 +2585,11 @@ function buildEventText(rawText, key) {
   // 本文にも {name} を差し込む。E16B の委員「ハナエ、{name}の名札たのむわ」で使う
   let text = withName(rawText);
   // 伏線は一度だけ差し込む。毎回付けると同じ一文が終盤まで延々繰り返され、
-  // 伏線ではなく表示バグに見える
-  if (!state.foreshadowShown && state.rival >= GAME_DATA.foreshadowThreshold) {
+  // 伏線ではなく表示バグに見える。
+  // foreshadowSkip の場面では貼らない —— 家族の回や静かな回の本文末尾に
+  // 浦川の一行が付くと完全に浮く。印も立てないので次の場面へ持ち越される
+  if (!state.foreshadowShown && state.rival >= GAME_DATA.foreshadowThreshold &&
+      !(GAME_DATA.foreshadowSkip || []).includes(key)) {
     state.foreshadowShown = true;
     text += GAME_DATA.foreshadowLine;
   }
