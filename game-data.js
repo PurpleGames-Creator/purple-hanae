@@ -260,7 +260,7 @@ const GAME_DATA = {
       text: `委員会が解散した後の教室。ハナエが一人、名簿と電卓を前に唸っている。当日の配置表がまだ終わっていないらしい。\n\n「あー、もう。……なんでうちだけ残っとるんやろな」\n\n独り言のつもりだったのか、こちらに気づいて「あ、ごめん。なんでもない」と取り繕った。`,
       choices: [
         { id:"A", label:"「終わるまで待ってるよ」", points:0, rival:0, tag:"passive", expr:"normal", reaction:"「別にええのに」" },
-        { id:"B", label:"「お疲れ、先帰るね」", points:-2, rival:0, tag:"passive", expr:"smile", reaction:"「うん、おつかれ」" },
+        { id:"B", label:"「お疲れ、先帰るね」", points:-2, rival:0, tag:"passive", expr:"soft", reaction:"「うん、おつかれ」" },
         { id:"C", label:"隣の席に座って名簿を半分引き取る", points:3, rival:0, expr:"soft", reaction:"「……ほんま、こういうとこやねんな、あんた」\n\n名簿の半分が、俺の前に滑ってきた。" },
         { id:"D", label:"「それ、明日でもいいんじゃない?」", points:-1, rival:0, expr:"trouble", reaction:"「明日やったら間に合わへんのよ」" },
       ],
@@ -753,7 +753,7 @@ const GAME_DATA = {
     E8:  { bg: "bg_gym",          sprite: "summer", expr: "trouble" },
     E8B: { bg: "bg_classroom",    sprite: "summer", expr: "normal" },
     E9:  { bg: "bg_tennis",       sprite: "summer", expr: "normal" },
-    E10: { bg: "bg_classroom",    sprite: "summer", tint: "rgba(255, 138, 64, 0.16)" },
+    E10: { bg: "bg_classroom",    sprite: "summer", expr: "trouble", tint: "rgba(255, 138, 64, 0.16)" },
     E11: { bg: "bg_gym",          sprite: "summer" },
     E12: { bg: "bg_cafe",         sprite: "summer", expr: "lonely" },
     E13: { bg: "bg_rain",         sprite: "summer", expr: "normal", tint: "rgba(80, 110, 160, 0.2)", weather: "rain" },
