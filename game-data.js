@@ -780,7 +780,7 @@ const GAME_DATA = {
     // **自由行動の地図のピンも、暗転のテロップも、この名前を使う**(2026-09-12 本人指摘。
     // ピンは「校門」なのにテロップは「体育館」と出ていた)。片方だけ直さないこと
     F1_neji:     { bg: "bg_gym",       sprite: "summer", expr: "trouble" },
-    F2_chusai:   { bg: "bg_classroom", sprite: "summer" },
+    F2_chusai:   { bg: "bg_classroom", sprite: "summer", expr: "normal" },
     // 場所と絵が食い違っていたので、専用の背景を足した(2026-09-12)。
     // 名前は placeLabels から引くので、place の上書きは要らなくなった
     F3_kaidashi: { bg: "bg_gate",      sprite: "summer" },
