@@ -467,9 +467,9 @@ const GAME_DATA = {
       // 噂イベントで「様子を見る」を選んだ時だけ末尾に足す(浦川エンドが確定していることを、罠と分かる形で見せる)
       rumorLine: "\n\nそう言った直後、机の上のケータイが一度光った。画面を見て、ハナエの口元が少しだけ緩む。浦川、という文字が見えた気がした。",
       choices: [
-        { id:"A", label:"片付けを黙々と続ける", points:0, rival:0, tag:"passive", expr:"normal", reaction:"そのまま片付けが終わる。" },
+        { id:"A", label:"片付けを黙々と続ける", points:-1, rival:0, tag:"passive", expr:"normal", reaction:"そのまま片付けが終わる。" },
         { id:"B", label:"「終わってほしくないな」", points:4, rival:0, expr:"shy", reaction:"「……うちも、ちょっとそう思うわ」\n\n窓の外の暗さに、ハナエの声が溶けていった。" },
-        { id:"C", label:"「お疲れさま、また明日な!」", points:-1, rival:0, tag:"passive", expr:"lonely", reaction:"「……お疲れ……」" },
+        { id:"C", label:"「うん。今日は早めに休もう。お疲れ」", points:1, rival:0, tag:"passive", expr:"soft", reaction:"「……せやな。あんたも、ちゃんと寝ぇや」" },
         { id:"D", label:"「明日なにかおもしろいこと起こるかな」", points:-2, rival:0, tag:"pushy", expr:"normal", reaction:"「さあ、知らんけど」" },
       ],
     },
