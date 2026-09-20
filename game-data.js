@@ -189,9 +189,9 @@ const GAME_DATA = {
       title: "準備帰り、喫茶店に寄る",
       text: `作業を終えた帰り道、ハナエに誘われる。\n\n「甘いもんで一服してこ」\n\nハナエの行きつけだという、古い木の扉の店だった。\n\n扉を押すと、カウンターの奥から、おかえり、と声がかかった。常連らしい。\n\n「ここのプリン、日本一やから。異論は認めへん」\n\n注文を終えたところで、ハナエが伝票に手を伸ばした。\n\n「うちから誘ったし、ここは奢ったるわ」`,
       choices: [
-        { id:"A", label:"「いや、ここは俺が払うよ」", points:-2, rival:0, tag:"pushy", expr:"trouble", reaction:"「そんなんええって、意地張らんでも」" },
+        { id:"A", label:"「いや、ここは俺が払うよ」", points:-1, rival:0, tag:"pushy", expr:"normal", reaction:"「そんなんええって、意地張らんでも」" },
         { id:"B", label:"「じゃあ、半分ずつで」", points:3, rival:0, expr:"smile", reaction:"「そういう対等な感じ、嫌いちゃうで」" },
-        { id:"C", label:"あたふたする", points:-1, rival:0, tag:"passive", expr:"trouble", reaction:"「なにしてんねん」" },
+        { id:"C", label:"あたふたする", points:-2, rival:0, tag:"passive", expr:"trouble", reaction:"「なにしてんねん」" },
         { id:"D", label:"「じゃあ、ごちそうになります」", points:0, rival:0, expr:"normal", reaction:"「うん、ええよー」" },
       ],
     },
