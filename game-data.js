@@ -155,9 +155,9 @@ const GAME_DATA = {
       text: `今日から夏休み。それでも文化祭の準備がある委員会は、朝から学校に集まっている。\n\n作業の合間、水分補給がてら壁にもたれて一息つく。ハナエもペットボトルを傾けながら汗をぬぐっていた。\n\n「はあ、しんど……。今日この後、部活もあるんよなあ」\n「え、今から?」\n「せやで。うち、テニス部やから」\n\nさらりと言うが、この暑さの中で二つ掛け持ちしているのは相当ハードなはずだ。`,
       choices: [
         { id:"A", label:"「へえ、大変だね」", points:-1, rival:0, expr:"trouble", reaction:"「なんか他人事やな」" },
-        { id:"B", label:"「大丈夫? 無理しすぎじゃない?」", points:1, rival:0, expr:"shy", reaction:"「そんな心配せんでもええのに」" },
+        { id:"B", label:"「大丈夫? 無理しすぎじゃない?」", points:1, rival:0, expr:"shy", reaction:"「ありがと。そんなに心配せんでもええよ」" },
         { id:"C", label:"「じゃあその分、今日の作業は俺が多めにやるよ」", points:2, rival:0, expr:"joy", reaction:"「めっちゃ助かるわー!」" },
-        { id:"D", label:"「そこまでして両方やる意味ある?」", points:-2, rival:0, tag:"pushy", expr:"angry", reaction:"「キツいに決まってるやん」" },
+        { id:"D", label:"「そこまでして両方やる意味ある?」", points:-2, rival:0, tag:"pushy", expr:"angry", reaction:"「意味とかちゃうねん。やるって決めたからやってんの」" },
       ],
     },
 
@@ -743,7 +743,7 @@ const GAME_DATA = {
   scenes: {
     E1:  { bg: "bg_classroom",    sprite: "summer" },
     E2:  { bg: "bg_gym",          sprite: "summer", expr: "normal" },
-    E3:  { bg: "bg_gym",          sprite: "summer" },
+    E3:  { bg: "bg_gym",          sprite: "summer", expr: "trouble" },
     E4:  { bg: "bg_classroom",    sprite: "summer", expr: "normal" },
     E4B: { bg: "bg_gym",          sprite: "summer", expr: "normal" },
     E5:  { bg: "bg_cafe",         sprite: "summer" },
