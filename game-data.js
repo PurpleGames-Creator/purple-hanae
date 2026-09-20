@@ -744,7 +744,7 @@ const GAME_DATA = {
     E1:  { bg: "bg_classroom",    sprite: "summer" },
     E2:  { bg: "bg_gym",          sprite: "summer" },
     E3:  { bg: "bg_gym",          sprite: "summer" },
-    E4:  { bg: "bg_classroom",    sprite: "summer" },
+    E4:  { bg: "bg_classroom",    sprite: "summer", expr: "normal" },
     E4B: { bg: "bg_gym",          sprite: "summer", expr: "normal" },
     E5:  { bg: "bg_cafe",         sprite: "summer" },
     // 大会当日でハナエは会場にいる。反応(翌日 / 返信)では顔を出す
