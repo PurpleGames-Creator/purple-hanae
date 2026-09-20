@@ -769,7 +769,7 @@ const GAME_DATA = {
     // 初日の夜(E20B)は本文どおり照明を落とした青に沈め、最終日の昼(E20C)は
     // 別の持ち場=教室へ移した。テロップの場所名も「体育館」→「教室」に変わる
     E20: { bg: "bg_gym",          sprite: "summer", expr: "normal" },
-    E20B:{ bg: "bg_gym",          sprite: "summer", expr: "smile", tint: "rgba(24, 34, 68, 0.34)" },
+    E20B:{ bg: "bg_gym",          sprite: "summer", expr: "normal", tint: "rgba(24, 34, 68, 0.34)" },
     E20C:{ bg: "bg_classroom",    sprite: "summer", expr: "shy" },
     E21: { bg: "bg_ground_night", sprite: "summer", expr: "lonely" },
 
