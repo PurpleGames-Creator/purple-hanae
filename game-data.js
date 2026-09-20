@@ -151,7 +151,7 @@ const GAME_DATA = {
       title: "委員会の合間の雑談",
       text: `作業の合間、水分補給がてら壁にもたれて一息つく。ハナエもペットボトルを傾けながら汗をぬぐっていた。\n\n「はあ、しんど……。今日この後、部活もあるんよなあ」\n「え、今から?」\n「せやで。うち、テニス部やから」\n\nさらりと言うが、この暑さの中で二つ掛け持ちしているのは相当ハードなはずだ。`,
       choices: [
-        { id:"A", label:"「へえ、大変だね」", points:-1, rival:0, expr:"trouble", reaction:"「そっけないなあ」" },
+        { id:"A", label:"「へえ、大変だね」", points:-1, rival:0, expr:"trouble", reaction:"「なんか他人事やな」" },
         { id:"B", label:"「大丈夫? 無理しすぎじゃない?」", points:1, rival:0, expr:"shy", reaction:"「そんな心配せんでもええのに」" },
         { id:"C", label:"「じゃあその分、今日の作業は俺が多めにやるよ」", points:2, rival:0, expr:"joy", reaction:"「めっちゃ助かるわー!」" },
         { id:"D", label:"「そこまでして両方やる意味ある?」", points:-2, rival:0, tag:"pushy", expr:"angry", reaction:"「キツいに決まってるやん」" },
