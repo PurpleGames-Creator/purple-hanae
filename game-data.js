@@ -297,8 +297,8 @@ const GAME_DATA = {
       text: `作業を終えて外に出ると、いつの間にか雨が降り出していた。傘はない。\n\n渡り廊下の軒下で雨宿りすることになった。雨の音が、体育館の熱を少しずつ冷ましていく。\n\nハナエは軒の端に腰を下ろして、濡れた校庭をぼんやり眺めている。いつもの声の大きさが、今は無い。\n\n二人きりの静かな時間が流れる。\n\n「こういう時間、嫌いちゃうな」\n\nハナエがぽつりと呟いた。`,
       choices: [
         { id:"A", label:"笑顔でうなずき、並んで雨を眺める", points:4, rival:0, expr:"soft", reaction:"「……こういうの、悪ないな」\n\n雨が弱くなるまで、どちらも動かなかった。" },
-        { id:"B", label:"「まぁ悪くないね」", points:1, rival:0, expr:"soft", reaction:"「……せやろ」" },
-        { id:"C", label:"「早く止まないかな〜」", points:-2, rival:0, tag:"passive", expr:"lonely", reaction:"「……せやな」" },
+        { id:"B", label:"「まぁ悪くないね」", points:1, rival:0, expr:"soft", reaction:"「……やんな。たまにはこういうんもええわ」" },
+        { id:"C", label:"「早く止まないかな〜」", points:-2, rival:0, tag:"pushy", expr:"lonely", reaction:"「……せやな」\n\nさっきの言葉は、それきり出てこなかった。" },
         { id:"D", label:"「なんで?」", points:0, rival:0, expr:"normal", reaction:"「……なんでやろな。わからんけど」" },
       ],
     },
