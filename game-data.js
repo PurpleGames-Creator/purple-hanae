@@ -135,7 +135,7 @@ const GAME_DATA = {
         // 文言は E2 の「はいはーい」(+1)と被らないものにする(似た言葉で評価が逆になる)。
         // 1場面目で「何をしたか」ではなく「どう言ったか」で点が動くと分かる肢。
         // 序盤の pushy は3回で最悪ルート(E8B)に入るので、その入口もここから開く
-        { id:"D", label:"「いきなり人使うね」", points:-2, rival:0, tag:"pushy", expr:"normal", reaction:"「人使うも何も、まだ何もしてくれてへんやん」" },
+        { id:"D", label:"「いきなり人使うね」", points:-2, rival:0, tag:"pushy", expr:"normal", reaction:"「みんなで協力するもんやろ」" },
       ],
     },
 
