@@ -44,7 +44,6 @@ function freshState() {
     freePicksLeft: 3,
     act3DriftApplied: false,
     rivalInsertShown: false,
-    foreshadowShown: false,
     senshu: false,
     // 序盤(E1〜E8)の無神経な選択の回数。閾値を超えると似顔絵の場面(E8B)が挟まる
     rudeEarly: 0,
@@ -2006,8 +2005,9 @@ const SPEAKER_BY_LINE = new Map([
   ["「昔から、コイツ試合負けた日は決まってコレなんですわ」", "touma"],
   ["「そういえば、浦川が『ハナエに告白しよかな』とか言うてたで」", "iin"],
   // E10 の末尾。地の文に埋まっているので「ハナエ「〜」」の形にできない。
-  // 伏線(foreshadowLine)が本文の後ろに付くと、推測の窓(前後24文字)に「浦川」が入って
-  // 彼女の台詞が浦川のものとして表示されていた(2026-09-21)
+  // 本文の後ろに何か足されると、推測の窓(前後24文字)に他の名前が入って
+  // 彼女の台詞が別人のものとして表示される(2026-09-21 に浦川の伏線で実際に起きた。
+  // その伏線自体は撤去したが、同じ事故を防ぐためここで固定しておく)
   ["「あ、ごめん。なんでもない」", "hanae"],
   ["「手伝うわ」", "urakawa"],
   ["「せやろ、こう見えて器用やねん」", "urakawa"],
@@ -2598,15 +2598,11 @@ function reactionTextFor(key, choice) {
 function buildEventText(rawText, key) {
   // 本文にも {name} を差し込む。E16B の委員「ハナエ、{name}の名札たのむわ」で使う
   let text = withName(rawText);
-  // 伏線は一度だけ差し込む。毎回付けると同じ一文が終盤まで延々繰り返され、
-  // 伏線ではなく表示バグに見える。
-  // foreshadowSkip の場面では貼らない —— 家族の回や静かな回の本文末尾に
-  // 浦川の一行が付くと完全に浮く。印も立てないので次の場面へ持ち越される
-  if (!state.foreshadowShown && state.rival >= GAME_DATA.foreshadowThreshold &&
-      !(GAME_DATA.foreshadowSkip || []).includes(key)) {
-    state.foreshadowShown = true;
-    text += GAME_DATA.foreshadowLine;
-  }
+  // 浦川の伏線(「そういえば最近、浦川の名前が〜」)はここで足していたが、
+  // 2026-09-21 に撤去した。場面を選ばず本文末尾に貼るため家族の回に紛れ込み、
+  // さらに後ろに「浦川」が来ることで直前のハナエの台詞が浦川の発言として
+  // 名札表示される事故まで起きていた。浦川ルートの前振りは E17 と
+  // rivalInsert(E19 直前の噂)が担うので、この一行は無くても成り立つ
   // 噂を聞いて「様子を見る」を選んだ後の E19 だけ、浦川の影を一行足す
   if (key === "E19" && state.rivalInsertShown && !state.senshu && GAME_DATA.events.E19.rumorLine) {
     text += GAME_DATA.events.E19.rumorLine;
