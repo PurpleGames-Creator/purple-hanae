@@ -163,8 +163,8 @@ const GAME_DATA = {
       text: `看板のデザイン案を巡って意見が割れた。派手な色使いを推す委員に対し、ハナエは首を横に振る。\n\n「これやと目立つだけで、内容が全然頭に入ってこーへん。もっとシンプルにせな」\n「目立つんと、伝わるんは別問題やろ」\n\nきっぱりと言い切るハナエに、場の空気が少し張り詰める。`,
       choices: [
         { id:"A", label:"「どっちの言い分も分かる気がする……」", points:-1, rival:0, tag:"passive", expr:"normal", reaction:"特に何も言われず、話は先に進む。" },
-        { id:"B", label:"「ハナエの言う通りだと思う」", points:1, rival:0, expr:"normal", reaction:"「せやろ」" },
-        { id:"C", label:"「シンプルな方がいいと思う。去年の案内板、見づらかったし」", points:2, rival:0, expr:"joy", reaction:"「そうそう、それやねん!」" },
+        { id:"B", label:"「ハナエが言うことは絶対でしょ」", points:1, rival:0, expr:"normal", reaction:"「王様みたいに言わんといて。でもシンプルがええと思う!」" },
+        { id:"C", label:"「うん、シンプルな方がいいと思う。去年の案内板、見づらかったし」", points:2, rival:0, expr:"joy", reaction:"「そうそう、それやねん!」" },
         { id:"D", label:"「そこまで言わなくても」", points:-2, rival:0, tag:"pushy", expr:"angry", reaction:"「思うたことハッキリ言うて何が悪いん。それがうちのやり方や」" },
       ],
     },
