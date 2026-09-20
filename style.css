@@ -1063,10 +1063,30 @@ body.is-ending * {
    呼ぶ前に返事をしていることになる。ただし場所は取っておく(詰めると、最初に押した瞬間に
    「呼ぶ」が一言のぶん下へずれて、連打の2回目以降が吹き出しに当たって空振りする。2026-09-11 実測) */
 .poke-hint.is-blank { visibility: hidden; }
+/* 「呼ぶ」は Perfect の結末にしか出ないおまけなので、気づかれずに終わることがあった
+   (2026-09-20 本人指摘)。枠をネオン色でゆっくり明滅させて目を引く。
+   枠と影だけを動かし、大きさや位置は変えない —— このボタンは連打される想定で、
+   動かすと2回目以降が空振りする(.poke-hint の場所を固定してあるのと同じ理由) */
 .poke-call {
   border-color: rgba(255, 170, 200, 0.5);
   background: rgba(255, 140, 180, 0.14);
+  animation: pokeCallGlow 1.9s ease-in-out infinite;
 }
+@keyframes pokeCallGlow {
+  0%, 100% {
+    border-color: rgba(255, 150, 190, 0.55);
+    box-shadow: 0 0 4px rgba(255, 120, 180, 0.30),
+                0 0 10px rgba(255, 90, 170, 0.15);
+  }
+  50% {
+    border-color: rgba(255, 225, 245, 0.95);
+    box-shadow: 0 0 10px rgba(255, 150, 205, 0.85),
+                0 0 22px rgba(255, 90, 185, 0.50),
+                0 0 36px rgba(255, 60, 165, 0.22);
+  }
+}
+/* 押せない間は光らせない(光っているのに反応しない、が一番紛らわしい) */
+.poke-call:disabled { animation: none; box-shadow: none; }
 /* 一言が変わるたびに軽く浮かせる。同じ長さの一言が続くと、変わったことに気づきにくい */
 .poke-hint.is-pop { animation: pokePop 0.28s ease-out; }
 @keyframes pokePop {
@@ -1075,6 +1095,12 @@ body.is-ending * {
 }
 @media (prefers-reduced-motion: reduce) {
   .poke-hint.is-pop { animation: none; }
+  /* 明滅は止めるが、目を引く役目は枠の色で残す */
+  .poke-call {
+    animation: none;
+    border-color: rgba(255, 215, 240, 0.9);
+    box-shadow: 0 0 10px rgba(255, 120, 190, 0.45);
+  }
 }
 
 /* 読み終わりに増える要素。本文の枠が滑らかに上がっていく間に、
