@@ -340,7 +340,7 @@ const GAME_DATA = {
 
 兄のトウマが差し入れの紙袋に『誕生日』と書いて寄越したせいで、委員会中に知れ渡った。\n\n作業終わり、誰かが買ってきたコンビニのケーキに、蝋燭が一本だけ立つ。\n\n「なんやこれ、恥ずかしいねんけど」\n\nそう言いながら、ハナエは蝋燭を消すまで誰にも席を譲らなかった。`,
       choices: [
-        { id:"A", label:"「おめでとう」", points:0, rival:0, expr:"smile", reaction:"「ありがと!」" },
+        { id:"A", label:"「おめでとう」", points:0, rival:0, expr:"smile", reaction:"「おおきに!」" },
         { id:"B", label:"プレゼントを渡す", points:-1, rival:0, tag:"pushy", expr:"soft", reaction:"「ありがとう! でもみんなの前は恥ずいわ」" },
         { id:"C", label:"いつも通り接する", points:-2, rival:0, tag:"passive", expr:"lonely", reaction:"「別にええけど、ちょっと寂しいな」" },
         { id:"D", label:"誰もいないところでみたらし団子を渡す", points:4, rival:0, expr:"cry", reaction:"「……めっちゃうれしい!」\n\n団子の袋を両手で持ったまま、ハナエはしばらく何も言えずにいた。" },
