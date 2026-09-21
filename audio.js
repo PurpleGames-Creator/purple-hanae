@@ -101,6 +101,10 @@ const AUDIO = (() => {
   let playCalls = 0;
   let playOk = 0;
   let ctxKicks = 0;
+  // 別の画面へ移るために曲を止めた印(pauseForLeave)。戻ってくる(resumeAfterLeave)まで
+  // 鳴らし直しをさせない。詳しくは「画面が裏に回った時」の節
+  let pausedForLeave = false;
+  let leftAt = 0;
 
   // 1曲 1.5〜1.9MB ある。タップしてから取りに行くと、曲が届く前に
   // プレイヤーが次の場面へ進んでしまうので、鳴らすと決まった時点で読み始める
@@ -221,6 +225,9 @@ const AUDIO = (() => {
       preloadTrack(el);
       return;
     }
+    // 画面が見えている時に場面が曲を求めたなら、プレイヤーはここにいる(おまけの
+    // タブが開けずに戻ってきた等)。「離れた」印を外して、鳴らし直しを効くようにする
+    if (!document.hidden) pausedForLeave = false;
     preloadTrack(el);
     setVolume(el, 0);
     playCalls += 1;
@@ -439,6 +446,12 @@ const AUDIO = (() => {
   // 音量には触らないので、立ち上げの途中で呼ばれてもフェードはやり直さない
   function ensurePlaying() {
     if (!unlocked || muted) return;
+    // 離れるために止めた曲は、戻ってくるまで鳴らさない。裏のタブでも鳴らさない。
+    // ここへは解錠直後の確かめ直し(400ms / 1500ms 後)と AudioContext の起床が遅れて来る。
+    // この判定が無かったので、解錠してすぐ(1.5秒以内)おまけの SUPER HANAE を押すと、
+    // 止めたばかりのタイトル曲が裏のタブで鳴り出して流れっぱなしになっていた
+    // (2026-09-21 本人報告。仮想時間のテストで再現: 押すのが 0.3秒後・1.0秒後だと鳴り出し、3秒後なら鳴らない)
+    if (pausedForLeave || document.hidden) return;
     if (!currentEl || !currentEl.paused) return;
     playCalls += 1;
     const p = currentEl.play();
@@ -535,11 +548,13 @@ const AUDIO = (() => {
   // 戻ってきたら同じ曲を続きから鳴らす。
   // 曲の切り替え(crossfade)の途中だと消えかけの前の曲も鳴っているので、
   // 今の曲だけでなく、用意した曲をすべて止める
-  let pausedForLeave = false;
-  let leftAt = 0;
-
   function pauseForLeave() {
     leftAt = performance.now();
+    // 鳴っていなくても「離れた」印は立てる。解錠直後は最初の play() が弾かれて止まったままの
+    // ことがあり、ここで印を立てないと、あとから来る鳴らし直し(ensurePlaying)が
+    // 裏のタブで曲を鳴らし始める。解錠前は何も鳴らないので立てない
+    // (立てると戻った時に resumeAfterLeave が操作前に AudioContext を作ってしまう)
+    if (unlocked) pausedForLeave = true;
     let any = false;
     elements.forEach((el) => {
       if (!el.paused) {
@@ -553,7 +568,6 @@ const AUDIO = (() => {
     elements.forEach((el) => {
       if (el !== currentEl) el.currentTime = 0;
     });
-    pausedForLeave = true;
   }
 
   function resumeAfterLeave() {
