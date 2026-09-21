@@ -1638,6 +1638,7 @@ function preloadExpressions() {
 /* ---------------- タイトル ---------------- */
 
 function initTitleScreen() {
+  lapsBeforeRun = null;
   showScreen("screen-title");
   resetAdultPoke();
   resetCallPoke();
@@ -1668,6 +1669,7 @@ function initTitleScreen() {
     continueBtn.onclick = () => {
       AUDIO.se("next");
       endingTestRunning = false;   // 同上
+      lapsBeforeRun = playCount();
       state = saved;
       el("player-name-input").value = state.name;
       advanceQueue();
@@ -1722,6 +1724,7 @@ function initTitleScreen() {
     // 試用モード(?ending= / ?scene= から入った状態)を必ず解く。
     // 解かないと、この回の結末がセーブにも図鑑にも残らない(2026-09-06 発覚)
     endingTestRunning = false;
+    lapsBeforeRun = playCount();
     state = freshState();
     state.name = name;
     rememberName(name);
@@ -2170,7 +2173,7 @@ let skipIdle = 0;
 
 function startSkip() {
   // 1周目は送る先が無い。ボタン自体を出していないが、キー操作の保険として見る
-  if (skipHeld || !readSet.size) return;
+  if (skipHeld || !skipAllowed()) return;
   skipHeld = true;
   skipIdle = 0;
   document.body.classList.add("is-skipping");
@@ -2196,9 +2199,20 @@ function skipTick() {
   skipTimer = setTimeout(skipTick, SKIP_STEP_MS);
 }
 
-// 既読が1つも無いうち(＝1周目)は出さない。押しても動かないボタンは壊れて見える
+// 早送りは2周目から出す(仕様。1周目は押しても未読で止まるだけで、壊れて見える)。
+// 以前は「既読が1つでもあれば出す」で判定していたが、既読は1周目のプロローグを読んだ
+// 時点で溜まり始めるので、初めての人にも最初の場面から出ていた(2026-09-22 本人指摘)。
+// 何周目かは「この周を始めた時点で遊び終えていた周の数」で決める。今の数(playCount)で
+// 決めると、1周目の結末に着いた瞬間に数が1に増え、1周目の結末の画面で出てしまう
+let lapsBeforeRun = null; // null = 周の外(タイトル・図鑑からの読み返し)。その時は今の数で決める
+
+function skipAllowed() {
+  const laps = lapsBeforeRun === null ? playCount() : lapsBeforeRun;
+  return laps >= 1 && readSet.size > 0;
+}
+
 function renderSkipButtons() {
-  const on = readSet.size > 0;
+  const on = skipAllowed();
   // 送りマーク ▼ を左へ寄せるかの目印。ボタンを出さない1周目は隅のまま
   document.body.classList.toggle("has-skip", on);
   document.querySelectorAll(".js-skip").forEach((b) => { b.hidden = !on; });
