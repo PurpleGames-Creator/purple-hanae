@@ -2,6 +2,9 @@
    センチメンタル・ハナエ - BGM と効果音
    --------------------------------------------------------------------------
    BGM は m4a(AAC)。iOS Safari の ogg 対応が不安定なため。
+   ただし m4a をそのままは置かない(2026-09-22): assets/bgm/*.bin は m4a の全バイトを
+   xorshift32 の乱数列で XOR したもの。読み込んで戻し、blob: のアドレスにして
+   <audio> に渡す(下の「曲ファイルの読み込み」)。
    効果音は Web Audio で合成する。ファイルを持たないので容量ゼロで、
    文字送りの音程を話者ごとに変えられる(ハナエは高い音、地の文は低い音)。
    ========================================================================== */
@@ -84,6 +87,69 @@ const AUDIO = (() => {
     }
   })();
 
+  /* ---------------- 曲ファイルの読み込み ---------------- */
+
+  // DOVA-SYNDROME(2026-09-15 から OpenTracks)の規約の禁止事項 8:
+  // 「コンバート等を行わず、エンドユーザーが容易に音源ファイルに音声ファイルとして
+  // アクセス、複製が可能な状態での利用」。m4a を公開 URL にそのまま置くと、開くだけで
+  // 曲として保存できてしまう。サーバーには XOR でかき混ぜた .bin だけを置き、ここで戻して
+  // ブラウザの中だけで使える blob: のアドレスにする。暗号ではない(鳴っている音は録れる)が、
+  // 開けばそのまま曲、という状態ではなくなる。鍵は _source/bgm/README.md の手順と同じ値
+  const BGM_KEY = 0x4a1e0b27;
+  const blobs = new Map(); // key -> { url, promise }
+
+  function unscramble(ab) {
+    const u = new Uint8Array(ab);
+    let x = BGM_KEY >>> 0;
+    for (let i = 0; i < u.length; i++) {
+      x ^= x << 13; x >>>= 0; x ^= x >>> 17; x ^= x << 5; x >>>= 0;
+      u[i] ^= x & 0xff;
+    }
+    return ab;
+  }
+
+  function loadTrack(key) {
+    if (blobs.has(key)) return blobs.get(key).promise;
+    const track = TRACKS[key];
+    const entry = { url: null, promise: null };
+    entry.promise = fetch(`${BGM_DIR}${track.file}.bin${BGM_V}`)
+      .then((r) => {
+        if (!r.ok) throw new Error("http " + r.status);
+        return r.arrayBuffer();
+      })
+      .then((ab) => {
+        entry.url = URL.createObjectURL(new Blob([unscramble(ab)], { type: "audio/mp4" }));
+        return entry.url;
+      })
+      .catch((e) => {
+        lastError = "load:" + (e && e.message);
+        blobs.delete(key); // 次に要る時にもう一度取りに行く
+        return null;
+      });
+    blobs.set(key, entry);
+    return entry.promise;
+  }
+
+  // 曲が届く前に鳴らすことになった要素に、とりあえず渡しておく 0.1 秒の無音。
+  // iOS は <audio> ごとに「最初の再生はタップの中」でないと鳴らさない。曲の読み込みを
+  // 待ってから play() するとタップの外になって弾かれるので、タップの中ではこの無音で
+  // play() して再生の許可を取っておき、曲が届いたら差し替えて鳴らし直す(許可は要素に残る)
+  const SILENCE = "data:audio/wav;base64,UklGRkQDAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YSADAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==";
+
+  // 曲が届いた。まだその要素がこの曲のためのもので、鳴っているべきなら差し替えて鳴らす
+  function attach(el, key, url) {
+    if (!url || el.dataset.key !== key || el.dataset.real === "1") return;
+    const wasPlaying = !el.paused;
+    el.dataset.real = "1";
+    el.src = url;
+    el.preload = "auto";
+    if (!wasPlaying) return;
+    if (!unlocked || muted || pausedForLeave || document.hidden) return;
+    playCalls += 1;
+    const p = el.play();
+    if (p && p.then) p.then(() => { playOk += 1; }, (err) => { if (err) lastError = err.name; });
+  }
+
   /* ---------------- BGM ---------------- */
 
   const elements = new Map(); // key -> HTMLAudioElement
@@ -109,13 +175,9 @@ const AUDIO = (() => {
   // 1曲 1.5〜1.9MB ある。タップしてから取りに行くと、曲が届く前に
   // プレイヤーが次の場面へ進んでしまうので、鳴らすと決まった時点で読み始める
   function preloadTrack(el) {
-    if (!el || el.preload === "auto") return;
-    el.preload = "auto";
-    try {
-      el.load();
-    } catch (e) {
-      /* 読み込めなくても play() 時に取りに行くので致命ではない */
-    }
+    if (!el) return;
+    const key = el.dataset.key;
+    if (el.dataset.real !== "1") loadTrack(key).then((url) => attach(el, key, url));
   }
 
   // 起動時には読まない。その曲が要る場面に入って初めて取りに行く
@@ -123,8 +185,9 @@ const AUDIO = (() => {
     if (elements.has(key)) return elements.get(key);
     const track = TRACKS[key];
     if (!track) return null;
+    // src は曲が届いてから attach が入れる(かき混ぜを戻した blob:)
     const el = new Audio();
-    el.src = `${BGM_DIR}${track.file}.m4a${BGM_V}`;
+    el.dataset.key = key;
     el.loop = true;
     el.preload = "none";
     el.volume = 0;
@@ -229,6 +292,9 @@ const AUDIO = (() => {
     // タブが開けずに戻ってきた等)。「離れた」印を外して、鳴らし直しを効くようにする
     if (!document.hidden) pausedForLeave = false;
     preloadTrack(el);
+    // 曲がまだ届いていなければ無音で鳴らしておく(タップの中で再生の許可を取るため)。
+    // 届いた時点で attach が本物に差し替えて鳴らし直す
+    if (el.dataset.real !== "1" && !el.src) el.src = SILENCE;
     setVolume(el, 0);
     playCalls += 1;
     const p = el.play();
@@ -622,6 +688,8 @@ const AUDIO = (() => {
       ctx: ctx ? ctx.state : null,
       // readyState 0 = まだ何も読めていない / 4 = 最後まで読めている
       ready: currentEl ? currentEl.readyState : null,
+      // 曲が届いて差し替わったか(false の間は無音で待っている)
+      real: currentEl ? currentEl.dataset.real === "1" : null,
       lastError,
       aborts,
       playCalls,

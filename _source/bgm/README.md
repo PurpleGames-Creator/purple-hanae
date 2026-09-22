@@ -5,7 +5,15 @@
 ここに置いた `.mp3` は `.gitignore` で **git 管理外**。素材そのものを公開リポジトリに
 置くと再配布に当たりうるため。GitHub にバックアップされないので、消すと戻らない。
 
-`assets/bgm/*.m4a` が公開用の変換結果。作品に組み込んだ状態なので、そちらは追跡する。
+公開するのは **`assets/bgm/*.bin`** だけ(2026-09-22〜)。m4a の全バイトを xorshift32 の乱数列で XOR した
+もので、`audio.js` が読み込み時に戻して `blob:` のアドレスで `<audio>` に渡す。
+
+> [!warning] m4a をそのまま公開しない
+> 配布元の規約(DOVA-SYNDROME は 2026-09-15 に **OpenTracks** へ改名)の禁止事項 8
+> 「コンバート等を行わず、エンドユーザーが容易に音源ファイルに音声ファイルとしてアクセス、
+> 複製が可能な状態での利用」。以前は `assets/bgm/*.m4a` を公開していたので、開けばそのまま
+> 曲として保存できた。**公開リポジトリの履歴には旧 m4a が残っている**(本人判断で履歴は書き換えない)。
+> 暗号ではない(鳴っている音は録れる)が、開けばそのまま曲、という状態ではなくなる。
 
 ## 変換手順
 
@@ -20,14 +28,20 @@ ffmpeg -i _source/bgm/日常・準備期間.mp3 \
 # 2パス目: 測定値を渡して変換(measured_* は1パス目の出力から)
 ffmpeg -y -i _source/bgm/日常・準備期間.mp3 \
   -af "loudnorm=I=-16:TP=-1.5:LRA=11:measured_I=...:measured_TP=...:measured_LRA=...:measured_thresh=...:offset=...:linear=true" \
-  -ar 44100 -c:a aac -b:a 96k -movflags +faststart assets/bgm/daily1.m4a
+  -ar 44100 -c:a aac -b:a 96k -movflags +faststart _source/bgm/m4a/daily1.m4a
+
+# 3. かき混ぜて公開用の .bin にする(_source/bgm/m4a/*.m4a を全部)
+uv run --no-project python _source/bgm/scramble.py
 ```
+
+m4a は変換途中のファイルとして `_source/bgm/m4a/` に置く(git 管理外)。
+`scramble.py` の `KEY` と `audio.js` の `BGM_KEY` は同じ値にしておく。
 
 形式は **m4a(AAC)**。iOS Safari の ogg 対応が不安定なため。
 
 ## ファイルの対応
 
-| 元ファイル | 公開ファイル | 使う場面 |
+| 元ファイル | 公開ファイル(`.bin`。変換途中は同名の `.m4a`) | 使う場面 |
 |---|---|---|
 | タイトル.mp3 | `title.m4a` | タイトル画面・プロローグ |
 | 日常・準備期間.mp3 | `daily1.m4a` | 日常イベント |

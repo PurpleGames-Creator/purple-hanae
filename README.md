@@ -33,7 +33,7 @@
 | `game.js` | ゲーム進行エンジン |
 | `audio.js` | BGM の切り替えと、Web Audio で合成する効果音 |
 | `assets/` | 背景7点・立ち絵19点(夏服10 / 冬服4 / 41歳5)・一枚絵(`cg_sketch`)・タイトルロゴ・OGP画像・アイコン |
-| `assets/bgm/` | BGM 12曲(m4a)。元ファイルと変換手順は `_source/bgm/README.md` |
+| `assets/bgm/` | BGM 13曲(`.bin` = m4a を XOR でかき混ぜたもの。2026-09-22〜)。元ファイルと変換手順は `_source/bgm/README.md` |
 
 キャッシュバスター `?v=NN` の正は **`index.html` の1箇所だけ**。`game.js`(画像)と `audio.js`(BGM)は
 自分の `<script src>` の `?v=` を読んで同じ数字を使うので、JS/CSS/画像/BGM のどれを更新しても
