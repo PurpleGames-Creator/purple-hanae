@@ -343,6 +343,14 @@ body.is-title #sprite { animation: breathe 4.6s ease-in-out infinite; }
   z-index: 3;
   transition: opacity 0.15s ease;
 }
+/* 押せる範囲だけを広げる(2026-09-22 本人指摘「反応する範囲が狭い」)。見た目の大きさと
+   位置は変えない。携帯では 40px 四方しか無く、画面の角との間の余白(左 14px・上 10px)を
+   押しても反応しなかった。角の側へ大きく、ロゴの側へは少しだけ広げて約 64px 四方にする */
+.title-home::before {
+  content: "";
+  position: absolute;
+  inset: -14px -10px -10px -14px;
+}
 .title-home:hover,
 .title-home:focus-visible { opacity: 1; }
 .title-home img {
